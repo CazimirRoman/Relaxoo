@@ -13,9 +13,15 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.GridView;
 
 import com.cazimir.relaxoo.R;
+import com.cazimir.relaxoo.adapter.GridBaseAdapter;
+import com.cazimir.relaxoo.model.Sound;
+
+import java.util.ArrayList;
 
 import static android.media.AudioManager.STREAM_MUSIC;
 
@@ -23,7 +29,8 @@ public class SoundListFragment extends Fragment implements ISoundListFragment {
 
   private static final String TAG = "SoundListFragment";
   private static final int MAX_SOUNDS = 5;
-  private Button play;
+  private GridView gridView;
+  private GridBaseAdapter gridBaseAdapter;
   private int sound1;
   private SoundPool soundPool;
   private SoundListViewModel viewModel;
@@ -40,15 +47,34 @@ public class SoundListFragment extends Fragment implements ISoundListFragment {
       @Nullable Bundle savedInstanceState) {
 
     View view = inflater.inflate(R.layout.sound_list_fragment, container, false);
-    play = view.findViewById(R.id.play);
+    gridView = view.findViewById(R.id.gridView);
 
-    play.setOnClickListener(
-        new View.OnClickListener() {
+    // will be fetched from Firebase servers via viewmodel
+    ArrayList<Sound> sounds = new ArrayList<>();
+    sounds.add(new Sound("Sound1", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound2", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound3", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound4", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+    sounds.add(new Sound("Sound5", R.drawable.ic_home_black_24dp));
+
+    gridBaseAdapter = new GridBaseAdapter(getContext(), sounds);
+
+    gridView.setAdapter(gridBaseAdapter);
+
+    gridView.setOnItemClickListener(
+        new AdapterView.OnItemClickListener() {
           @Override
-          public void onClick(View v) {
-
-              soundPool.play(sound1, 1.0f, 1.0f, 0, -1,1);
-
+          public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            soundPool.play(sound1, 1.0f, 1.0f, 0, -1, 1);
           }
         });
 
