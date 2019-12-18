@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Relaxoo</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="nav_sounds">Sounds</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_create_sound">Create your sound</string>
+    <string name="nav_about">About</string>
 </resources>

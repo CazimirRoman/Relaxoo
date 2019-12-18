@@ -1,22 +1,24 @@
 package com.cazimir.relaxoo;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager.widget.ViewPager;
 
 import android.os.Bundle;
 
-import com.cazimir.relaxoo.ui.soundlist.SoundListFragment;
+import com.cazimir.relaxoo.adapter.SampleAdapter;
+import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends FragmentActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main_activity);
-    if (savedInstanceState == null) {
-      getSupportFragmentManager()
-          .beginTransaction()
-          .replace(R.id.container, SoundListFragment.newInstance())
-          .commitNow();
-    }
+
+    ViewPager pager = findViewById(R.id.pager);
+
+    pager.setAdapter(new SampleAdapter(getSupportFragmentManager()));
+
   }
 }
