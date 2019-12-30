@@ -11,12 +11,14 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.cazimir.relaxoo.R;
 
-public class FavoritesFragment extends Fragment {
+public class FavoritesFragment extends Fragment implements IFavoritesFragment {
 
     private FavoritesViewModel mViewModel;
+    private TextView text;
 
     public static FavoritesFragment newInstance() {
         return new FavoritesFragment();
@@ -25,7 +27,9 @@ public class FavoritesFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.favorites_fragment, container, false);
+        View view = inflater.inflate(R.layout.favorites_fragment, container, false);
+        text = view.findViewById(R.id.text);
+        return view;
     }
 
     @Override
@@ -35,4 +39,8 @@ public class FavoritesFragment extends Fragment {
         // TODO: Use the ViewModel
     }
 
+    @Override
+    public void updateList(String soundName) {
+        text.setText(soundName);
+    }
 }

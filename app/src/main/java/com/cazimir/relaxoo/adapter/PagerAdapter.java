@@ -9,11 +9,11 @@ import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
 
-public class SampleAdapter extends FragmentPagerAdapter {
+public class PagerAdapter extends FragmentPagerAdapter {
 
   public static final int NUMBER_OF_FRAGMENTS = 4;
 
-  public SampleAdapter(FragmentManager fm) {
+  public PagerAdapter(FragmentManager fm) {
     super(fm);
   }
 

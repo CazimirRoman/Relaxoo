@@ -5,7 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 
@@ -15,36 +15,16 @@ import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.sound_grid.OnSoundClickListener;
 
-import java.util.ArrayList;
+import java.util.List;
 
-public class GridBaseAdapter extends BaseAdapter {
+public class GridAdapter extends ArrayAdapter<Sound> {
 
-  private static final String TAG = "GridBaseAdapter";
-  private LayoutInflater inflater;
-  private Context ctx;
-  private ArrayList<Sound> soundList;
+  private static final String TAG = "GridAdapter";
   private OnSoundClickListener listener;
 
-  public GridBaseAdapter(Context ctx, ArrayList<Sound> sounds, OnSoundClickListener listener) {
-
-    this.ctx = ctx;
-    this.soundList = sounds;
+  public GridAdapter(Context ctx, List<Sound> sounds, OnSoundClickListener listener) {
+    super(ctx, 0, sounds);
     this.listener = listener;
-  }
-
-  @Override
-  public int getCount() {
-    return soundList.size();
-  }
-
-  @Override
-  public Object getItem(int position) {
-    return soundList.get(position);
-  }
-
-  @Override
-  public long getItemId(int position) {
-    return 0;
   }
 
   @Override
@@ -56,7 +36,7 @@ public class GridBaseAdapter extends BaseAdapter {
 
       // inflate de layout
       LayoutInflater inflater =
-          (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+          (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
       if (inflater != null) {
         convertView = inflater.inflate(R.layout.grid_item, parent, false);
       }
@@ -68,8 +48,6 @@ public class GridBaseAdapter extends BaseAdapter {
       viewHolderItem.soundVolume = convertView.findViewById(R.id.sound_volume);
       viewHolderItem.cl = convertView.findViewById(R.id.cl);
 
-
-
       // store the holder with the view.
       convertView.setTag(viewHolderItem);
     } else {
@@ -79,38 +57,27 @@ public class GridBaseAdapter extends BaseAdapter {
     }
 
     // object item based on the position
-    final Sound sound = soundList.get(position);
+    final Sound sound = getItem(position);
 
-    // assign values if the object is not null
-
-    if (sound != null) {
-      viewHolderItem.soundImage.setImageResource(R.drawable.ic_windy);
-    }
+    viewHolderItem.soundVolume.setProgress(Math.round(sound.volume() * 100));
+    viewHolderItem.soundVolume.setVisibility(sound.isPlaying() ? View.VISIBLE : View.INVISIBLE);
+    viewHolderItem.soundImage.setImageResource(R.drawable.ic_windy);
 
     viewHolderItem.cl.setOnClickListener(
-            new View.OnClickListener() {
-              @Override
-              public void onClick(View v) {
-
-                viewHolderItem.soundVolume.setProgress(sound.getVolume());
-
-                viewHolderItem.soundVolume.setVisibility(
-                        viewHolderItem.soundVolume.getVisibility() == View.VISIBLE
-                                ? View.INVISIBLE
-                                : View.VISIBLE);
-                listener.clicked(sound.isPlaying());
-                soundList.get(position).setPlaying(!sound.isPlaying());
-
-              }
-            });
+        new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            listener.clicked(sound.soundPoolId(), sound.isPlaying(), sound.streamId());
+          }
+        });
 
     viewHolderItem.soundVolume.setOnSeekBarChangeListener(
         new SeekBar.OnSeekBarChangeListener() {
           @Override
           public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             Log.d(TAG, "onProgressChanged: current value: " + progress);
-            soundList.get(position).setVolume(progress);
-            listener.volumeChange(progress);
+            Sound sound = getItem(position);
+            listener.volumeChange(sound.streamId(), progress);
           }
 
           @Override

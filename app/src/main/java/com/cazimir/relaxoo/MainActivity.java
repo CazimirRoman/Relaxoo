@@ -1,24 +1,95 @@
 package com.cazimir.relaxoo;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
-import com.cazimir.relaxoo.adapter.SampleAdapter;
-import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
+import com.cazimir.relaxoo.adapter.PagerAdapter;
+import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
+import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
+import com.cazimir.relaxoo.ui.sound_grid.OnActivityNeededCallback;
+import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity implements OnActivityNeededCallback, OnFavoriteSaved {
+
+  private static final String TAG = "MainActivity";
+
+  private static final String CHANNEL_WHATEVER = "" +
+          "";
+  private static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".provider";
+  private static int NOTIFY_ID = 1337;
+  private NotificationManager notificationManager;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main_activity);
-
     ViewPager pager = findViewById(R.id.pager);
+    pager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
+    setupNotifications();
+  }
 
-    pager.setAdapter(new SampleAdapter(getSupportFragmentManager()));
+  private void setupNotifications() {
+    notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+            && notificationManager.getNotificationChannel(CHANNEL_WHATEVER) == null) {
+
+
+      NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_WHATEVER , "Whatever", NotificationManager.IMPORTANCE_LOW);
+      notificationChannel.setSound(null, null);
+      notificationManager.createNotificationChannel(notificationChannel);
+    }
+  }
+
+  @Override
+  public void showNotification() {
+
+    NotificationCompat.Builder b = new NotificationCompat.Builder(this, CHANNEL_WHATEVER);
+
+    b.setAutoCancel(true);
+
+    b.setContentTitle("Relaxoo")
+        .setContentText("1 sound selected")
+        .setSmallIcon(android.R.drawable.stat_sys_download_done);
+
+    notificationManager.notify(NOTIFY_ID, b.build());
+  }
+
+  @Override
+  public void hideNotification() {
+    notificationManager.cancel(NOTIFY_ID);
+  }
+
+  @Override
+  public void showDialogFragment() {
+
+    new SaveToFavoritesDialog().show(getSupportFragmentManager(), "sample");
+  }
+
+  @Override
+  public void showToast(String message) {
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+  }
+
+
+  @Override
+  public void onSaved(String favoriteName) {
+    Log.d(TAG, "onSaved: called");
+
+    FavoritesFragment favoritesFragment = (FavoritesFragment) getSupportFragmentManager()
+            .findFragmentByTag(
+                    "android:switcher:" + R.id.pager + ":1");
+
+    favoritesFragment.updateList(favoriteName);
+
+    // pass argument to Favorite Fragment and populate TextView
   }
 }
