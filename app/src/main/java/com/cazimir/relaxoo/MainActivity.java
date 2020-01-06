@@ -12,14 +12,16 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import com.cazimir.relaxoo.adapter.PagerAdapter;
+import com.cazimir.relaxoo.dialog.OnTimerDialogCallback;
 import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
 import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityNeededCallback;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
+import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
 
 public class MainActivity extends FragmentActivity
-    implements OnActivityNeededCallback, OnFavoriteSaved {
+    implements OnActivityNeededCallback, OnFavoriteSaved, OnTimerDialogCallback {
 
   private static final String TAG = "MainActivity";
 
@@ -69,13 +71,18 @@ public class MainActivity extends FragmentActivity
   }
 
   @Override
-  public void showDialogFragment() {
+  public void showAddToFavoritesDialog() {
     new SaveToFavoritesDialog().show(getSupportFragmentManager(), "save");
   }
 
   @Override
   public void showToast(String message) {
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+  }
+
+  @Override
+  public void showTimerDialog() {
+    new TimerDialog(this).show(getSupportFragmentManager(), "timer");
   }
 
   @Override
@@ -89,5 +96,13 @@ public class MainActivity extends FragmentActivity
     favoritesFragment.updateList(favoriteName);
 
     // pass argument to Favorite Fragment and populate TextView
+  }
+
+  @Override
+  public void startCountDownTimer(Integer minutes) {
+    SoundGridFragment soundGridFragment =
+        (SoundGridFragment)
+            getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":0");
+    soundGridFragment.startCountDownTimer(minutes);
   }
 }

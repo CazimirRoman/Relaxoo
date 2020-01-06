@@ -56,7 +56,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="#00000000"
-            android:src="@drawable/ic_timer" />
+            android:src="@drawable/ic_timer_on" />
 
     </LinearLayout>
 
@@ -64,9 +64,9 @@
         android:id="@+id/timerText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/white"
         android:gravity="center_horizontal"
         android:text="Sounds will stop in 00:04:30"
+        android:textColor="@android:color/white"
         android:visibility="invisible" />
 
     <GridView

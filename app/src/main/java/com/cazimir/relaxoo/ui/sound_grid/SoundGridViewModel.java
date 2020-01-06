@@ -1,6 +1,5 @@
 package com.cazimir.relaxoo.ui.sound_grid;
 
-import android.app.Application;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
@@ -15,20 +14,18 @@ import java.util.List;
 public class SoundGridViewModel extends ViewModel {
 
   private static final String TAG = "SoundGridViewModel";
+  private List<Sound> sounds = new ArrayList<>();
+  private MutableLiveData<List<Sound>> soundsLiveData = new MutableLiveData<>();
+  private List<Sound> playingSounds = new ArrayList<>();
+  private MutableLiveData<List<Sound>> playingSoundsLiveData = new MutableLiveData<>();
+  /** used to show notification in MainActivity to let user know that a sound is playing */
+  private MutableLiveData<Boolean> isAtLeastOneSoundPlaying = new MutableLiveData<>();
+
+  private MutableLiveData<Boolean> mutedLiveData = new MutableLiveData<>();
 
   public SoundGridViewModel() {
     fetchSounds();
   }
-
-  private List<Sound> sounds = new ArrayList<>();
-  private MutableLiveData<List<Sound>> soundsLiveData = new MutableLiveData<>();
-
-  private List<Sound> playingSounds = new ArrayList<>();
-  private MutableLiveData<List<Sound>> playingSoundsLiveData = new MutableLiveData<>();
-
-  /** used to show notification in MainActivity to let user know that a sound is playing */
-  private MutableLiveData<Boolean> isAtLeastOneSoundPlaying = new MutableLiveData<>();
-  private MutableLiveData<Boolean> mutedLiveData = new MutableLiveData<>();
 
   public MutableLiveData<Boolean> mutedLiveData() {
     return mutedLiveData;
@@ -45,15 +42,15 @@ public class SoundGridViewModel extends ViewModel {
     Sound sound2 = Sound.newSound("Sound2", R.drawable.ic_windy, R.raw.sound3, false, 0.5f);
     Sound sound3 = Sound.newSound("Sound3", R.drawable.ic_windy, R.raw.sound3, false, 0.5f);
 
-    if(!sounds.contains(sound1)){
+    if (!sounds.contains(sound1)) {
       sounds.add(sound1);
     }
 
-    if(!sounds.contains(sound2)){
+    if (!sounds.contains(sound2)) {
       sounds.add(sound2);
     }
 
-    if(!sounds.contains(sound3)){
+    if (!sounds.contains(sound3)) {
       sounds.add(sound3);
     }
 

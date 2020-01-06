@@ -17,15 +17,16 @@ import android.widget.TimePicker;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.GridAdapter;
+import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.model.Sound;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -33,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import static android.media.AudioManager.STREAM_MUSIC;
 
-public class SoundGridFragment extends Fragment implements ISoundGridFragment {
+public class SoundGridFragment extends Fragment {
 
   private static final String TAG = "SoundGridFragment";
   private static final int MAX_SOUNDS = 5;
@@ -41,7 +42,6 @@ public class SoundGridFragment extends Fragment implements ISoundGridFragment {
   private SoundPool soundPool;
   private SoundGridViewModel viewModel;
   private boolean once;
-
   private GridView gridView;
   private ImageButton muteButton;
   private ImageButton randomButton;
@@ -49,19 +49,16 @@ public class SoundGridFragment extends Fragment implements ISoundGridFragment {
   private ImageButton saveFavorites;
   private ImageButton setTimer;
   private TextView timerText;
-
-  private boolean timerEnabled;
-  private CountDownTimer countDownTimer;
   private boolean muted;
   private OnActivityNeededCallback activityCallback;
 
-  TimePickerDialog.OnTimeSetListener timerPickerListener =
+  private MutableLiveData<Boolean> timerEnabled = new MutableLiveData<>();
+  private CountDownTimer countDownTimer;
+
+  private TimePickerDialog.OnTimeSetListener timerPickerListener =
       new TimePickerDialog.OnTimeSetListener() {
         public void onTimeSet(TimePicker view, int hours, int minutes) {
-
-          toggleCountdownTimer(hours, minutes);
-
-          activityCallback.showToast("Timer set to: " + hours + " " + minutes);
+          toggleCountdownTimer((hours * 60) + minutes);
         }
       };
 
@@ -105,8 +102,7 @@ public class SoundGridFragment extends Fragment implements ISoundGridFragment {
     activityCallback = (OnActivityNeededCallback) context;
   }
 
-  @Override
-  public void stopAllSounds() {
+  private void stopAllSounds() {
 
     List<Sound> list = new CopyOnWriteArrayList<>(viewModel.playingSounds().getValue());
 
@@ -143,12 +139,10 @@ public class SoundGridFragment extends Fragment implements ISoundGridFragment {
               @Override
               public void onChanged(Boolean muted) {
                 if (muted) {
-                  muteButton.setImageDrawable(
-                      getActivity().getResources().getDrawable(R.drawable.ic_mute_off));
+                  muteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_mute_off));
 
                 } else {
-                  muteButton.setImageDrawable(
-                      getActivity().getResources().getDrawable(R.drawable.ic_mute_on));
+                  muteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_mute_on));
                 }
               }
             });
@@ -225,22 +219,42 @@ public class SoundGridFragment extends Fragment implements ISoundGridFragment {
               @Override
               public void onChanged(List<Sound> playingList) {
                 if (playingList.isEmpty()) {
-                  playStopButton.setImageDrawable(
-                      getActivity().getResources().getDrawable(R.drawable.ic_play));
-                  timerText.setVisibility(View.INVISIBLE);
-                  if(countDownTimer != null){
-                      countDownTimer.cancel();
+                  playStopButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_play));
+                  setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_on));
+                  if (countDownTimer != null) {
+                    timerEnabled.setValue(false);
                   }
                 } else {
-                  playStopButton.setImageDrawable(
-                      getActivity().getResources().getDrawable(R.drawable.ic_stop));
+                  playStopButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_stop));
                 }
               }
             });
 
+    // TODO: 06-Jan-20 move this to viewmodel
+    timerEnabled.observe(
+        getViewLifecycleOwner(),
+        new Observer<Boolean>() {
+          @Override
+          public void onChanged(Boolean isTimerEnabled) {
+
+            Log.d(TAG, "timerEnabled: " + isTimerEnabled);
+
+            if (isTimerEnabled) {
+              showTimerText();
+              setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_off));
+            } else {
+              hideTimerText();
+              setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_on));
+              countDownTimer.cancel();
+              Log.d(TAG, "countDownTimer canceled!");
+            }
+          }
+        });
+
     // endregion
   }
 
+  // region Listeners
   private void configureListeners() {
 
     muteButton.setOnClickListener(
@@ -300,7 +314,7 @@ public class SoundGridFragment extends Fragment implements ISoundGridFragment {
             Boolean atLeastOneIsPlaying = viewModel.isAtLeastOneSoundPlaying().getValue();
 
             if (atLeastOneIsPlaying != null && atLeastOneIsPlaying) {
-              activityCallback.showDialogFragment();
+              activityCallback.showAddToFavoritesDialog();
             } else {
               activityCallback.showToast("You must play at least one sound");
             }
@@ -316,17 +330,14 @@ public class SoundGridFragment extends Fragment implements ISoundGridFragment {
 
             if (atLeastOneIsPlaying != null && atLeastOneIsPlaying) {
 
-                //show TimerDialog fragment created with file template
+              Boolean timerIsRunning = timerEnabled.getValue();
 
-              Calendar calendar = Calendar.getInstance();
-
-              new TimePickerDialog(
-                      getContext(),
-                      timerPickerListener,
-                      0,
-                      0,
-                      true)
-                  .show();
+              if (timerIsRunning != null && timerIsRunning) {
+                timerEnabled.setValue(false);
+              } else {
+                // show TimerDialog fragment created with file template
+                activityCallback.showTimerDialog();
+              }
 
             } else {
               activityCallback.showToast("You must play at least one sound");
@@ -335,41 +346,7 @@ public class SoundGridFragment extends Fragment implements ISoundGridFragment {
         });
   }
 
-  private void toggleCountdownTimer(int hours, int minutes) {
-    if (timerEnabled && countDownTimer != null) {
-      countDownTimer.cancel();
-      timerEnabled = false;
-      timerText.setVisibility(View.INVISIBLE);
-    } else {
-
-      timerText.setVisibility(View.VISIBLE);
-
-      countDownTimer =
-          new CountDownTimer(TimeUnit.MINUTES.toMillis((hours * 60) + minutes), 1000) {
-
-            public void onTick(long millisUntilFinished) {
-
-              timerEnabled = !timerEnabled;
-
-              timerText.setText(
-                  "Sounds will stop in "
-                      + String.format(
-                          "%02d:%02d:%02d",
-                          TimeUnit.MILLISECONDS.toHours(millisUntilFinished),
-                          TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished),
-                          TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished)
-                              - TimeUnit.MINUTES.toSeconds(
-                                  TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished))));
-            }
-
-            public void onFinish() {
-              timerEnabled = false;
-              stopAllSounds();
-              timerText.setVisibility(View.INVISIBLE);
-            }
-          }.start();
-    }
-  }
+  // endregion
 
   private void loadToSoundPool(List<Sound> sounds) {
 
@@ -386,5 +363,55 @@ public class SoundGridFragment extends Fragment implements ISoundGridFragment {
     Log.d(TAG, "loadToSoundPool: sounds: " + sounds1);
 
     viewModel.addToSounds(sounds1);
+  }
+
+  private void showTimerText() {
+    timerText.setVisibility(View.VISIBLE);
+  }
+
+  private void hideTimerText() {
+    Log.d(TAG, "hideTimerText: called");
+    timerText.setVisibility(View.INVISIBLE);
+  }
+
+  private void setTimerText(String text) {
+    timerText.setText(text);
+  }
+
+  public void startCountDownTimer(Integer minutes) {
+
+    Log.d(TAG, "startCountDownTimer: minutes: " + minutes);
+
+    if (minutes == 999) {
+      new TimePickerDialog(getContext(), timerPickerListener, 0, 0, true).show();
+    } else {
+      toggleCountdownTimer(minutes);
+    }
+  }
+
+  private void toggleCountdownTimer(int minutes) {
+
+    if (timerEnabled.getValue() != null && timerEnabled.getValue() && countDownTimer != null) {
+      timerEnabled.setValue(false);
+    } else {
+      countDownTimer =
+          new CountDownTimer(TimeUnit.MINUTES.toMillis(minutes), 1000) {
+
+            public void onTick(long millisUntilFinished) {
+
+              setTimerText(
+                  "Sounds will stop in " + TimerDialog.getCountTimeByLong(millisUntilFinished));
+            }
+
+            public void onFinish() {
+              setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_on));
+              timerEnabled.setValue(false);
+              stopAllSounds();
+              hideTimerText();
+            }
+          }.start();
+
+      timerEnabled.setValue(true);
+    }
   }
 }

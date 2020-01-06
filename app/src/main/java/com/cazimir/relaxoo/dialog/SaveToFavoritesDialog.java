@@ -14,7 +14,8 @@ import androidx.fragment.app.DialogFragment;
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 
-public class SaveToFavoritesDialog extends DialogFragment implements DialogInterface.OnClickListener {
+public class SaveToFavoritesDialog extends DialogFragment
+    implements DialogInterface.OnClickListener {
 
   private static final String TAG = "SaveToFavoritesDialog";
   private OnFavoriteSaved onFavoriteSavedCallback;
@@ -28,11 +29,7 @@ public class SaveToFavoritesDialog extends DialogFragment implements DialogInter
 
     form = getActivity().getLayoutInflater().inflate(R.layout.favorites_dialog, null);
 
-
     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
-
-
 
     return (builder
         .setTitle("Save Favorites Combos")

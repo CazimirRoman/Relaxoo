@@ -18,11 +18,11 @@
 
     <SeekBar
         android:id="@+id/sound_volume"
-        android:max="100"
         android:layout_width="match_parent"
-        android:visibility="invisible"
         android:layout_height="wrap_content"
+        android:max="100"
         android:padding="10dp"
+        android:visibility="invisible"
         app:layout_constraintTop_toBottomOf="@+id/sound_image" />
 
     <ImageView
