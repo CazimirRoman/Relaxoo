@@ -1,17 +1,21 @@
 package com.cazimir.relaxoo.dialog;
 
 import android.app.Dialog;
+import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
 import com.cazimir.relaxoo.R;
 
-public class TimerDialog extends DialogFragment implements DialogInterface.OnClickListener {
+import java.util.Calendar;
+
+public class TimerDialog extends DialogFragment {
 
     private static final String TAG = TimerDialog.class.getSimpleName();
 
@@ -22,12 +26,11 @@ public class TimerDialog extends DialogFragment implements DialogInterface.OnCli
 
         final View form = getActivity().getLayoutInflater().inflate(R.layout.dialog_timer, null);
 
+        ListView listView = form.findViewById(R.id.timer_list);
+
+//        listView.setAdapter(new SimpleAdapter(getActivity(), ))
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
-        builder.setNegativeButton(android.R.string.cancel, null);
-
-        builder.setPositiveButton(android.R.string.ok, this);
 
         return (builder
                 .setTitle("Set timer duration")
@@ -35,10 +38,18 @@ public class TimerDialog extends DialogFragment implements DialogInterface.OnCli
                 .create());
     }
 
-    @Override
-    public void onClick(DialogInterface dialog, int which) {
-        // handle which button was clicked here
-    }
+//    private void setCustomTimer(){
+//
+//        Calendar calendar = Calendar.getInstance();
+//
+//        new TimePickerDialog(
+//                getContext(),
+//                timerPickerListener,
+//                0,
+//                0,
+//                true)
+//                .show();
+//    }
 
     @Override
     public void onDismiss(DialogInterface unused) {
