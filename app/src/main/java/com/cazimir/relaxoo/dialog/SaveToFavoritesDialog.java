@@ -26,10 +26,13 @@ public class SaveToFavoritesDialog extends DialogFragment implements DialogInter
 
     onFavoriteSavedCallback = (OnFavoriteSaved) getContext();
 
-    form = getActivity().getLayoutInflater().inflate(R.layout.dialog, null);
+    form = getActivity().getLayoutInflater().inflate(R.layout.favorites_dialog, null);
 
 
     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+
+
 
     return (builder
         .setTitle("Save Favorites Combos")

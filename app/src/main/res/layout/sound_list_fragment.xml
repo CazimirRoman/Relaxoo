@@ -18,8 +18,8 @@
             style="@style/UpperButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
             android:layout_weight="1"
+            android:background="@android:color/transparent"
             android:src="@drawable/ic_mute_on" />
 
         <ImageButton
@@ -59,6 +59,15 @@
             android:src="@drawable/ic_timer" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/timerText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:gravity="center_horizontal"
+        android:text="Sounds will stop in 00:04:30"
+        android:visibility="invisible" />
 
     <GridView
         android:id="@+id/gridView"

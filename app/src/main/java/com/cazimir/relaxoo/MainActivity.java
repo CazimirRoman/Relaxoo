@@ -1,9 +1,5 @@
 package com.cazimir.relaxoo;
 
-import androidx.core.app.NotificationCompat;
-import androidx.fragment.app.FragmentActivity;
-import androidx.viewpager.widget.ViewPager;
-
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
@@ -11,19 +7,23 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.app.NotificationCompat;
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager.widget.ViewPager;
+
 import com.cazimir.relaxoo.adapter.PagerAdapter;
 import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
+import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityNeededCallback;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 
-public class MainActivity extends FragmentActivity implements OnActivityNeededCallback, OnFavoriteSaved {
+public class MainActivity extends FragmentActivity
+    implements OnActivityNeededCallback, OnFavoriteSaved {
 
   private static final String TAG = "MainActivity";
 
-  private static final String CHANNEL_WHATEVER = "" +
-          "";
-  private static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".provider";
+  private static final String CHANNEL_WHATEVER = "" + "";
   private static int NOTIFY_ID = 1337;
   private NotificationManager notificationManager;
 
@@ -40,10 +40,10 @@ public class MainActivity extends FragmentActivity implements OnActivityNeededCa
     notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-            && notificationManager.getNotificationChannel(CHANNEL_WHATEVER) == null) {
+        && notificationManager.getNotificationChannel(CHANNEL_WHATEVER) == null) {
 
-
-      NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_WHATEVER , "Whatever", NotificationManager.IMPORTANCE_LOW);
+      NotificationChannel notificationChannel =
+          new NotificationChannel(CHANNEL_WHATEVER, "Whatever", NotificationManager.IMPORTANCE_LOW);
       notificationChannel.setSound(null, null);
       notificationManager.createNotificationChannel(notificationChannel);
     }
@@ -70,8 +70,7 @@ public class MainActivity extends FragmentActivity implements OnActivityNeededCa
 
   @Override
   public void showDialogFragment() {
-
-    new SaveToFavoritesDialog().show(getSupportFragmentManager(), "sample");
+    new SaveToFavoritesDialog().show(getSupportFragmentManager(), "save");
   }
 
   @Override
@@ -79,14 +78,13 @@ public class MainActivity extends FragmentActivity implements OnActivityNeededCa
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
   }
 
-
   @Override
   public void onSaved(String favoriteName) {
     Log.d(TAG, "onSaved: called");
 
-    FavoritesFragment favoritesFragment = (FavoritesFragment) getSupportFragmentManager()
-            .findFragmentByTag(
-                    "android:switcher:" + R.id.pager + ":1");
+    FavoritesFragment favoritesFragment =
+        (FavoritesFragment)
+            getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":1");
 
     favoritesFragment.updateList(favoriteName);
 
