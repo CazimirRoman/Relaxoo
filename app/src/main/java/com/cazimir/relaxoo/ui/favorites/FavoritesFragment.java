@@ -1,22 +1,34 @@
 package com.cazimir.relaxoo.ui.favorites;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.cazimir.relaxoo.R;
+import com.cazimir.relaxoo.adapter.SavedComboAdapter;
+import com.cazimir.relaxoo.model.SavedCombo;
+
+import java.util.List;
 
 public class FavoritesFragment extends Fragment implements IFavoritesFragment {
 
+  private static final String TAG = "FavoritesFragment";
+
   private FavoritesViewModel mViewModel;
-  private TextView text;
+
+  private RecyclerView favoritesList;
+
+  private SavedComboAdapter adapter;
 
   public static FavoritesFragment newInstance() {
     return new FavoritesFragment();
@@ -28,7 +40,7 @@ public class FavoritesFragment extends Fragment implements IFavoritesFragment {
       @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.favorites_fragment, container, false);
-    text = view.findViewById(R.id.text);
+    favoritesList = view.findViewById(R.id.favoritesList);
     return view;
   }
 
@@ -36,11 +48,31 @@ public class FavoritesFragment extends Fragment implements IFavoritesFragment {
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     mViewModel = ViewModelProviders.of(this).get(FavoritesViewModel.class);
-    // TODO: Use the ViewModel
+    mViewModel
+        .savedCombosLive()
+        .observe(
+            getViewLifecycleOwner(),
+            new Observer<List<SavedCombo>>() {
+              @Override
+              public void onChanged(List<SavedCombo> savedCombos) {
+              Log.d(TAG, "onChanged: called: savedCombos size is: " + savedCombos.size());
+                // update recyclerview
+                favoritesList.setLayoutManager(new LinearLayoutManager(getContext()));
+
+
+                adapter = new SavedComboAdapter(getContext(), savedCombos);
+                favoritesList.setAdapter(adapter);
+              }
+            });
   }
 
   @Override
-  public void updateList(String soundName) {
-    text.setText(soundName);
+  public void updateList(SavedCombo savedCombo) {
+
+    adapter.addCombo(savedCombo);
+    adapter.notifyDataSetChanged();
+
+
+
   }
 }

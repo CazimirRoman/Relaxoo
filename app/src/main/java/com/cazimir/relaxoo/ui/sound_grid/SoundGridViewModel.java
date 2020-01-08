@@ -36,7 +36,7 @@ public class SoundGridViewModel extends ViewModel {
   }
 
   void fetchSounds() {
-    // this call will be done to Firebase
+    // this call will be done to Firebase through Repository pattern.
 
     Sound sound1 = Sound.newSound("Sound1", R.drawable.ic_windy, R.raw.sound1, false, 0.5f);
     Sound sound2 = Sound.newSound("Sound2", R.drawable.ic_windy, R.raw.sound3, false, 0.5f);

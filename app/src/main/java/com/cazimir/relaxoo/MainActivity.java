@@ -15,10 +15,14 @@ import com.cazimir.relaxoo.adapter.PagerAdapter;
 import com.cazimir.relaxoo.dialog.OnTimerDialogCallback;
 import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
 import com.cazimir.relaxoo.dialog.TimerDialog;
+import com.cazimir.relaxoo.model.SavedCombo;
+import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityNeededCallback;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
+
+import java.util.List;
 
 public class MainActivity extends FragmentActivity
     implements OnActivityNeededCallback, OnFavoriteSaved, OnTimerDialogCallback {
@@ -71,8 +75,8 @@ public class MainActivity extends FragmentActivity
   }
 
   @Override
-  public void showAddToFavoritesDialog() {
-    new SaveToFavoritesDialog().show(getSupportFragmentManager(), "save");
+  public void showAddToFavoritesDialog(List<Sound> playingSounds) {
+    new SaveToFavoritesDialog(playingSounds).show(getSupportFragmentManager(), "save");
   }
 
   @Override
@@ -86,16 +90,15 @@ public class MainActivity extends FragmentActivity
   }
 
   @Override
-  public void onSaved(String favoriteName) {
+  public void onSaved(SavedCombo savedCombo) {
     Log.d(TAG, "onSaved: called");
 
     FavoritesFragment favoritesFragment =
         (FavoritesFragment)
             getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":1");
 
-    favoritesFragment.updateList(favoriteName);
+    favoritesFragment.updateList(savedCombo);
 
-    // pass argument to Favorite Fragment and populate TextView
   }
 
   @Override

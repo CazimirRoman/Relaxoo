@@ -5,4 +5,5 @@
     <string name="nav_create_sound">Create your sound</string>
     <string name="nav_about">About</string>
     <string name="toast">Value: %1$s</string>
+    <string name="favorites_combos">Favorites combos</string>
 </resources>

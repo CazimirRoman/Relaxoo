@@ -124,7 +124,7 @@ public class SoundGridFragment extends Fragment {
           @Override
           public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
             Log.d(TAG, "onLoadComplete: " + sampleId);
-            configureListeners();
+            setListenersForButtons();
           }
         });
 
@@ -147,7 +147,7 @@ public class SoundGridFragment extends Fragment {
               }
             });
 
-    // listen if at least one sound is playing to show notification to user
+    // listen if at least one sound is playing to show notification in actionbar to user
     viewModel
         .isAtLeastOneSoundPlaying()
         .observe(
@@ -254,8 +254,8 @@ public class SoundGridFragment extends Fragment {
     // endregion
   }
 
-  // region Listeners
-  private void configureListeners() {
+  // region Listeners for buttons on top
+  private void setListenersForButtons() {
 
     muteButton.setOnClickListener(
         new View.OnClickListener() {
@@ -314,7 +314,7 @@ public class SoundGridFragment extends Fragment {
             Boolean atLeastOneIsPlaying = viewModel.isAtLeastOneSoundPlaying().getValue();
 
             if (atLeastOneIsPlaying != null && atLeastOneIsPlaying) {
-              activityCallback.showAddToFavoritesDialog();
+              activityCallback.showAddToFavoritesDialog(viewModel.playingSounds().getValue());
             } else {
               activityCallback.showToast("You must play at least one sound");
             }
