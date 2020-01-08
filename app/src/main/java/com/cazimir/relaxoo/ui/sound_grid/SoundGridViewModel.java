@@ -38,9 +38,9 @@ public class SoundGridViewModel extends ViewModel {
   void fetchSounds() {
     // this call will be done to Firebase through Repository pattern.
 
-    Sound sound1 = Sound.newSound("Sound1", R.drawable.ic_windy, R.raw.sound1, false, 0.5f);
-    Sound sound2 = Sound.newSound("Sound2", R.drawable.ic_windy, R.raw.sound3, false, 0.5f);
-    Sound sound3 = Sound.newSound("Sound3", R.drawable.ic_windy, R.raw.sound3, false, 0.5f);
+    Sound sound1 = Sound.newSound("Sound1", R.drawable.ic_windy, R.raw.sound3, false, 0.5f);
+    Sound sound2 = Sound.newSound("Sound2", R.drawable.ic_windy, R.raw.birds, false, 0.5f);
+    Sound sound3 = Sound.newSound("Sound3", R.drawable.ic_windy, R.raw.graveyard_ambiance, false, 0.5f);
 
     if (!sounds.contains(sound1)) {
       sounds.add(sound1);
@@ -103,6 +103,7 @@ public class SoundGridViewModel extends ViewModel {
       }
     }
 
+    // TODO: 08-Jan-20 update playing sounds reactively as a result of sounds beeing updated
     playingSounds.clear();
 
     for (Sound sound2 : sounds) {

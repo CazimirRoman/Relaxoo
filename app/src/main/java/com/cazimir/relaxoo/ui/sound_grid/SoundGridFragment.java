@@ -24,10 +24,13 @@ import androidx.lifecycle.ViewModelProviders;
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.GridAdapter;
 import com.cazimir.relaxoo.dialog.TimerDialog;
+import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.model.Sound;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +53,7 @@ public class SoundGridFragment extends Fragment {
   private ImageButton setTimer;
   private TextView timerText;
   private boolean muted;
-  private OnActivityNeededCallback activityCallback;
+  private OnActivityCallback activityCallback;
 
   private MutableLiveData<Boolean> timerEnabled = new MutableLiveData<>();
   private CountDownTimer countDownTimer;
@@ -88,10 +91,15 @@ public class SoundGridFragment extends Fragment {
   private void playStopSound(int soundPoolId, boolean playing, int streamId) {
     Log.d(TAG, "playStopSound: called");
     if (playing) {
+        Log.d(TAG, "stopping sound");
       soundPool.stop(streamId);
+//update viewmodel for favorites fragment somehow - perhaps through activity?
+
+
       viewModel.updateSoundList(soundPoolId, -1);
     } else {
       int newStreamId = soundPool.play(soundPoolId, 0.5f, 0.5f, 0, -1, 1);
+      Log.d(TAG, "playing sound");
       viewModel.updateSoundList(soundPoolId, newStreamId);
     }
   }
@@ -99,7 +107,7 @@ public class SoundGridFragment extends Fragment {
   @Override
   public void onAttach(Context context) {
     super.onAttach(context);
-    activityCallback = (OnActivityNeededCallback) context;
+    activityCallback = (OnActivityCallback) context;
   }
 
   private void stopAllSounds() {
@@ -175,7 +183,7 @@ public class SoundGridFragment extends Fragment {
               @Override
               public void onChanged(List<Sound> sounds) {
 
-                Log.d(TAG, "Data observer changed: " + sounds);
+                Log.d(TAG, "Sound list changed: " + sounds);
 
                 gridArrayAdapter =
                     new GridAdapter(
@@ -314,7 +322,7 @@ public class SoundGridFragment extends Fragment {
             Boolean atLeastOneIsPlaying = viewModel.isAtLeastOneSoundPlaying().getValue();
 
             if (atLeastOneIsPlaying != null && atLeastOneIsPlaying) {
-              activityCallback.showAddToFavoritesDialog(viewModel.playingSounds().getValue());
+              activityCallback.showAddToFavoritesDialog(getSoundParameters(viewModel.playingSounds().getValue()));
             } else {
               activityCallback.showToast("You must play at least one sound");
             }
@@ -346,7 +354,18 @@ public class SoundGridFragment extends Fragment {
         });
   }
 
-  // endregion
+  private HashMap<Integer, Integer> getSoundParameters(List<Sound> sounds) {
+
+    HashMap<Integer, Integer> hashMap = new HashMap<>();
+
+    for (Sound sound : sounds) {
+      hashMap.put(sound.soundPoolId(), sound.streamId());
+    }
+
+    return hashMap;
+  }
+
+    // endregion
 
   private void loadToSoundPool(List<Sound> sounds) {
 
@@ -412,6 +431,13 @@ public class SoundGridFragment extends Fragment {
           }.start();
 
       timerEnabled.setValue(true);
+    }
+  }
+
+  public void triggerCombo(SavedCombo savedCombo) {
+
+    for (Map.Entry<Integer, Integer> entry : savedCombo.getSoundPoolParameters().entrySet()) {
+      playStopSound(entry.getKey(), savedCombo.isPlaying(), entry.getValue());
     }
   }
 }

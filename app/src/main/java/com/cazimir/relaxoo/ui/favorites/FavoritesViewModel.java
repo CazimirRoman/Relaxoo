@@ -11,6 +11,7 @@ import com.cazimir.relaxoo.model.Sound;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class FavoritesViewModel extends ViewModel {
@@ -31,26 +32,17 @@ public class FavoritesViewModel extends ViewModel {
 
     Log.d(TAG, "fetchFavorites: called");
 
+    HashMap<Integer, Integer> hashMap = new HashMap<>();
+
+    hashMap.put(55,99);
+
     SavedCombo savedCombo1 =
         new SavedCombo.Builder()
-            .withName("Test combo 1")
-            .withSounds(
-                Arrays.asList(
-                    Sound.newSound("Sound1", R.drawable.ic_windy, R.raw.sound1, false, 0.5f),
-                    Sound.newSound("Sound2", R.drawable.ic_windy, R.raw.sound3, false, 0.5f)))
+            .withName("Phone")
+            .withSoundPoolParameters(hashMap)
             .build();
 
-    SavedCombo savedCombo2 =
-            new SavedCombo.Builder()
-                    .withName("Test combo 2")
-                    .withSounds(
-                            Arrays.asList(
-                                    Sound.newSound("Sound1", R.drawable.ic_windy, R.raw.sound1, false, 0.5f),
-                                    Sound.newSound("Sound2", R.drawable.ic_windy, R.raw.sound3, false, 0.5f)))
-                    .build();
-
-
-    ArrayList<SavedCombo> list = new ArrayList<>(Arrays.asList(savedCombo1, savedCombo2));
+    ArrayList<SavedCombo> list = new ArrayList<>(Arrays.asList(savedCombo1));
 
     savedCombos.setValue(list);
   }

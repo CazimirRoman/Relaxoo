@@ -94,24 +94,18 @@ public class Sound {
 
   @Override
   public String toString() {
-    return "Sound{"
-        + "soundPoolId="
-        + soundPoolId
-        + ", streamId="
-        + streamId
-        + ", name='"
-        + name
-        + '\''
-        + ", drawable="
-        + drawable
-        + ", file="
-        + file
-        + ", playing="
-        + playing
-        + ", volume="
-        + volume
-        + '}';
-  }
+    final StringBuffer sb = new StringBuffer(System.lineSeparator());
+    sb.append("Sound ");
+    sb.append("{soundPoolId=").append(soundPoolId);
+    sb.append(", streamId=").append(streamId);
+    sb.append(", name='").append(name).append('\'');
+    sb.append(", drawable=").append(drawable);
+    sb.append(", file=").append(file);
+    sb.append(", playing=").append(playing);
+    sb.append(", volume=").append(volume);
+    sb.append('}');
+    return sb.toString();
+}
 
   public static final class SoundBuilder {
     private int soundPoolId;
@@ -128,7 +122,7 @@ public class Sound {
       return new SoundBuilder();
     }
 
-    public SoundBuilder withSoundPoolId(int soundPoolId) {
+    public SoundBuilder withSoundPoolId(Integer soundPoolId) {
       this.soundPoolId = soundPoolId;
       return this;
     }

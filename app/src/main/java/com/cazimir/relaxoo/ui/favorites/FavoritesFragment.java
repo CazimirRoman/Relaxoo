@@ -1,5 +1,6 @@
 package com.cazimir.relaxoo.ui.favorites;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.SavedComboAdapter;
 import com.cazimir.relaxoo.model.SavedCombo;
+import com.cazimir.relaxoo.model.Sound;
+import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 
 import java.util.List;
 
@@ -29,6 +32,8 @@ public class FavoritesFragment extends Fragment implements IFavoritesFragment {
   private RecyclerView favoritesList;
 
   private SavedComboAdapter adapter;
+
+  private OnActivityCallback activityCallback;
 
   public static FavoritesFragment newInstance() {
     return new FavoritesFragment();
@@ -58,9 +63,13 @@ public class FavoritesFragment extends Fragment implements IFavoritesFragment {
               Log.d(TAG, "onChanged: called: savedCombos size is: " + savedCombos.size());
                 // update recyclerview
                 favoritesList.setLayoutManager(new LinearLayoutManager(getContext()));
-
-
-                adapter = new SavedComboAdapter(getContext(), savedCombos);
+                adapter = new SavedComboAdapter(getContext(), savedCombos, new SavedComboAdapter.OnItemClickListener() {
+                  @Override
+                  public void onItemClick(SavedCombo savedCombo) {
+                    activityCallback.triggerCombo(savedCombo);
+                    adapter.updateComboWithPlayingStatus(savedCombo);
+                  }
+                });
                 favoritesList.setAdapter(adapter);
               }
             });
@@ -68,11 +77,12 @@ public class FavoritesFragment extends Fragment implements IFavoritesFragment {
 
   @Override
   public void updateList(SavedCombo savedCombo) {
-
     adapter.addCombo(savedCombo);
-    adapter.notifyDataSetChanged();
+  }
 
-
-
+  @Override
+  public void onAttach(Context context) {
+    super.onAttach(context);
+    activityCallback = (OnActivityCallback) context;
   }
 }

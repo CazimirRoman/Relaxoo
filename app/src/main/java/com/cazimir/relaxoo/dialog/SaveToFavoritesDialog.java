@@ -13,28 +13,27 @@ import androidx.fragment.app.DialogFragment;
 
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.model.SavedCombo;
-import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 
-import java.util.List;
+import java.util.HashMap;
 
 public class SaveToFavoritesDialog extends DialogFragment
     implements DialogInterface.OnClickListener {
 
   private static final String TAG = "SaveToFavoritesDialog";
-  private OnFavoriteSaved onFavoriteSavedCallback;
+  private OnFavoriteSaved addToListInFragmentCallback;
 
   private View form = null;
-  private final List<Sound> playingSounds;
+  private final HashMap<Integer, Integer> playingSoundsParameters;
 
-  public SaveToFavoritesDialog(List<Sound> playingSounds) {
-    this.playingSounds = playingSounds;
+  public SaveToFavoritesDialog(HashMap<Integer, Integer> playingSounds) {
+    this.playingSoundsParameters = playingSounds;
   }
 
     @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-    onFavoriteSavedCallback = (OnFavoriteSaved) getContext();
+    addToListInFragmentCallback = (OnFavoriteSaved) getContext();
 
     form = getActivity().getLayoutInflater().inflate(R.layout.favorites_dialog, null);
 
@@ -50,10 +49,10 @@ public class SaveToFavoritesDialog extends DialogFragment
 
   @Override
   public void onClick(DialogInterface dialog, int which) {
-    String template = getActivity().getString(R.string.toast);
     EditText comboName = form.findViewById(R.id.comboName);
-    SavedCombo savedCombo = new SavedCombo.Builder().withName(comboName.getText().toString()).withSounds(playingSounds).build();
-    onFavoriteSavedCallback.onSaved(savedCombo);
+    //saving a new combo
+    SavedCombo savedCombo = new SavedCombo.Builder().withName(comboName.getText().toString()).withSoundPoolParameters(playingSoundsParameters).withPlaying(true).build();
+    addToListInFragmentCallback.onSavedToList(savedCombo);
     Toast.makeText(getActivity(), "Saved combo!", Toast.LENGTH_LONG).show();
   }
 

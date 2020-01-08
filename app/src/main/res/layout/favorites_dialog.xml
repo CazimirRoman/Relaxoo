@@ -8,9 +8,9 @@
     <EditText
         android:id="@+id/comboName"
         android:layout_width="match_parent"
+        android:focusedByDefault="true"
         android:layout_height="wrap_content"
         android:hint="Enter your combo name here">
-
     </EditText>
 
 </LinearLayout>

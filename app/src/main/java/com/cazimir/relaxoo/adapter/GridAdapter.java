@@ -41,7 +41,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
         convertView = inflater.inflate(R.layout.grid_item, parent, false);
       }
 
-      // will set up the ViewHolder
+      // will set up the RowHolder
 
       viewHolderItem = new ViewHolderItem();
       viewHolderItem.soundImage = convertView.findViewById(R.id.sound_image);

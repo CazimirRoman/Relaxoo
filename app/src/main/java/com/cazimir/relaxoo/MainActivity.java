@@ -16,16 +16,15 @@ import com.cazimir.relaxoo.dialog.OnTimerDialogCallback;
 import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
 import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.model.SavedCombo;
-import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
-import com.cazimir.relaxoo.ui.sound_grid.OnActivityNeededCallback;
+import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
 
-import java.util.List;
+import java.util.HashMap;
 
 public class MainActivity extends FragmentActivity
-    implements OnActivityNeededCallback, OnFavoriteSaved, OnTimerDialogCallback {
+    implements OnActivityCallback, OnFavoriteSaved, OnTimerDialogCallback {
 
   private static final String TAG = "MainActivity";
 
@@ -75,7 +74,7 @@ public class MainActivity extends FragmentActivity
   }
 
   @Override
-  public void showAddToFavoritesDialog(List<Sound> playingSounds) {
+  public void showAddToFavoritesDialog(HashMap<Integer, Integer> playingSounds) {
     new SaveToFavoritesDialog(playingSounds).show(getSupportFragmentManager(), "save");
   }
 
@@ -90,8 +89,17 @@ public class MainActivity extends FragmentActivity
   }
 
   @Override
-  public void onSaved(SavedCombo savedCombo) {
-    Log.d(TAG, "onSaved: called");
+  public void triggerCombo(SavedCombo savedCombo) {
+    Log.d(TAG, "triggerCombo in MainActivity: called with: " + savedCombo.getSoundPoolParameters().toString());
+    SoundGridFragment soundGridFragment =
+            (SoundGridFragment)
+                    getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":0");
+    soundGridFragment.triggerCombo(savedCombo);
+  }
+
+  @Override
+  public void onSavedToList(SavedCombo savedCombo) {
+    Log.d(TAG, "onSavedToList: called");
 
     FavoritesFragment favoritesFragment =
         (FavoritesFragment)

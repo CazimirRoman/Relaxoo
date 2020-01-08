@@ -4,5 +4,5 @@ import com.cazimir.relaxoo.model.SavedCombo;
 
 public interface OnFavoriteSaved {
 
-  void onSaved(SavedCombo favoriteName);
+  void onSavedToList(SavedCombo favoriteName);
 }
