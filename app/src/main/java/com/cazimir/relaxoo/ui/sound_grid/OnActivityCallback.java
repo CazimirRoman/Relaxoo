@@ -16,4 +16,8 @@ public interface OnActivityCallback {
   void showTimerDialog();
 
   void triggerCombo(SavedCombo savedCombo);
+
+  void showDeleteConfirmationDialog(int position);
+
+  void showBottomDialog();
 }

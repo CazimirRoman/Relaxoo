@@ -6,8 +6,8 @@
     tools:context=".ui.create_sound.CreateSoundFragment">
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="CreateSoundFragment" />
+        android:id="@+id/textView"
+        style="@style/FragmentTitle"
+        android:text="@string/create_sound" />
 
 </FrameLayout>

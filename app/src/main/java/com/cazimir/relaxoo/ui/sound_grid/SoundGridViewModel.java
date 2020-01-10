@@ -27,20 +27,21 @@ public class SoundGridViewModel extends ViewModel {
     fetchSounds();
   }
 
-  public MutableLiveData<Boolean> mutedLiveData() {
+  MutableLiveData<Boolean> mutedLiveData() {
     return mutedLiveData;
   }
 
-  public MutableLiveData<Boolean> isAtLeastOneSoundPlaying() {
+  MutableLiveData<Boolean> isAtLeastOneSoundPlaying() {
     return isAtLeastOneSoundPlaying;
   }
 
-  void fetchSounds() {
+  private void fetchSounds() {
     // this call will be done to Firebase through Repository pattern.
 
-    Sound sound1 = Sound.newSound("Sound1", R.drawable.ic_windy, R.raw.sound3, false, 0.5f);
-    Sound sound2 = Sound.newSound("Sound2", R.drawable.ic_windy, R.raw.birds, false, 0.5f);
-    Sound sound3 = Sound.newSound("Sound3", R.drawable.ic_windy, R.raw.graveyard_ambiance, false, 0.5f);
+    Sound sound1 = Sound.newSound("Ring", R.drawable.ic_windy, R.raw.sound3, false, 0.5f, true);
+    Sound sound2 = Sound.newSound("Bird", R.drawable.ic_windy, R.raw.birds, false, 0.5f, false);
+    Sound sound3 =
+        Sound.newSound("Wind", R.drawable.ic_windy, R.raw.graveyard_ambiance, false, 0.5f, false);
 
     if (!sounds.contains(sound1)) {
       sounds.add(sound1);
@@ -97,6 +98,7 @@ public class SoundGridViewModel extends ViewModel {
                 .withFile(sound.file())
                 .withPlaying(!sound.isPlaying())
                 .withVolume(sound.volume())
+                .withPro(sound.pro())
                 .build());
 
         break;
@@ -126,7 +128,7 @@ public class SoundGridViewModel extends ViewModel {
     Log.d(TAG, "updateSoundList: atLeastOneIsPlaying: " + atLeastOneIsPlaying);
   }
 
-  public void updateMuteLiveData(Boolean muted) {
+  void updateMuteLiveData(Boolean muted) {
     mutedLiveData.setValue(muted);
   }
 }

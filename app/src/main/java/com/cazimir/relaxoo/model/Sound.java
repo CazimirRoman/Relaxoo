@@ -1,5 +1,7 @@
 package com.cazimir.relaxoo.model;
 
+import androidx.annotation.NonNull;
+
 public class Sound {
 
   private final int soundPoolId;
@@ -9,26 +11,32 @@ public class Sound {
   private final int file;
   private final boolean playing;
   private final float volume = 0.5f;
+  private final boolean pro;
+
+  public boolean pro() {
+    return pro;
+  }
 
   private Sound(
-      int soundPoolId,
-      int streamId,
-      String name,
-      int drawable,
-      int file,
-      boolean playing,
-      float volume) {
+          int soundPoolId,
+          int streamId,
+          String name,
+          int drawable,
+          int file,
+          boolean playing,
+          float volume, boolean pro) {
     this.soundPoolId = soundPoolId;
     this.streamId = streamId;
     this.file = file;
     this.name = name;
     this.drawable = drawable;
     this.playing = playing;
+    this.pro = pro;
   }
 
   public static Sound newSound(
-      String name, int graphic, int soundFile, boolean playing, float volume) {
-    return new Sound(-1, -1, name, graphic, soundFile, playing, volume);
+      String name, int graphic, int soundFile, boolean playing, float volume, boolean pro) {
+    return new Sound(-1, -1, name, graphic, soundFile, playing, volume, pro);
   }
 
   public static Sound withSoundPoolId(Sound sound, int soundPoolId) {
@@ -39,7 +47,7 @@ public class Sound {
         sound.drawable,
         sound.file,
         sound.playing,
-        sound.volume);
+        sound.volume, sound.pro);
   }
 
   public static Sound withStreamId(Sound sound, int streamId) {
@@ -50,7 +58,7 @@ public class Sound {
         sound.drawable,
         sound.file,
         sound.playing,
-        sound.volume);
+        sound.volume, sound.pro);
   }
 
   public static Sound withPlaying(Sound sound) {
@@ -61,7 +69,7 @@ public class Sound {
         sound.drawable,
         sound.file,
         !sound.isPlaying(),
-        sound.volume);
+        sound.volume, sound.pro);
   }
 
   public int drawable() {
@@ -92,20 +100,22 @@ public class Sound {
     return file;
   }
 
+@NonNull
   @Override
   public String toString() {
-    final StringBuffer sb = new StringBuffer(System.lineSeparator());
+    final StringBuilder sb = new StringBuilder(System.lineSeparator());
     sb.append("Sound ");
-    sb.append("{soundPoolId=").append(soundPoolId);
+    sb.append("soundPoolId=").append(soundPoolId);
     sb.append(", streamId=").append(streamId);
     sb.append(", name='").append(name).append('\'');
     sb.append(", drawable=").append(drawable);
     sb.append(", file=").append(file);
     sb.append(", playing=").append(playing);
     sb.append(", volume=").append(volume);
+    sb.append(", pro=").append(pro);
     sb.append('}');
     return sb.toString();
-}
+  }
 
   public static final class SoundBuilder {
     private int soundPoolId;
@@ -115,6 +125,8 @@ public class Sound {
     private int file;
     private boolean playing;
     private float volume = 0.5f;
+    private boolean pro;
+
 
     private SoundBuilder() {}
 
@@ -157,9 +169,13 @@ public class Sound {
       return this;
     }
 
+    public SoundBuilder withPro(boolean pro) {
+      this.pro = pro;
+      return this;
+    }
+
     public Sound build() {
-      Sound sound = new Sound(soundPoolId, streamId, name, drawable, file, playing, volume);
-      return sound;
+      return new Sound(soundPoolId, streamId, name, drawable, file, playing, volume, pro);
     }
   }
 }

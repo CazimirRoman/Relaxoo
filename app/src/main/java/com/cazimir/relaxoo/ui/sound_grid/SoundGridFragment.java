@@ -91,10 +91,9 @@ public class SoundGridFragment extends Fragment {
   private void playStopSound(int soundPoolId, boolean playing, int streamId) {
     Log.d(TAG, "playStopSound: called");
     if (playing) {
-        Log.d(TAG, "stopping sound");
+      Log.d(TAG, "stopping sound");
       soundPool.stop(streamId);
-//update viewmodel for favorites fragment somehow - perhaps through activity?
-
+      // update viewmodel for favorites fragment somehow - perhaps through activity?
 
       viewModel.updateSoundList(soundPoolId, -1);
     } else {
@@ -110,7 +109,9 @@ public class SoundGridFragment extends Fragment {
     activityCallback = (OnActivityCallback) context;
   }
 
-  private void stopAllSounds() {
+  private boolean stopAllSounds() {
+
+    Log.d(TAG, "stopAllSounds: called");
 
     List<Sound> list = new CopyOnWriteArrayList<>(viewModel.playingSounds().getValue());
 
@@ -119,6 +120,8 @@ public class SoundGridFragment extends Fragment {
       soundPool.stop(sound.streamId());
       viewModel.updateSoundList(sound.soundPoolId(), -1);
     }
+
+    return false;
   }
 
   @Override
@@ -191,8 +194,14 @@ public class SoundGridFragment extends Fragment {
                         sounds,
                         new OnSoundClickListener() {
                           @Override
-                          public void clicked(int soundId, boolean playing, int streamId) {
-                            playStopSound(soundId, playing, streamId);
+                          public void clicked(
+                              int soundId, boolean playing, int streamId, boolean pro) {
+
+                            if (pro) {
+                              activityCallback.showBottomDialog();
+                            } else {
+                              playStopSound(soundId, playing, streamId);
+                            }
                           }
 
                           @Override
@@ -322,7 +331,8 @@ public class SoundGridFragment extends Fragment {
             Boolean atLeastOneIsPlaying = viewModel.isAtLeastOneSoundPlaying().getValue();
 
             if (atLeastOneIsPlaying != null && atLeastOneIsPlaying) {
-              activityCallback.showAddToFavoritesDialog(getSoundParameters(viewModel.playingSounds().getValue()));
+              activityCallback.showAddToFavoritesDialog(
+                  getSoundParameters(viewModel.playingSounds().getValue()));
             } else {
               activityCallback.showToast("You must play at least one sound");
             }
@@ -365,7 +375,7 @@ public class SoundGridFragment extends Fragment {
     return hashMap;
   }
 
-    // endregion
+  // endregion
 
   private void loadToSoundPool(List<Sound> sounds) {
 
@@ -436,8 +446,10 @@ public class SoundGridFragment extends Fragment {
 
   public void triggerCombo(SavedCombo savedCombo) {
 
+    boolean areSoundsStillPlaying = stopAllSounds();
+
     for (Map.Entry<Integer, Integer> entry : savedCombo.getSoundPoolParameters().entrySet()) {
-      playStopSound(entry.getKey(), savedCombo.isPlaying(), entry.getValue());
+      playStopSound(entry.getKey(), areSoundsStillPlaying, entry.getValue());
     }
   }
 }

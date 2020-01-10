@@ -18,12 +18,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.SavedComboAdapter;
 import com.cazimir.relaxoo.model.SavedCombo;
-import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 
 import java.util.List;
 
-public class FavoritesFragment extends Fragment implements IFavoritesFragment {
+public class FavoritesFragment extends Fragment {
 
   private static final String TAG = "FavoritesFragment";
 
@@ -67,7 +66,12 @@ public class FavoritesFragment extends Fragment implements IFavoritesFragment {
                   @Override
                   public void onItemClick(SavedCombo savedCombo) {
                     activityCallback.triggerCombo(savedCombo);
-                    adapter.updateComboWithPlayingStatus(savedCombo);
+                    //adapter.updateComboWithPlayingStatus(savedCombo);
+                  }
+
+                  @Override
+                  public void onItemDeleted(int position) {
+                    activityCallback.showDeleteConfirmationDialog(position);
                   }
                 });
                 favoritesList.setAdapter(adapter);
@@ -75,9 +79,12 @@ public class FavoritesFragment extends Fragment implements IFavoritesFragment {
             });
   }
 
-  @Override
   public void updateList(SavedCombo savedCombo) {
     adapter.addCombo(savedCombo);
+  }
+
+  public void deleteFavorite(int position) {
+    adapter.removeCombo(position);
   }
 
   @Override

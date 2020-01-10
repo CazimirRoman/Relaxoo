@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 
+import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.cazimir.relaxoo.R;
@@ -27,6 +28,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
     this.listener = listener;
   }
 
+  @NonNull
   @Override
   public View getView(final int position, View convertView, ViewGroup parent) {
 
@@ -46,7 +48,8 @@ public class GridAdapter extends ArrayAdapter<Sound> {
       viewHolderItem = new ViewHolderItem();
       viewHolderItem.soundImage = convertView.findViewById(R.id.sound_image);
       viewHolderItem.soundVolume = convertView.findViewById(R.id.sound_volume);
-      viewHolderItem.cl = convertView.findViewById(R.id.cl);
+      viewHolderItem.parentLayout = convertView.findViewById(R.id.cl);
+      viewHolderItem.proIcon = convertView.findViewById(R.id.proIcon);
 
       // store the holder with the view.
       convertView.setTag(viewHolderItem);
@@ -62,12 +65,14 @@ public class GridAdapter extends ArrayAdapter<Sound> {
     viewHolderItem.soundVolume.setProgress(Math.round(sound.volume() * 100));
     viewHolderItem.soundVolume.setVisibility(sound.isPlaying() ? View.VISIBLE : View.INVISIBLE);
     viewHolderItem.soundImage.setImageResource(R.drawable.ic_windy);
+    viewHolderItem.proIcon.setVisibility(sound.pro() ? View.VISIBLE : View.INVISIBLE);
 
-    viewHolderItem.cl.setOnClickListener(
+    viewHolderItem.parentLayout.setOnClickListener(
         new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-            listener.clicked(sound.soundPoolId(), sound.isPlaying(), sound.streamId());
+
+            listener.clicked(sound.soundPoolId(), sound.isPlaying(), sound.streamId(), sound.pro());
           }
         });
 
@@ -94,6 +99,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
 
     private ImageView soundImage;
     private SeekBar soundVolume;
-    private ConstraintLayout cl;
+    private ConstraintLayout parentLayout;
+    private ImageView proIcon;
   }
 }

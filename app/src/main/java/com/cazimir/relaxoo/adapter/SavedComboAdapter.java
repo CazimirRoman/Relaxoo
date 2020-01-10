@@ -5,8 +5,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,6 +34,12 @@ public class SavedComboAdapter extends RecyclerView.Adapter<SavedComboAdapter.Ro
    list.add(savedCombo);
   }
 
+  /** Inflate custom layout to use
+   * @param parent
+   * @param viewType
+   * @return new instance of ViewHolder with the inflated view.
+   */
+  @NonNull
   @Override
   public RowHolder onCreateViewHolder(ViewGroup parent, int viewType) {
     Context context = parent.getContext();
@@ -40,6 +48,11 @@ public class SavedComboAdapter extends RecyclerView.Adapter<SavedComboAdapter.Ro
     return new RowHolder(view);
   }
 
+  /** get item from list
+   * set listeners for views
+   * @param holder
+   * @param position
+   */
   @Override
   public void onBindViewHolder(RowHolder holder, final int position) {
 
@@ -54,6 +67,13 @@ public class SavedComboAdapter extends RecyclerView.Adapter<SavedComboAdapter.Ro
             listener.onItemClick(list.get(position));
           }
         });
+
+    holder.deleteCombo.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        listener.onItemDeleted(position);
+      }
+    });
   }
 
   @Override
@@ -61,27 +81,33 @@ public class SavedComboAdapter extends RecyclerView.Adapter<SavedComboAdapter.Ro
     return list.size();
   }
 
-  public void updateComboWithPlayingStatus(SavedCombo savedCombo) {
-    list.set(list.indexOf(savedCombo), SavedCombo.withPlaying(savedCombo, !savedCombo.isPlaying()));
+  public void removeCombo(int position) {
+    list.remove(list.get(position));
+    notifyDataSetChanged();
   }
 
   public interface OnItemClickListener {
     void onItemClick(SavedCombo savedCombo);
+    void onItemDeleted(int position);
   }
 
   /**
-   * is responsible for binding data as needed from our model into the widgets for a row in our listMutable
+   * is responsible for binding data as needed from our model into the widgets for a row
    */
-  public static class RowHolder extends RecyclerView.ViewHolder {
+  static class RowHolder extends RecyclerView.ViewHolder {
 
     private TextView comboText;
+    private ImageButton deleteCombo;
     private ConstraintLayout parentLayout;
 
-    public RowHolder(View view) {
+    RowHolder(View view) {
       super(view);
       comboText = view.findViewById(R.id.comboText);
-      parentLayout = view.findViewById(R.id.parent_layout);
+      parentLayout = view.findViewById(R.id.parentLayout);
+      deleteCombo = view.findViewById(R.id.deleteCombo);
+
       // rest of the views
+
 
     }
   }

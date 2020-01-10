@@ -6,4 +6,11 @@
     <string name="nav_about">About</string>
     <string name="toast">Value: %1$s</string>
     <string name="favorites_combos">Favorites combos</string>
+    <string name="delete_confirmation">Are you sure you want to delete?</string>
+    <string name="create_sound">Create your sound</string>
+    <string name="actions_text">You can do these actions to play sound</string>
+    <string name="view_ads">View ads</string>
+    <string name="invite_fb_friends">Invite friends with Facebook</string>
+    <string name="invite_friends">Invite friends</string>
+    <string name="about_fragment">AboutFragment</string>
 </resources>

@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
@@ -30,6 +31,7 @@ public class SaveToFavoritesDialog extends DialogFragment
     this.playingSoundsParameters = playingSounds;
   }
 
+  @NonNull
     @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
 
@@ -52,7 +54,7 @@ public class SaveToFavoritesDialog extends DialogFragment
     EditText comboName = form.findViewById(R.id.comboName);
     //saving a new combo
     SavedCombo savedCombo = new SavedCombo.Builder().withName(comboName.getText().toString()).withSoundPoolParameters(playingSoundsParameters).withPlaying(true).build();
-    addToListInFragmentCallback.onSavedToList(savedCombo);
+    addToListInFragmentCallback.saved(savedCombo);
     Toast.makeText(getActivity(), "Saved combo!", Toast.LENGTH_LONG).show();
   }
 
