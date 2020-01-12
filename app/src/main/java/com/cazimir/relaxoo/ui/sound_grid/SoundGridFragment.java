@@ -299,15 +299,18 @@ public class SoundGridFragment extends Fragment {
         new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-            // total number of available sounds can be found in viewmodel in sounds variable
 
             final Random totalNumberOfSounds = new Random();
 
+            // total number of available sounds can be found in viewmodel in sounds variable
             List<Sound> value = viewModel.sounds().getValue();
 
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < value.size(); i++) {
+              Log.d(TAG, "randomClick for loop called: " + i);
               Sound sound = value.get(totalNumberOfSounds.nextInt(value.size()));
-              playStopSound(sound.soundPoolId(), sound.isPlaying(), sound.streamId());
+              if (!sound.pro()) {
+                playStopSound(sound.soundPoolId(), sound.isPlaying(), sound.streamId());
+              }
             }
           }
         });
@@ -316,7 +319,8 @@ public class SoundGridFragment extends Fragment {
         new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-            if (viewModel.playingSounds().getValue().size() != 0) {
+            if (viewModel.playingSounds().getValue() != null
+                && viewModel.playingSounds().getValue().size() != 0) {
               // stop all sounds and show play button again
               stopAllSounds();
             }

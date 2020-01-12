@@ -1,12 +1,17 @@
 package com.cazimir.relaxoo;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
@@ -26,6 +31,9 @@ import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.HashMap;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends FragmentActivity
     implements OnActivityCallback, OnFavoriteSaved, OnTimerDialogCallback, OnFavoriteDeleted {
@@ -37,6 +45,8 @@ public class MainActivity extends FragmentActivity
   private static final String CHANNEL_WHATEVER = "" + "";
   private static int NOTIFY_ID = 1337;
   private NotificationManager notificationManager;
+  private int previousColor = R.color.colorPrimary;
+  private int nextColor = 0;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +55,63 @@ public class MainActivity extends FragmentActivity
     ViewPager pager = findViewById(R.id.pager);
     pager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
     setupNotifications();
+    startColorChangeAnimation();
+  }
+
+  private void startColorChangeAnimation() {
+
+    final LinearLayout parentLayout = findViewById(R.id.parentLayout);
+
+    Timer timer = new Timer();
+    // Set the schedule function
+    timer.scheduleAtFixedRate(
+        new TimerTask() {
+          @Override
+          public void run() {
+
+            runOnUiThread(
+                new Runnable() {
+                  @Override
+                  public void run() {
+
+                    nextColor = getRandomColor();
+
+                    Log.d(
+                        TAG,
+                        String.format(
+                            "run: called. previousColor: %s and nextColor: %s",
+                            previousColor, nextColor));
+
+                    int duration = 1500;
+                    ObjectAnimator animator =
+                        ObjectAnimator.ofObject(
+                                parentLayout,
+                                "backgroundColor",
+                                new ArgbEvaluator(),
+                                previousColor,
+                                nextColor)
+                            .setDuration(duration);
+
+                    animator.addListener(
+                        new AnimatorListenerAdapter() {
+                          @Override
+                          public void onAnimationEnd(Animator animation) {
+                            previousColor = nextColor;
+                          }
+                        });
+
+                    animator.start();
+                  }
+                });
+          }
+        },
+        2000,
+        10000);
+  }
+
+  private int getRandomColor() {
+    Random random = new Random();
+    return Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256));
   }
 
   private void setupNotifications() {
@@ -137,19 +204,17 @@ public class MainActivity extends FragmentActivity
   }
 
   @Override
-  public void showBottomDialog(){
+  public void showBottomDialog() {
     BottomSheetDialog dialog = new BottomSheetDialog(this);
     final View form = getLayoutInflater().inflate(R.layout.dialog_bottom, null);
 
-//    TextView textView = form.findViewById(R.id.proIcon);
-//    textView.setOnClickListener(new View.OnClickListener() {
-//      @Override
-//      public void onClick(View v) {
-//        showToast("clicken on Textview in Bottombar");
-//      }
-//    });
-
-
+    //    TextView textView = form.findViewById(R.id.proIcon);
+    //    textView.setOnClickListener(new View.OnClickListener() {
+    //      @Override
+    //      public void onClick(View v) {
+    //        showToast("clicken on Textview in Bottombar");
+    //      }
+    //    });
 
     dialog.setContentView(form);
     dialog.show();

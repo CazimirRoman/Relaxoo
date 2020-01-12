@@ -9,6 +9,7 @@ import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.model.Sound;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SoundGridViewModel extends ViewModel {
@@ -40,20 +41,12 @@ public class SoundGridViewModel extends ViewModel {
 
     Sound sound1 = Sound.newSound("Ring", R.drawable.ic_windy, R.raw.sound3, false, 0.5f, true);
     Sound sound2 = Sound.newSound("Bird", R.drawable.ic_windy, R.raw.birds, false, 0.5f, false);
-    Sound sound3 =
-        Sound.newSound("Wind", R.drawable.ic_windy, R.raw.graveyard_ambiance, false, 0.5f, false);
+    Sound sound3 = Sound.newSound("Wind", R.drawable.ic_windy, R.raw.graveyard_ambiance, false, 0.5f, false);
+    Sound sound4 = Sound.newSound("Other", R.drawable.ic_windy, R.raw.graveyard_ambiance, false, 0.5f, false);
+    Sound sound5 = Sound.newSound("Other2", R.drawable.ic_windy, R.raw.graveyard_ambiance, false, 0.5f, true);
 
-    if (!sounds.contains(sound1)) {
-      sounds.add(sound1);
-    }
-
-    if (!sounds.contains(sound2)) {
-      sounds.add(sound2);
-    }
-
-    if (!sounds.contains(sound3)) {
-      sounds.add(sound3);
-    }
+    sounds = new ArrayList<>();
+    sounds.addAll(Arrays.asList(sound1, sound2, sound3, sound4, sound5));
 
     refreshSoundLiveData();
   }
