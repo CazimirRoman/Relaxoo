@@ -1,8 +1,10 @@
 package com.cazimir.relaxoo.ui.sound_grid;
 
 import com.cazimir.relaxoo.model.SavedCombo;
+import com.cazimir.relaxoo.model.Sound;
 
 import java.util.HashMap;
+import java.util.List;
 
 public interface OnActivityCallback {
   void showNotification();
@@ -20,4 +22,6 @@ public interface OnActivityCallback {
   void showDeleteConfirmationDialog(int position);
 
   void showBottomDialog();
+
+  void showIfFileStillThere(List<Sound> sounds);
 }

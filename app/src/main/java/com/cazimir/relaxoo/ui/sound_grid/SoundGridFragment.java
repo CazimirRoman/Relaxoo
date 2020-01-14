@@ -44,7 +44,7 @@ public class SoundGridFragment extends Fragment {
   private GridAdapter gridArrayAdapter;
   private SoundPool soundPool;
   private SoundGridViewModel viewModel;
-  private boolean once;
+  private boolean loadedToSoundPool;
   private GridView gridView;
   private ImageButton muteButton;
   private ImageButton randomButton;
@@ -186,6 +186,8 @@ public class SoundGridFragment extends Fragment {
               @Override
               public void onChanged(List<Sound> sounds) {
 
+                saveTemporaryFileToPersistence(sounds);
+
                 Log.d(TAG, "Sound list changed: " + sounds);
 
                 gridArrayAdapter =
@@ -219,11 +221,11 @@ public class SoundGridFragment extends Fragment {
                         });
 
                 gridView.setAdapter(gridArrayAdapter);
-                // TODO: 19.12.2019 get rid of this!!!
-                if (!once) {
+                // if sound not loaded yet and sounds list not yet populated
+                if (!loadedToSoundPool && !sounds.isEmpty()) {
                   loadToSoundPool(sounds);
+                  loadedToSoundPool = true;
                 }
-                once = true;
               }
             });
 
@@ -271,7 +273,15 @@ public class SoundGridFragment extends Fragment {
     // endregion
   }
 
-  // region Listeners for buttons on top
+  // TODO: 13.01.2020 send only File objects
+
+  private void saveTemporaryFileToPersistence(List<Sound> sounds) {
+
+        activityCallback.showIfFileStillThere(sounds);
+
+    }
+
+    // region Listeners for buttons on top
   private void setListenersForButtons() {
 
     muteButton.setOnClickListener(
@@ -389,7 +399,7 @@ public class SoundGridFragment extends Fragment {
 
     for (Sound sound : sounds) {
       // add to arraylist with soundId from soundpool
-      int soundId = soundPool.load(getContext(), sound.file(), 1);
+      int soundId = soundPool.load(sound.file().getPath(), 1);
       sounds1.add(Sound.withSoundPoolId(sound, soundId));
     }
 
@@ -433,7 +443,9 @@ public class SoundGridFragment extends Fragment {
             public void onTick(long millisUntilFinished) {
 
               setTimerText(
-                  "Sounds will stop in " + TimerDialog.getCountTimeByLong(millisUntilFinished));
+                  String.format(
+                      "Sound%s will stop in " + TimerDialog.getCountTimeByLong(millisUntilFinished),
+                      viewModel.playingSounds().getValue().size() > 1 ? "s" : ""));
             }
 
             public void onFinish() {

@@ -24,13 +24,16 @@ import com.cazimir.relaxoo.dialog.OnTimerDialogCallback;
 import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
 import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.model.SavedCombo;
+import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
+import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -56,6 +59,21 @@ public class MainActivity extends FragmentActivity
     pager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
     setupNotifications();
     startColorChangeAnimation();
+
+
+
+    File path = getCacheDir();
+    Log.d("Files", "Path: " + path);
+    File directory = new File(path.getAbsolutePath());
+    File[] files = directory.listFiles();
+    Log.d("Files", "Size: "+ files.length);
+    for (int i = 0; i < files.length; i++)
+    {
+      Log.d("Files", "FileName:" + files[i].getName());
+    }
+
+
+
   }
 
   private void startColorChangeAnimation() {
@@ -218,5 +236,23 @@ public class MainActivity extends FragmentActivity
 
     dialog.setContentView(form);
     dialog.show();
+  }
+
+  @Override
+  public void showIfFileStillThere(List<Sound> sounds) {
+
+    if(!sounds.isEmpty()){
+      Log.d(TAG, "stored File: " + sounds.get(0).file().getPath());
+
+    }
+
+
+
+
+
+
+
+
+
   }
 }

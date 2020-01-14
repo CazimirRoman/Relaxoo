@@ -2,13 +2,15 @@ package com.cazimir.relaxoo.model;
 
 import androidx.annotation.NonNull;
 
+import java.io.File;
+
 public class Sound {
 
   private final int soundPoolId;
   private final int streamId;
   private final String name;
   private final int drawable;
-  private final int file;
+  private final File file;
   private final boolean playing;
   private final float volume = 0.5f;
   private final boolean pro;
@@ -22,7 +24,7 @@ public class Sound {
           int streamId,
           String name,
           int drawable,
-          int file,
+          File file,
           boolean playing,
           float volume, boolean pro) {
     this.soundPoolId = soundPoolId;
@@ -35,7 +37,7 @@ public class Sound {
   }
 
   public static Sound newSound(
-      String name, int graphic, int soundFile, boolean playing, float volume, boolean pro) {
+      String name, int graphic, File soundFile, boolean playing, float volume, boolean pro) {
     return new Sound(-1, -1, name, graphic, soundFile, playing, volume, pro);
   }
 
@@ -96,7 +98,7 @@ public class Sound {
     return soundPoolId;
   }
 
-  public int file() {
+  public File file() {
     return file;
   }
 
@@ -109,7 +111,7 @@ public class Sound {
     sb.append(", streamId=").append(streamId);
     sb.append(", name='").append(name).append('\'');
     sb.append(", drawable=").append(drawable);
-    sb.append(", file=").append(file);
+    sb.append(", file=").append(file.getName());
     sb.append(", playing=").append(playing);
     sb.append(", volume=").append(volume);
     sb.append(", pro=").append(pro);
@@ -122,7 +124,7 @@ public class Sound {
     private int streamId;
     private String name;
     private int drawable;
-    private int file;
+    private File file;
     private boolean playing;
     private float volume = 0.5f;
     private boolean pro;
@@ -154,7 +156,7 @@ public class Sound {
       return this;
     }
 
-    public SoundBuilder withFile(int file) {
+    public SoundBuilder withFile(File file) {
       this.file = file;
       return this;
     }
