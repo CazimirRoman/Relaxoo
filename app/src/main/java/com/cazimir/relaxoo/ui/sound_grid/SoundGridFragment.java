@@ -367,7 +367,7 @@ public class SoundGridFragment extends Fragment {
               if (timerIsRunning != null && timerIsRunning) {
                 timerEnabled.setValue(false);
               } else {
-                // show TimerDialog fragment created with file template
+                  // show TimerDialog fragment created with filePath template
                 activityCallback.showTimerDialog();
               }
 
@@ -399,7 +399,7 @@ public class SoundGridFragment extends Fragment {
 
     for (Sound sound : sounds) {
       // add to arraylist with soundId from soundpool
-      int soundId = soundPool.load(sound.file().getPath(), 1);
+        int soundId = soundPool.load(sound.filePath(), 1);
       sounds1.add(Sound.withSoundPoolId(sound, soundId));
     }
 

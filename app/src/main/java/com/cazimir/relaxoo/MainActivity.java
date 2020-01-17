@@ -1,5 +1,6 @@
 package com.cazimir.relaxoo;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ArgbEvaluator;
@@ -9,6 +10,7 @@ import android.app.NotificationManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -30,6 +32,11 @@ import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
 import java.io.File;
 import java.util.HashMap;
@@ -60,17 +67,37 @@ public class MainActivity extends FragmentActivity
     setupNotifications();
     startColorChangeAnimation();
 
+      Dexter.withActivity(this)
+              .withPermissions(
+                      Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                      Manifest.permission.READ_EXTERNAL_STORAGE
+              ).withListener(new MultiplePermissionsListener() {
+          @Override
+          public void onPermissionsChecked(MultiplePermissionsReport report) {
+              Log.d(TAG, "onPermissionsChecked: " + report);
+
+              File folder = Environment.getExternalStoragePublicDirectory("Relaxoo");
+
+              Log.d("Files", "Path: " + folder);
+              File directory = new File(folder.getAbsolutePath());
+              File[] files = directory.listFiles();
+              Log.d("Files", "Size: " + files.length);
+              for (int i = 0; i < files.length; i++) {
+                  Log.d("Files", "FileName:" + files[i].getName());
+              }
+
+          }
+
+          @Override
+          public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+              Log.d(TAG, "onPermissionRationaleShouldBeShown: called");
+
+              /* ... */
+          }
+      }).check();
 
 
-    File path = getCacheDir();
-    Log.d("Files", "Path: " + path);
-    File directory = new File(path.getAbsolutePath());
-    File[] files = directory.listFiles();
-    Log.d("Files", "Size: "+ files.length);
-    for (int i = 0; i < files.length; i++)
-    {
-      Log.d("Files", "FileName:" + files[i].getName());
-    }
+
 
 
 
@@ -242,7 +269,7 @@ public class MainActivity extends FragmentActivity
   public void showIfFileStillThere(List<Sound> sounds) {
 
     if(!sounds.isEmpty()){
-      Log.d(TAG, "stored File: " + sounds.get(0).file().getPath());
+        Log.d(TAG, "stored File: " + sounds.get(0).filePath());
 
     }
 

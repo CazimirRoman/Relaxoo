@@ -2,15 +2,13 @@ package com.cazimir.relaxoo.model;
 
 import androidx.annotation.NonNull;
 
-import java.io.File;
-
 public class Sound {
 
   private final int soundPoolId;
   private final int streamId;
   private final String name;
   private final int drawable;
-  private final File file;
+  private final String filePath;
   private final boolean playing;
   private final float volume = 0.5f;
   private final boolean pro;
@@ -24,12 +22,12 @@ public class Sound {
           int streamId,
           String name,
           int drawable,
-          File file,
+          String file,
           boolean playing,
           float volume, boolean pro) {
     this.soundPoolId = soundPoolId;
     this.streamId = streamId;
-    this.file = file;
+    this.filePath = file;
     this.name = name;
     this.drawable = drawable;
     this.playing = playing;
@@ -37,7 +35,7 @@ public class Sound {
   }
 
   public static Sound newSound(
-      String name, int graphic, File soundFile, boolean playing, float volume, boolean pro) {
+          String name, int graphic, String soundFile, boolean playing, float volume, boolean pro) {
     return new Sound(-1, -1, name, graphic, soundFile, playing, volume, pro);
   }
 
@@ -47,7 +45,7 @@ public class Sound {
         sound.streamId,
         sound.name,
         sound.drawable,
-        sound.file,
+            sound.filePath,
         sound.playing,
         sound.volume, sound.pro);
   }
@@ -58,7 +56,7 @@ public class Sound {
         streamId,
         sound.name,
         sound.drawable,
-        sound.file,
+            sound.filePath,
         sound.playing,
         sound.volume, sound.pro);
   }
@@ -69,7 +67,7 @@ public class Sound {
         sound.streamId,
         sound.name,
         sound.drawable,
-        sound.file,
+            sound.filePath,
         !sound.isPlaying(),
         sound.volume, sound.pro);
   }
@@ -98,8 +96,8 @@ public class Sound {
     return soundPoolId;
   }
 
-  public File file() {
-    return file;
+  public String filePath() {
+    return filePath;
   }
 
 @NonNull
@@ -111,7 +109,7 @@ public class Sound {
     sb.append(", streamId=").append(streamId);
     sb.append(", name='").append(name).append('\'');
     sb.append(", drawable=").append(drawable);
-    sb.append(", file=").append(file.getName());
+  sb.append(", filePath=").append(filePath);
     sb.append(", playing=").append(playing);
     sb.append(", volume=").append(volume);
     sb.append(", pro=").append(pro);
@@ -124,7 +122,7 @@ public class Sound {
     private int streamId;
     private String name;
     private int drawable;
-    private File file;
+    private String filePath;
     private boolean playing;
     private float volume = 0.5f;
     private boolean pro;
@@ -156,8 +154,8 @@ public class Sound {
       return this;
     }
 
-    public SoundBuilder withFile(File file) {
-      this.file = file;
+    public SoundBuilder withFilePath(String filePath) {
+      this.filePath = filePath;
       return this;
     }
 
@@ -177,7 +175,7 @@ public class Sound {
     }
 
     public Sound build() {
-      return new Sound(soundPoolId, streamId, name, drawable, file, playing, volume, pro);
+      return new Sound(soundPoolId, streamId, name, drawable, filePath, playing, volume, pro);
     }
   }
 }
