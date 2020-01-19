@@ -24,4 +24,8 @@ public interface OnActivityCallback {
   void showBottomDialog();
 
   void showIfFileStillThere(List<Sound> sounds);
+
+  void soundsFetchedAndSaved();
+
+  void fragmentStarted();
 }

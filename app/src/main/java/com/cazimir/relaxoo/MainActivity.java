@@ -18,6 +18,9 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.viewpager.widget.ViewPager;
 
 import com.cazimir.relaxoo.adapter.PagerAdapter;
@@ -58,49 +61,97 @@ public class MainActivity extends FragmentActivity
   private int previousColor = R.color.colorPrimary;
   private int nextColor = 0;
 
+  private MutableLiveData<Boolean> areWritePermissionsGranted = new MutableLiveData<>();
+  private MutableLiveData<Boolean> isFragmentStarted = new MutableLiveData<>();
+  private MergePermissionFragmentStarted mergePermissionFragmentStarted;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    areWritePermissionsGranted.setValue(false);
+    isFragmentStarted.setValue(false);
+
+    mergePermissionFragmentStarted = new MergePermissionFragmentStarted.Builder().build();
+
     setContentView(R.layout.main_activity);
     ViewPager pager = findViewById(R.id.pager);
     pager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
     setupNotifications();
     startColorChangeAnimation();
+    checkPermissions();
 
-      Dexter.withActivity(this)
-              .withPermissions(
-                      Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                      Manifest.permission.READ_EXTERNAL_STORAGE
-              ).withListener(new MultiplePermissionsListener() {
-          @Override
-          public void onPermissionsChecked(MultiplePermissionsReport report) {
-              Log.d(TAG, "onPermissionsChecked: " + report);
+    final MediatorLiveData<MergePermissionFragmentStarted> result = new MediatorLiveData<>();
 
-              File folder = Environment.getExternalStoragePublicDirectory("Relaxoo");
+    result.addSource(
+            areWritePermissionsGranted,
+            new Observer<Boolean>() {
+              @Override
+              public void onChanged(Boolean permissionsGranted) {
+                Log.d(TAG, "permissions granted: " + permissionsGranted);
+                mergePermissionFragmentStarted =
+                        MergePermissionFragmentStarted.withPermissionGranted(
+                                mergePermissionFragmentStarted, permissionsGranted);
+                result.setValue(mergePermissionFragmentStarted);
 
-              Log.d("Files", "Path: " + folder);
-              File directory = new File(folder.getAbsolutePath());
-              File[] files = directory.listFiles();
-              Log.d("Files", "Size: " + files.length);
-              for (int i = 0; i < files.length; i++) {
-                  Log.d("Files", "FileName:" + files[i].getName());
               }
+            });
 
-          }
+    result.addSource(
+            isFragmentStarted,
+            new Observer<Boolean>() {
+              @Override
+              public void onChanged(Boolean fragmentStarted) {
+                Log.d(TAG, "fragment started: " + fragmentStarted);
+                mergePermissionFragmentStarted =
+                        MergePermissionFragmentStarted.withFragmentInstantiated(
+                                mergePermissionFragmentStarted, fragmentStarted);
+                result.setValue(mergePermissionFragmentStarted);
+              }
+            });
 
-          @Override
-          public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
-              Log.d(TAG, "onPermissionRationaleShouldBeShown: called");
+    result.observe(
+            this,
+            new Observer<MergePermissionFragmentStarted>() {
+              @Override
+              public void onChanged(MergePermissionFragmentStarted mergePermissionFragmentStarted) {
+                Log.d(
+                        TAG,
+                        "onChanged() called with: mergePermissionFragmentStarted: "
+                                + mergePermissionFragmentStarted.toString());
 
-              /* ... */
-          }
-      }).check();
+                if (mergePermissionFragmentStarted.isFragmentStarted() && mergePermissionFragmentStarted.isPermissionsGranted()) {
+                  getSoundGridFragment().fetchSounds();
+                }
+              }
+            });
+  }
 
+  private void checkPermissions() {
+    Dexter.withActivity(this)
+            .withPermissions(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
+            .withListener(
+                    new MultiplePermissionsListener() {
+                      @Override
+                      public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        Log.d(
+                                TAG,
+                                "onPermissionsChecked: " + report.getGrantedPermissionResponses().toString());
+                        if (report.areAllPermissionsGranted()) {
+                          areWritePermissionsGranted.setValue(true);
+                        }
+                      }
 
+                      @Override
+                      public void onPermissionRationaleShouldBeShown(
+                              List<PermissionRequest> permissions, PermissionToken token) {
+                        Log.d(TAG, "onPermissionRationaleShouldBeShown: called");
 
-
-
-
+                        /* ... */
+                      }
+                    })
+            .check();
   }
 
   private void startColorChangeAnimation() {
@@ -268,18 +319,34 @@ public class MainActivity extends FragmentActivity
   @Override
   public void showIfFileStillThere(List<Sound> sounds) {
 
-    if(!sounds.isEmpty()){
-        Log.d(TAG, "stored File: " + sounds.get(0).filePath());
-
+    if (!sounds.isEmpty()) {
+      Log.d(TAG, "stored File: " + sounds.get(0).filePath());
     }
+  }
 
+  @Override
+  public void soundsFetchedAndSaved() {
+    Log.d(TAG, "soundsFetchedAndSaved() called");
+    checkIfFileIsThere();
+  }
 
+  @Override
+  public void fragmentStarted() {
+    isFragmentStarted.setValue(true);
+  }
 
+  private void checkIfFileIsThere() {
 
+    Log.d(TAG, "checkIfFileIsThere() called with: ");
 
+    File folder = Environment.getExternalStoragePublicDirectory("Relaxoo");
 
-
-
-
+    Log.d("Files", "Path: " + folder);
+    File directory = new File(folder.getAbsolutePath());
+    File[] files = directory.listFiles();
+    Log.d("Files", "Size: " + files.length);
+    for (File file : files) {
+      Log.d("Files", "FileName:" + file.getName());
+    }
   }
 }

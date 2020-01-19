@@ -16,13 +16,12 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class SoundGridViewModel extends ViewModel {
+class SoundGridViewModel extends ViewModel {
 
   private static final String TAG = "SoundGridViewModel";
   private List<Sound> sounds = new ArrayList<>();
@@ -34,15 +33,6 @@ public class SoundGridViewModel extends ViewModel {
 
   private MutableLiveData<Boolean> mutedLiveData = new MutableLiveData<>();
 
-  public SoundGridViewModel() {
-    try {
-      fetchSounds();
-    } catch (IOException e) {
-      Log.d(TAG, "fetchSounds failed with: " + e.getMessage());
-      e.printStackTrace();
-    }
-  }
-
   MutableLiveData<Boolean> mutedLiveData() {
     return mutedLiveData;
   }
@@ -51,20 +41,16 @@ public class SoundGridViewModel extends ViewModel {
     return isAtLeastOneSoundPlaying;
   }
 
-  private void fetchSounds() throws IOException {
+  void fetchSounds() {
 
     // Create a storage reference for your app
-    StorageReference reference = FirebaseStorage.getInstance().getReference().child("sounds");
-
+    StorageReference reference = FirebaseStorage.getInstance().getReference().child("rain.ogg");
 
     File folder = Environment.getExternalStoragePublicDirectory("Relaxoo");
     if (!folder.exists()) {
-      folder.mkdirs();
+      folder.mkdir();
     }
 
-    for (File file : folder.listFiles()) {
-      Log.d(TAG, "fetchSounds: " + file.getName());
-    }
     final File myFile = new File(folder, "rain.ogg");
 
     reference
@@ -80,6 +66,7 @@ public class SoundGridViewModel extends ViewModel {
                         sounds = new ArrayList<>();
                         sounds.addAll(Arrays.asList(sound1));
                         refreshSoundLiveData();
+
                       }
                     })
             .addOnFailureListener(

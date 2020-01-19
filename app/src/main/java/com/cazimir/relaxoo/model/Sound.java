@@ -13,10 +13,6 @@ public class Sound {
   private final float volume = 0.5f;
   private final boolean pro;
 
-  public boolean pro() {
-    return pro;
-  }
-
   private Sound(
           int soundPoolId,
           int streamId,
@@ -24,7 +20,8 @@ public class Sound {
           int drawable,
           String file,
           boolean playing,
-          float volume, boolean pro) {
+          float volume,
+          boolean pro) {
     this.soundPoolId = soundPoolId;
     this.streamId = streamId;
     this.filePath = file;
@@ -47,7 +44,8 @@ public class Sound {
         sound.drawable,
             sound.filePath,
         sound.playing,
-        sound.volume, sound.pro);
+            sound.volume,
+            sound.pro);
   }
 
   public static Sound withStreamId(Sound sound, int streamId) {
@@ -58,7 +56,8 @@ public class Sound {
         sound.drawable,
             sound.filePath,
         sound.playing,
-        sound.volume, sound.pro);
+            sound.volume,
+            sound.pro);
   }
 
   public static Sound withPlaying(Sound sound) {
@@ -69,7 +68,12 @@ public class Sound {
         sound.drawable,
             sound.filePath,
         !sound.isPlaying(),
-        sound.volume, sound.pro);
+            sound.volume,
+            sound.pro);
+  }
+
+  public boolean pro() {
+    return pro;
   }
 
   public int drawable() {
@@ -100,7 +104,7 @@ public class Sound {
     return filePath;
   }
 
-@NonNull
+  @NonNull
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder(System.lineSeparator());
@@ -109,7 +113,7 @@ public class Sound {
     sb.append(", streamId=").append(streamId);
     sb.append(", name='").append(name).append('\'');
     sb.append(", drawable=").append(drawable);
-  sb.append(", filePath=").append(filePath);
+    sb.append(", filePath=").append(filePath);
     sb.append(", playing=").append(playing);
     sb.append(", volume=").append(volume);
     sb.append(", pro=").append(pro);
@@ -126,7 +130,6 @@ public class Sound {
     private boolean playing;
     private float volume = 0.5f;
     private boolean pro;
-
 
     private SoundBuilder() {}
 

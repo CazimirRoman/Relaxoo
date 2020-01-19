@@ -104,6 +104,7 @@ public class SoundGridFragment extends Fragment {
   }
 
   @Override
+  @NonNull
   public void onAttach(Context context) {
     super.onAttach(context);
     activityCallback = (OnActivityCallback) context;
@@ -128,6 +129,7 @@ public class SoundGridFragment extends Fragment {
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     viewModel = ViewModelProviders.of(this).get(SoundGridViewModel.class);
+
     soundPool = new SoundPool(MAX_SOUNDS, STREAM_MUSIC, 0);
 
     soundPool.setOnLoadCompleteListener(
@@ -190,6 +192,10 @@ public class SoundGridFragment extends Fragment {
 
                 Log.d(TAG, "Sound list changed: " + sounds);
 
+                  if (!sounds.isEmpty()) {
+                      activityCallback.soundsFetchedAndSaved();
+                  }
+
                 gridArrayAdapter =
                     new GridAdapter(
                         getContext(),
@@ -221,7 +227,8 @@ public class SoundGridFragment extends Fragment {
                         });
 
                 gridView.setAdapter(gridArrayAdapter);
-                // if sound not loaded yet and sounds list not yet populated
+
+                  // if sound not loaded yet and sounds list not yet populated
                 if (!loadedToSoundPool && !sounds.isEmpty()) {
                   loadToSoundPool(sounds);
                   loadedToSoundPool = true;
@@ -468,4 +475,14 @@ public class SoundGridFragment extends Fragment {
       playStopSound(entry.getKey(), areSoundsStillPlaying, entry.getValue());
     }
   }
+
+    public void fetchSounds() {
+        viewModel.fetchSounds();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        activityCallback.fragmentStarted();
+    }
 }
