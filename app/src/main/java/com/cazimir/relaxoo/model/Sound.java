@@ -2,26 +2,32 @@ package com.cazimir.relaxoo.model;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.database.Exclude;
+
 public class Sound {
 
-  private final int soundPoolId;
-  private final int streamId;
-  private final String name;
-  private final int drawable;
-  private final String filePath;
-  private final boolean playing;
-  private final float volume = 0.5f;
-  private final boolean pro;
+
+  private String id;
+  private int soundPoolId;
+  private int streamId;
+  private String name;
+  private String drawable;
+  private String filePath;
+  private boolean playing;
+  private float volume = 0.5f;
+  private boolean pro;
 
   private Sound(
+          String id,
           int soundPoolId,
           int streamId,
           String name,
-          int drawable,
+          String drawable,
           String file,
           boolean playing,
           float volume,
           boolean pro) {
+    this.id = id;
     this.soundPoolId = soundPoolId;
     this.streamId = streamId;
     this.filePath = file;
@@ -31,13 +37,25 @@ public class Sound {
     this.pro = pro;
   }
 
-  public static Sound newSound(
-          String name, int graphic, String soundFile, boolean playing, float volume, boolean pro) {
-    return new Sound(-1, -1, name, graphic, soundFile, playing, volume, pro);
+  public Sound() {
+  }
+
+  public static Sound withId(Sound sound, String id) {
+    return new Sound(
+            id,
+            sound.soundPoolId,
+            sound.streamId,
+            sound.name,
+            sound.drawable,
+            sound.filePath,
+            sound.playing,
+            sound.volume,
+            sound.pro);
   }
 
   public static Sound withSoundPoolId(Sound sound, int soundPoolId) {
     return new Sound(
+            sound.id,
         soundPoolId,
         sound.streamId,
         sound.name,
@@ -50,6 +68,7 @@ public class Sound {
 
   public static Sound withStreamId(Sound sound, int streamId) {
     return new Sound(
+            sound.id,
         sound.soundPoolId,
         streamId,
         sound.name,
@@ -62,6 +81,7 @@ public class Sound {
 
   public static Sound withPlaying(Sound sound) {
     return new Sound(
+            sound.id,
         sound.soundPoolId,
         sound.streamId,
         sound.name,
@@ -72,35 +92,43 @@ public class Sound {
             sound.pro);
   }
 
-  public boolean pro() {
+  public String getId() {
+    return id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public boolean isPro() {
     return pro;
   }
 
-  public int drawable() {
+  public String getLogoPath() {
     return drawable;
   }
 
+  @Exclude
   public int streamId() {
     return streamId;
   }
 
-  public String name() {
-    return this.name;
-  }
-
+  @Exclude
   public boolean isPlaying() {
     return playing;
   }
 
+  @Exclude
   public float volume() {
     return volume;
   }
 
+  @Exclude
   public int soundPoolId() {
     return soundPoolId;
   }
 
-  public String filePath() {
+  public String getFilePath() {
     return filePath;
   }
 
@@ -112,20 +140,22 @@ public class Sound {
     sb.append("soundPoolId=").append(soundPoolId);
     sb.append(", streamId=").append(streamId);
     sb.append(", name='").append(name).append('\'');
-    sb.append(", drawable=").append(drawable);
-    sb.append(", filePath=").append(filePath);
+    sb.append(", logo=").append(drawable);
+    sb.append(", getFilePath=").append(filePath);
     sb.append(", playing=").append(playing);
     sb.append(", volume=").append(volume);
-    sb.append(", pro=").append(pro);
+    sb.append(", isPro=").append(pro);
     sb.append('}');
     return sb.toString();
   }
 
   public static final class SoundBuilder {
+
+    private String id;
     private int soundPoolId;
     private int streamId;
     private String name;
-    private int drawable;
+    private String logo;
     private String filePath;
     private boolean playing;
     private float volume = 0.5f;
@@ -135,6 +165,11 @@ public class Sound {
 
     public static SoundBuilder aSound() {
       return new SoundBuilder();
+    }
+
+    public SoundBuilder withId(String id) {
+      this.id = id;
+      return this;
     }
 
     public SoundBuilder withSoundPoolId(Integer soundPoolId) {
@@ -152,8 +187,8 @@ public class Sound {
       return this;
     }
 
-    public SoundBuilder withDrawable(int drawable) {
-      this.drawable = drawable;
+    public SoundBuilder withLogo(String logo) {
+      this.logo = logo;
       return this;
     }
 
@@ -178,7 +213,7 @@ public class Sound {
     }
 
     public Sound build() {
-      return new Sound(soundPoolId, streamId, name, drawable, filePath, playing, volume, pro);
+      return new Sound(id, soundPoolId, streamId, name, logo, filePath, playing, volume, pro);
     }
   }
 }

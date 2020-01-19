@@ -65,14 +65,14 @@ public class GridAdapter extends ArrayAdapter<Sound> {
     viewHolderItem.soundVolume.setProgress(Math.round(sound.volume() * 100));
     viewHolderItem.soundVolume.setVisibility(sound.isPlaying() ? View.VISIBLE : View.INVISIBLE);
     viewHolderItem.soundImage.setImageResource(R.drawable.ic_windy);
-    viewHolderItem.proIcon.setVisibility(sound.pro() ? View.VISIBLE : View.INVISIBLE);
+      viewHolderItem.proIcon.setVisibility(sound.isPro() ? View.VISIBLE : View.INVISIBLE);
 
     viewHolderItem.parentLayout.setOnClickListener(
         new View.OnClickListener() {
           @Override
           public void onClick(View v) {
 
-            listener.clicked(sound.soundPoolId(), sound.isPlaying(), sound.streamId(), sound.pro());
+              listener.clicked(sound.soundPoolId(), sound.isPlaying(), sound.streamId(), sound.isPro());
           }
         });
 

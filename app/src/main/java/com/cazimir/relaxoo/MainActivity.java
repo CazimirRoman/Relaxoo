@@ -10,7 +10,6 @@ import android.app.NotificationManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -41,7 +40,6 @@ import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -320,7 +318,7 @@ public class MainActivity extends FragmentActivity
   public void showIfFileStillThere(List<Sound> sounds) {
 
     if (!sounds.isEmpty()) {
-      Log.d(TAG, "stored File: " + sounds.get(0).filePath());
+      Log.d(TAG, "stored File: " + sounds.get(0).getFilePath());
     }
   }
 
@@ -338,15 +336,5 @@ public class MainActivity extends FragmentActivity
   private void checkIfFileIsThere() {
 
     Log.d(TAG, "checkIfFileIsThere() called with: ");
-
-    File folder = Environment.getExternalStoragePublicDirectory("Relaxoo");
-
-    Log.d("Files", "Path: " + folder);
-    File directory = new File(folder.getAbsolutePath());
-    File[] files = directory.listFiles();
-    Log.d("Files", "Size: " + files.length);
-    for (File file : files) {
-      Log.d("Files", "FileName:" + file.getName());
-    }
   }
 }

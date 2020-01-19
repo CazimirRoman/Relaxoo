@@ -184,59 +184,54 @@ public class SoundGridFragment extends Fragment {
         .observe(
             // TODO: 19.12.2019 move in a separate file or inner class
             getViewLifecycleOwner(),
-            new Observer<List<Sound>>() {
-              @Override
-              public void onChanged(List<Sound> sounds) {
+                sounds -> {
+                    saveTemporaryFileToPersistence(sounds);
 
-                saveTemporaryFileToPersistence(sounds);
+                    Log.d(TAG, "Sound list changed: " + sounds);
 
-                Log.d(TAG, "Sound list changed: " + sounds);
+                    if (!sounds.isEmpty()) {
+                        activityCallback.soundsFetchedAndSaved();
+                    }
 
-                  if (!sounds.isEmpty()) {
-                      activityCallback.soundsFetchedAndSaved();
-                  }
+                    gridArrayAdapter =
+                            new GridAdapter(
+                                    getContext(),
+                                    sounds,
+                                    new OnSoundClickListener() {
+                                        @Override
+                                        public void clicked(
+                                                int soundId, boolean playing, int streamId, boolean pro) {
 
-                gridArrayAdapter =
-                    new GridAdapter(
-                        getContext(),
-                        sounds,
-                        new OnSoundClickListener() {
-                          @Override
-                          public void clicked(
-                              int soundId, boolean playing, int streamId, boolean pro) {
+                                            if (pro) {
+                                                activityCallback.showBottomDialog();
+                                            } else {
+                                                playStopSound(soundId, playing, streamId);
+                                            }
+                                        }
 
-                            if (pro) {
-                              activityCallback.showBottomDialog();
-                            } else {
-                              playStopSound(soundId, playing, streamId);
-                            }
-                          }
+                                        @Override
+                                        public void volumeChange(int streamId, int progress) {
+                                            // TODO: 18.12.2019 refactor this float to string to double
+                                            // transformation
+                                            Log.d(
+                                                    TAG,
+                                                    "volumeChange: called with volume: " + (double) progress / 100);
+                                            soundPool.setVolume(
+                                                    streamId,
+                                                    Float.valueOf(String.valueOf((double) progress / 100)),
+                                                    Float.valueOf(String.valueOf((double) progress / 100)));
+                                        }
+                                    });
 
-                          @Override
-                          public void volumeChange(int streamId, int progress) {
-                            // TODO: 18.12.2019 refactor this float to string to double
-                            // transformation
-                            Log.d(
-                                TAG,
-                                "volumeChange: called with volume: " + (double) progress / 100);
-                            soundPool.setVolume(
-                                streamId,
-                                Float.valueOf(String.valueOf((double) progress / 100)),
-                                Float.valueOf(String.valueOf((double) progress / 100)));
-                          }
-                        });
+                    gridView.setAdapter(gridArrayAdapter);
 
-                gridView.setAdapter(gridArrayAdapter);
+                    // if sound not loaded yet and sounds list not yet populated
+                    if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
+                        loadToSoundPool(sounds);
+                    }
+                });
 
-                  // if sound not loaded yet and sounds list not yet populated
-                if (!loadedToSoundPool && !sounds.isEmpty()) {
-                  loadToSoundPool(sounds);
-                  loadedToSoundPool = true;
-                }
-              }
-            });
-
-    // listen to the playing sounds live data object to change the play stop drawable icon on top
+      // listen to the playing sounds live data object to change the play stop getLogoPath icon on top
     viewModel
         .playingSounds()
         .observe(
@@ -280,7 +275,15 @@ public class SoundGridFragment extends Fragment {
     // endregion
   }
 
-  // TODO: 13.01.2020 send only File objects
+    private boolean atLeastOneSoundWithoutSoundPoolId(List<Sound> sounds) {
+        for (Sound sound : sounds) {
+            if (sound.soundPoolId() == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
   private void saveTemporaryFileToPersistence(List<Sound> sounds) {
 
@@ -325,7 +328,7 @@ public class SoundGridFragment extends Fragment {
             for (int i = 0; i < value.size(); i++) {
               Log.d(TAG, "randomClick for loop called: " + i);
               Sound sound = value.get(totalNumberOfSounds.nextInt(value.size()));
-              if (!sound.pro()) {
+                if (!sound.isPro()) {
                 playStopSound(sound.soundPoolId(), sound.isPlaying(), sound.streamId());
               }
             }
@@ -374,7 +377,7 @@ public class SoundGridFragment extends Fragment {
               if (timerIsRunning != null && timerIsRunning) {
                 timerEnabled.setValue(false);
               } else {
-                  // show TimerDialog fragment created with filePath template
+                  // show TimerDialog fragment created with getFilePath template
                 activityCallback.showTimerDialog();
               }
 
@@ -405,9 +408,14 @@ public class SoundGridFragment extends Fragment {
     List<Sound> sounds1 = new ArrayList<>();
 
     for (Sound sound : sounds) {
-      // add to arraylist with soundId from soundpool
-        int soundId = soundPool.load(sound.filePath(), 1);
-      sounds1.add(Sound.withSoundPoolId(sound, soundId));
+
+        if (sound.soundPoolId() == 0) {
+            // add to arraylist with soundId from soundpool
+            int soundId = soundPool.load(sound.getFilePath(), 1);
+            sounds1.add(Sound.withSoundPoolId(sound, soundId));
+        } else {
+            sounds1.add(sound);
+        }
     }
 
     Log.d(TAG, "loadToSoundPool: sounds: " + sounds1);
