@@ -19,7 +19,6 @@ import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import androidx.viewpager.widget.ViewPager;
 
 import com.cazimir.relaxoo.adapter.PagerAdapter;
@@ -52,15 +51,13 @@ public class MainActivity extends FragmentActivity
   private static final String TAG = "MainActivity";
   private static final String FAVORITE_FRAGMENT = ":1";
   private static final String SOUND_GRID_FRAGMENT = ":0";
-
   private static final String CHANNEL_WHATEVER = "" + "";
   private static int NOTIFY_ID = 1337;
   private NotificationManager notificationManager;
   private int previousColor = R.color.colorPrimary;
   private int nextColor = 0;
-
   private MutableLiveData<Boolean> areWritePermissionsGranted = new MutableLiveData<>();
-  private MutableLiveData<Boolean> isFragmentStarted = new MutableLiveData<>();
+  private MutableLiveData<Boolean> isSoundGridFragmentStarted = new MutableLiveData<>();
   private MergePermissionFragmentStarted mergePermissionFragmentStarted;
 
   @Override
@@ -68,7 +65,7 @@ public class MainActivity extends FragmentActivity
     super.onCreate(savedInstanceState);
 
     areWritePermissionsGranted.setValue(false);
-    isFragmentStarted.setValue(false);
+    isSoundGridFragmentStarted.setValue(false);
 
     mergePermissionFragmentStarted = new MergePermissionFragmentStarted.Builder().build();
 
@@ -83,42 +80,37 @@ public class MainActivity extends FragmentActivity
 
     result.addSource(
             areWritePermissionsGranted,
-            new Observer<Boolean>() {
-              @Override
-              public void onChanged(Boolean permissionsGranted) {
-                Log.d(TAG, "permissions granted: " + permissionsGranted);
-                mergePermissionFragmentStarted =
-                        MergePermissionFragmentStarted.withPermissionGranted(
-                                mergePermissionFragmentStarted, permissionsGranted);
-                result.setValue(mergePermissionFragmentStarted);
+            permissionsGranted -> {
+              Log.d(TAG, "permissions granted: " + permissionsGranted);
+              mergePermissionFragmentStarted =
+                      MergePermissionFragmentStarted.withPermissionGranted(
+                              mergePermissionFragmentStarted, permissionsGranted);
+              result.setValue(mergePermissionFragmentStarted);
 
-              }
             });
 
     result.addSource(
-            isFragmentStarted,
-            new Observer<Boolean>() {
-              @Override
-              public void onChanged(Boolean fragmentStarted) {
-                Log.d(TAG, "fragment started: " + fragmentStarted);
-                mergePermissionFragmentStarted =
-                        MergePermissionFragmentStarted.withFragmentInstantiated(
-                                mergePermissionFragmentStarted, fragmentStarted);
-                result.setValue(mergePermissionFragmentStarted);
-              }
+            isSoundGridFragmentStarted,
+            fragmentStarted -> {
+              Log.d(TAG, "fragment started: " + fragmentStarted);
+              mergePermissionFragmentStarted =
+                      MergePermissionFragmentStarted.withFragmentInstantiated(
+                              mergePermissionFragmentStarted, fragmentStarted);
+              result.setValue(mergePermissionFragmentStarted);
             });
 
     result.observe(
             this,
-            new Observer<MergePermissionFragmentStarted>() {
-              @Override
-              public void onChanged(MergePermissionFragmentStarted mergePermissionFragmentStarted) {
-                Log.d(
-                        TAG,
-                        "onChanged() called with: mergePermissionFragmentStarted: "
-                                + mergePermissionFragmentStarted.toString());
+            mergePermissionFragmentStarted -> {
+              Log.d(
+                      TAG,
+                      "onChanged() called with: mergePermissionFragmentStarted: "
+                              + mergePermissionFragmentStarted.toString());
 
-                if (mergePermissionFragmentStarted.isFragmentStarted() && mergePermissionFragmentStarted.isPermissionsGranted()) {
+              if (mergePermissionFragmentStarted.isFragmentStarted() && mergePermissionFragmentStarted.isPermissionsGranted()) {
+
+                if (!getSoundGridFragment().soundsAlreadyFetched()) {
+                  Log.d(TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched());
                   getSoundGridFragment().fetchSounds();
                 }
               }
@@ -329,8 +321,8 @@ public class MainActivity extends FragmentActivity
   }
 
   @Override
-  public void fragmentStarted() {
-    isFragmentStarted.setValue(true);
+  public void soundGridFragmentStarted() {
+    isSoundGridFragmentStarted.setValue(true);
   }
 
   private void checkIfFileIsThere() {

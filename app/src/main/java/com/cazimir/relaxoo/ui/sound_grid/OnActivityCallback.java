@@ -27,5 +27,5 @@ public interface OnActivityCallback {
 
   void soundsFetchedAndSaved();
 
-  void fragmentStarted();
+  void soundGridFragmentStarted();
 }

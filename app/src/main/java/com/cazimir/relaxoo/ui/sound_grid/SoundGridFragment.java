@@ -11,8 +11,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.TimePicker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,16 +36,19 @@ import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
-import static android.media.AudioManager.STREAM_MUSIC;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class SoundGridFragment extends Fragment {
 
   private static final String TAG = "SoundGridFragment";
-  private static final int MAX_SOUNDS = 5;
-  private GridAdapter gridArrayAdapter;
+    @BindView(R.id.progress_bar)
+    ProgressBar progressBar;
+    @BindView(R.id.upper_buttons)
+    LinearLayout upperButtons;
+    private GridAdapter gridArrayAdapter;
   private SoundPool soundPool;
   private SoundGridViewModel viewModel;
-  private boolean loadedToSoundPool;
   private GridView gridView;
   private ImageButton muteButton;
   private ImageButton randomButton;
@@ -59,11 +63,7 @@ public class SoundGridFragment extends Fragment {
   private CountDownTimer countDownTimer;
 
   private TimePickerDialog.OnTimeSetListener timerPickerListener =
-      new TimePickerDialog.OnTimeSetListener() {
-        public void onTimeSet(TimePicker view, int hours, int minutes) {
-          toggleCountdownTimer((hours * 60) + minutes);
-        }
-      };
+          (view, hours, minutes) -> toggleCountdownTimer((hours * 60) + minutes);
 
   public static SoundGridFragment newInstance() {
     return new SoundGridFragment();
@@ -77,6 +77,9 @@ public class SoundGridFragment extends Fragment {
       @Nullable Bundle savedInstanceState) {
 
     View view = inflater.inflate(R.layout.sound_list_fragment, container, false);
+
+      ButterKnife.bind(this, view);
+
     gridView = view.findViewById(R.id.gridView);
     playStopButton = view.findViewById(R.id.play_button);
     muteButton = view.findViewById(R.id.mute_button);
@@ -95,7 +98,7 @@ public class SoundGridFragment extends Fragment {
       soundPool.stop(streamId);
       // update viewmodel for favorites fragment somehow - perhaps through activity?
 
-      viewModel.updateSoundList(soundPoolId, -1);
+        viewModel.updateSoundList(soundPoolId, 0);
     } else {
       int newStreamId = soundPool.play(soundPoolId, 0.5f, 0.5f, 0, -1, 1);
       Log.d(TAG, "playing sound");
@@ -130,16 +133,14 @@ public class SoundGridFragment extends Fragment {
     super.onActivityCreated(savedInstanceState);
     viewModel = ViewModelProviders.of(this).get(SoundGridViewModel.class);
 
-    soundPool = new SoundPool(MAX_SOUNDS, STREAM_MUSIC, 0);
+      soundPool = viewModel.createOrGetSoundPool();
+
+      setListenersForButtons();
 
     soundPool.setOnLoadCompleteListener(
-        new SoundPool.OnLoadCompleteListener() {
-          @Override
-          public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-            Log.d(TAG, "onLoadComplete: " + sampleId);
-            setListenersForButtons();
-          }
-        });
+            (soundPool, sampleId, status) -> {
+                Log.d(TAG, "onLoadComplete: " + sampleId);
+            });
 
     // region Observers
 
@@ -225,6 +226,8 @@ public class SoundGridFragment extends Fragment {
 
                     gridView.setAdapter(gridArrayAdapter);
 
+                    hideProgressBar();
+
                     // if sound not loaded yet and sounds list not yet populated
                     if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
                         loadToSoundPool(sounds);
@@ -275,6 +278,11 @@ public class SoundGridFragment extends Fragment {
     // endregion
   }
 
+    private void hideProgressBar() {
+        progressBar.setVisibility(View.GONE);
+        upperButtons.setVisibility(View.VISIBLE);
+    }
+
     private boolean atLeastOneSoundWithoutSoundPoolId(List<Sound> sounds) {
         for (Sound sound : sounds) {
             if (sound.soundPoolId() == 0) {
@@ -293,6 +301,8 @@ public class SoundGridFragment extends Fragment {
 
     // region Listeners for buttons on top
   private void setListenersForButtons() {
+
+      Log.d(TAG, "setListenersForButtons: called");
 
     muteButton.setOnClickListener(
         new View.OnClickListener() {
@@ -491,6 +501,10 @@ public class SoundGridFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        activityCallback.fragmentStarted();
+        activityCallback.soundGridFragmentStarted();
+    }
+
+    public boolean soundsAlreadyFetched() {
+        return viewModel.getSoundsAlreadyFetched();
     }
 }

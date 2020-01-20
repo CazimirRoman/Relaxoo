@@ -1,6 +1,7 @@
 package com.cazimir.relaxoo.adapter;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,7 +65,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
 
     viewHolderItem.soundVolume.setProgress(Math.round(sound.volume() * 100));
     viewHolderItem.soundVolume.setVisibility(sound.isPlaying() ? View.VISIBLE : View.INVISIBLE);
-    viewHolderItem.soundImage.setImageResource(R.drawable.ic_windy);
+      viewHolderItem.soundImage.setImageBitmap(BitmapFactory.decodeFile(sound.getLogoPath()));
       viewHolderItem.proIcon.setVisibility(sound.isPro() ? View.VISIBLE : View.INVISIBLE);
 
     viewHolderItem.parentLayout.setOnClickListener(
@@ -72,7 +73,8 @@ public class GridAdapter extends ArrayAdapter<Sound> {
           @Override
           public void onClick(View v) {
 
-              listener.clicked(sound.soundPoolId(), sound.isPlaying(), sound.streamId(), sound.isPro());
+              listener.clicked(
+                      sound.soundPoolId(), sound.isPlaying(), sound.streamId(), sound.isPro());
           }
         });
 

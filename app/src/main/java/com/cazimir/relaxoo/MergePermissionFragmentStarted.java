@@ -35,7 +35,7 @@ class MergePermissionFragmentStarted {
     @NonNull
     public String toString() {
         String sb = System.lineSeparator() + "MergePermissionFragmentStarted{" +
-                "fragmentStarted=" + fragmentStarted +
+                "soundGridFragmentStarted=" + fragmentStarted +
                 ", permissionsGranted=" + permissionsGranted +
                 '}';
         return sb;

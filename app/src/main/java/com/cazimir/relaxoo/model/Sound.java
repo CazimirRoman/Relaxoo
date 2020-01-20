@@ -6,12 +6,11 @@ import com.google.firebase.database.Exclude;
 
 public class Sound {
 
-
   private String id;
   private int soundPoolId;
   private int streamId;
   private String name;
-  private String drawable;
+  private String logoPath;
   private String filePath;
   private boolean playing;
   private float volume = 0.5f;
@@ -22,7 +21,7 @@ public class Sound {
           int soundPoolId,
           int streamId,
           String name,
-          String drawable,
+          String logoPath,
           String file,
           boolean playing,
           float volume,
@@ -32,7 +31,7 @@ public class Sound {
     this.streamId = streamId;
     this.filePath = file;
     this.name = name;
-    this.drawable = drawable;
+    this.logoPath = logoPath;
     this.playing = playing;
     this.pro = pro;
   }
@@ -46,7 +45,7 @@ public class Sound {
             sound.soundPoolId,
             sound.streamId,
             sound.name,
-            sound.drawable,
+            sound.logoPath,
             sound.filePath,
             sound.playing,
             sound.volume,
@@ -59,7 +58,7 @@ public class Sound {
         soundPoolId,
         sound.streamId,
         sound.name,
-        sound.drawable,
+            sound.logoPath,
             sound.filePath,
         sound.playing,
             sound.volume,
@@ -72,7 +71,7 @@ public class Sound {
         sound.soundPoolId,
         streamId,
         sound.name,
-        sound.drawable,
+            sound.logoPath,
             sound.filePath,
         sound.playing,
             sound.volume,
@@ -85,7 +84,7 @@ public class Sound {
         sound.soundPoolId,
         sound.streamId,
         sound.name,
-        sound.drawable,
+            sound.logoPath,
             sound.filePath,
         !sound.isPlaying(),
             sound.volume,
@@ -105,7 +104,7 @@ public class Sound {
   }
 
   public String getLogoPath() {
-    return drawable;
+    return logoPath;
   }
 
   @Exclude
@@ -140,7 +139,7 @@ public class Sound {
     sb.append("soundPoolId=").append(soundPoolId);
     sb.append(", streamId=").append(streamId);
     sb.append(", name='").append(name).append('\'');
-    sb.append(", logo=").append(drawable);
+    sb.append(", logoPath=").append(logoPath);
     sb.append(", getFilePath=").append(filePath);
     sb.append(", playing=").append(playing);
     sb.append(", volume=").append(volume);
@@ -155,7 +154,7 @@ public class Sound {
     private int soundPoolId;
     private int streamId;
     private String name;
-    private String logo;
+    private String logoPath;
     private String filePath;
     private boolean playing;
     private float volume = 0.5f;
@@ -188,7 +187,7 @@ public class Sound {
     }
 
     public SoundBuilder withLogo(String logo) {
-      this.logo = logo;
+      this.logoPath = logo;
       return this;
     }
 
@@ -213,7 +212,7 @@ public class Sound {
     }
 
     public Sound build() {
-      return new Sound(id, soundPoolId, streamId, name, logo, filePath, playing, volume, pro);
+      return new Sound(id, soundPoolId, streamId, name, logoPath, filePath, playing, volume, pro);
     }
   }
 }
