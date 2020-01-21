@@ -63,26 +63,26 @@ public class SoundGridViewModel extends ViewModel {
     // Read from the database
     soundsRef.addListenerForSingleValueEvent(
             new ValueEventListener() {
-              @Override
-              public void onDataChange(DataSnapshot dataSnapshot) {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
 
-                for (DataSnapshot soundsSnapshot : dataSnapshot.getChildren()) {
-                  Sound sound = soundsSnapshot.getValue(Sound.class);
-                  if (sound != null) {
-                    soundsInFirebase.add(0, sound);
-                  }
+                    for (DataSnapshot soundsSnapshot : dataSnapshot.getChildren()) {
+                        Sound sound = soundsSnapshot.getValue(Sound.class);
+                        if (sound != null) {
+                            soundsInFirebase.add(0, sound);
+                        }
+                    }
+
+                    if (soundsInFirebase.size() > 0) {
+                        getAssetsFromFirebaseStorage(soundsInFirebase);
+                    }
                 }
 
-                if (soundsInFirebase.size() > 0) {
-                  getAssetsFromFirebaseStorage(soundsInFirebase);
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    // Failed to read value
+                    Log.w(TAG, "Failed to read value.", error.toException());
                 }
-              }
-
-              @Override
-              public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w(TAG, "Failed to read value.", error.toException());
-              }
             });
   }
 
@@ -92,18 +92,19 @@ public class SoundGridViewModel extends ViewModel {
 
     // check if files already downloaded locally
 
-    File folder = Environment.getExternalStoragePublicDirectory("Relaxoo");
+      File soundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/sounds");
+      File logosFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/logos");
 
-    if (!folder.exists()) {
-      folder.mkdir();
+      if (!soundsFolder.exists()) {
+          soundsFolder.mkdirs();
     }
 
     // check locally to see how many files there are
-    File directory = new File(folder.getAbsolutePath());
-    File[] files = directory.listFiles();
+      File soundsDirectory = new File(soundsFolder.getAbsolutePath());
+      File[] files = soundsDirectory.listFiles();
 
     // there are some sounds missing locally
-    if (files != null && files.length < sounds.size()) {
+      if (files == null || files.length < sounds.size()) {
       Log.d(TAG, "getAssetsFromFirebaseStorage: loading assets from firebase");
       // get sounds
       for (Sound sound : sounds) {
@@ -114,38 +115,42 @@ public class SoundGridViewModel extends ViewModel {
         StorageReference imageReference =
                 FirebaseStorage.getInstance().getReference().child("logos").child(sound.getLogoPath());
 
-        final File soundFile = new File(folder, sound.getFilePath());
-        final File logoFile = new File(folder, sound.getLogoPath());
+          if (!logosFolder.exists()) {
+              logosFolder.mkdirs();
+          }
+
+          final File soundFile = new File(soundsFolder, sound.getFilePath());
+          final File logoFile = new File(logosFolder, sound.getLogoPath());
 
         // download from Firebase
         soundReference
                 .getFile(soundFile)
                 .addOnSuccessListener(
                         soundSnapshot -> {
-                          Log.d(TAG, "onSuccess: called");
+                            Log.d(TAG, "onSuccess: called");
 
-                          // now download the image
+                            // now download the image
 
-                          imageReference
-                                  .getFile(logoFile)
-                                  .addOnSuccessListener(
-                                          imageSnapshot -> {
-                                            Log.d(TAG, "onSuccess: called");
+                            imageReference
+                                    .getFile(logoFile)
+                                    .addOnSuccessListener(
+                                            imageSnapshot -> {
+                                                Log.d(TAG, "onSuccess: called");
 
-                                            Sound fetchedSound =
+                                                Sound fetchedSound =
                                 Sound.SoundBuilder.aSound()
                                         .withName(sound.getName())
                                         .withLogo(logoFile.getPath())
                                         .withFilePath(soundFile.getPath())
                                         .build();
 
-                                            allSounds.addAll(Arrays.asList(fetchedSound));
+                                                allSounds.addAll(Arrays.asList(fetchedSound));
 
-                                            if (allSounds.size() == sounds.size()) {
-                                              refreshSoundLiveData();
-                                            }
-                                          })
-                                  .addOnFailureListener(e -> Log.d(TAG, "onFailure: " + e.getMessage()));
+                                                if (allSounds.size() == sounds.size()) {
+                                                    refreshSoundLiveData();
+                                                }
+                                            })
+                                    .addOnFailureListener(e -> Log.d(TAG, "onFailure: " + e.getMessage()));
                         })
                 .addOnFailureListener(e -> Log.d(TAG, "onFailure: " + e.getMessage()));
       }
@@ -155,11 +160,13 @@ public class SoundGridViewModel extends ViewModel {
 
       Log.d(TAG, "getAssetsFromFirebaseStorage: loading assets from local storage");
 
+          File logosDirectory = new File(logosFolder.getAbsolutePath());
+
       for (int i = 0; i < sounds.size(); i++) {
         Sound localSound =
                 Sound.SoundBuilder.aSound()
                         .withName(sounds.get(i).getName())
-                        .withLogo(directory + "/" + sounds.get(i).getLogoPath())
+                        .withLogo(logosDirectory + "/" + sounds.get(i).getLogoPath())
                         .withFilePath(files[i].getPath())
                         .build();
 
