@@ -50,7 +50,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
       viewHolderItem.soundImage = convertView.findViewById(R.id.sound_image);
       viewHolderItem.soundVolume = convertView.findViewById(R.id.sound_volume);
       viewHolderItem.parentLayout = convertView.findViewById(R.id.cl);
-      viewHolderItem.proIcon = convertView.findViewById(R.id.proIcon);
+        viewHolderItem.proIcon = convertView.findViewById(R.id.pro_icon);
 
       // store the holder with the view.
       convertView.setTag(viewHolderItem);
