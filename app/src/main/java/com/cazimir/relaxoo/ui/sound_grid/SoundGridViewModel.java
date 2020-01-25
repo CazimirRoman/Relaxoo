@@ -167,7 +167,7 @@ public class SoundGridViewModel extends ViewModel {
                 Sound.SoundBuilder.aSound()
                         .withName(sounds.get(i).getName())
                         .withLogo(logosDirectory + "/" + sounds.get(i).getLogoPath())
-                        .withFilePath(files[i].getPath())
+                        .withFilePath(soundsDirectory + "/" + sounds.get(i).getFilePath())
                         .build();
 
         allSounds.add(localSound);

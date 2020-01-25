@@ -1,14 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.create_sound.CreateSoundFragment">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textView"
+            style="@style/FragmentTitle"
+            android:text="@string/create_sound" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recording_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </androidx.recyclerview.widget.RecyclerView>
+
+    </LinearLayout>
+
     <TextView
-        android:id="@+id/textView"
-        style="@style/FragmentTitle"
-        android:text="@string/create_sound" />
+        android:id="@+id/no_recordings_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="You don't have any recordings"
+        android:textColor="@android:color/white">
+
+    </TextView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_recording"
@@ -16,7 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
         android:layout_margin="16dp"
-        android:src="@drawable/ic_record">
+        app:srcCompat="@drawable/ic_record">
 
     </com.google.android.material.floatingactionbutton.FloatingActionButton>
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -20,50 +21,50 @@
         android:paddingLeft="10dp"
         android:paddingRight="10dp">
 
-        <ImageButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/mute_button"
             style="@style/UpperButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:src="@drawable/ic_mute_on" />
+            app:srcCompat="@drawable/ic_mute_on" />
 
-        <ImageButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/random_button"
             style="@style/UpperButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="#00000000"
-            android:src="@drawable/ic_random" />
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_random" />
 
-        <ImageButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/play_button"
             style="@style/UpperButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="#00000000"
-            android:src="@drawable/ic_play" />
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_play" />
 
-        <ImageButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/save_fav_button"
             style="@style/UpperButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="#00000000"
-            android:src="@drawable/ic_save_fav" />
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_save_fav" />
 
-        <ImageButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/set_timer_button"
             style="@style/UpperButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="#00000000"
-            android:src="@drawable/ic_timer_on" />
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_timer_on" />
 
     </LinearLayout>
 

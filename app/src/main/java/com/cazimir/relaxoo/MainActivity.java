@@ -7,14 +7,17 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.MediatorLiveData;
@@ -28,6 +31,8 @@ import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
 import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.model.Sound;
+import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment;
+import com.cazimir.relaxoo.ui.create_sound.OnRecordingStarted;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
@@ -36,22 +41,39 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+import com.karumi.dexter.listener.single.PermissionListener;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder;
+import cafe.adriel.androidaudiorecorder.model.AudioChannel;
+import cafe.adriel.androidaudiorecorder.model.AudioSampleRate;
+import cafe.adriel.androidaudiorecorder.model.AudioSource;
+
 public class MainActivity extends FragmentActivity
-    implements OnActivityCallback, OnFavoriteSaved, OnTimerDialogCallback, OnFavoriteDeleted {
+        implements OnActivityCallback,
+        OnFavoriteSaved,
+        OnTimerDialogCallback,
+        OnFavoriteDeleted,
+        OnRecordingStarted {
 
   private static final String TAG = "MainActivity";
   private static final String FAVORITE_FRAGMENT = ":1";
   private static final String SOUND_GRID_FRAGMENT = ":0";
+  private static final String CREATE_SOUND_FRAGMENT = ":2";
   private static final String CHANNEL_WHATEVER = "" + "";
+  private static final int RECORDING_REQ_CODE = 0;
   private static int NOTIFY_ID = 1337;
   private NotificationManager notificationManager;
   private int previousColor = R.color.colorPrimary;
@@ -86,13 +108,12 @@ public class MainActivity extends FragmentActivity
                       MergePermissionFragmentStarted.withPermissionGranted(
                               mergePermissionFragmentStarted, permissionsGranted);
               result.setValue(mergePermissionFragmentStarted);
-
             });
 
     result.addSource(
             isSoundGridFragmentStarted,
             fragmentStarted -> {
-              Log.d(TAG, "fragment started: " + fragmentStarted);
+              Log.d(TAG, "fragment recordingStarted: " + fragmentStarted);
               mergePermissionFragmentStarted =
                       MergePermissionFragmentStarted.withFragmentInstantiated(
                               mergePermissionFragmentStarted, fragmentStarted);
@@ -107,10 +128,12 @@ public class MainActivity extends FragmentActivity
                       "onChanged() called with: mergePermissionFragmentStarted: "
                               + mergePermissionFragmentStarted.toString());
 
-              if (mergePermissionFragmentStarted.isFragmentStarted() && mergePermissionFragmentStarted.isPermissionsGranted()) {
+              if (mergePermissionFragmentStarted.isFragmentStarted()
+                      && mergePermissionFragmentStarted.isPermissionsGranted()) {
 
                 if (!getSoundGridFragment().soundsAlreadyFetched()) {
-                  Log.d(TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched());
+                  Log.d(
+                          TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched());
                   getSoundGridFragment().fetchSounds();
                 }
               }
@@ -279,6 +302,12 @@ public class MainActivity extends FragmentActivity
             .findFragmentByTag("android:switcher:" + R.id.pager + SOUND_GRID_FRAGMENT);
   }
 
+  private CreateSoundFragment getCreateSoundFragment() {
+    return (CreateSoundFragment)
+            getSupportFragmentManager()
+                    .findFragmentByTag("android:switcher:" + R.id.pager + CREATE_SOUND_FRAGMENT);
+  }
+
   @Override
   public void startCountDownTimer(Integer minutes) {
     getSoundGridFragment().startCountDownTimer(minutes);
@@ -328,5 +357,77 @@ public class MainActivity extends FragmentActivity
   private void checkIfFileIsThere() {
 
     Log.d(TAG, "checkIfFileIsThere() called with: ");
+  }
+
+  @Override
+  public void recordingStarted() {
+    checkRecordingPermission();
+  }
+
+  private void checkRecordingPermission() {
+    Dexter.withActivity(this)
+            .withPermission(Manifest.permission.RECORD_AUDIO)
+            .withListener(
+                    new PermissionListener() {
+                      @Override
+                      public void onPermissionGranted(PermissionGrantedResponse response) {
+                        startRecordingActivity();
+                      }
+
+                      @Override
+                      public void onPermissionDenied(PermissionDeniedResponse response) {
+                        showToast("You need to grant recording permissions to record your own sound");
+                      }
+
+                      @Override
+                      public void onPermissionRationaleShouldBeShown(
+                              PermissionRequest permission, PermissionToken token) {
+                        /* ... */
+                      }
+                    })
+            .check();
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == 0) {
+      if (resultCode == RESULT_OK) {
+        showToast("Sound saved to file");
+
+        getCreateSoundFragment().updateList();
+
+        // Great! User has recorded and saved the audio file
+      } else if (resultCode == RESULT_CANCELED) {
+        showToast("User canceled!");
+      }
+    }
+  }
+
+  private void startRecordingActivity() {
+
+    File ownSoundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/own_sounds");
+    if (!ownSoundsFolder.exists()) {
+      ownSoundsFolder.mkdir();
+    }
+
+    String fileName = new SimpleDateFormat("yyyyMMddHHmm'.wav'").format(new Date());
+    String filePath = Environment.getExternalStorageDirectory() + "/Relaxoo/own_sounds/" + fileName;
+
+    int color = getResources().getColor(R.color.colorPrimaryDark);
+    int requestCode = RECORDING_REQ_CODE;
+    AndroidAudioRecorder.with(this)
+            // Required
+            .setFilePath(filePath)
+            .setColor(color)
+            .setRequestCode(requestCode)
+            // Optional
+            .setSource(AudioSource.MIC)
+            .setChannel(AudioChannel.STEREO)
+            .setSampleRate(AudioSampleRate.HZ_48000)
+            .setAutoStart(false)
+            .setKeepDisplayOn(true)
+            // Start recording
+            .record();
   }
 }

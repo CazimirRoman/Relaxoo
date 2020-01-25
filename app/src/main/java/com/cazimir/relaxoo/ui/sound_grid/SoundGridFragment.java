@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -50,7 +51,7 @@ public class SoundGridFragment extends Fragment {
   private SoundPool soundPool;
   private SoundGridViewModel viewModel;
   private GridView gridView;
-  private ImageButton muteButton;
+    private ImageView muteButton;
   private ImageButton randomButton;
   private ImageButton playStopButton;
   private ImageButton saveFavorites;
