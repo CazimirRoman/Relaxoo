@@ -21,7 +21,7 @@ public interface OnActivityCallback {
 
   void showDeleteConfirmationDialog(int position);
 
-  void showBottomDialog();
+  void showBottomDialogForPro();
 
   void showIfFileStillThere(List<Sound> sounds);
 

@@ -13,4 +13,7 @@
     <string name="invite_fb_friends">Invite friends with Facebook</string>
     <string name="invite_friends">Invite friends</string>
     <string name="about_fragment">AboutFragment</string>
+    <string name="convert_to_white_noise">Convert to white noise</string>
+    <string name="edit_recording_name">Edit name</string>
+    <string name="delete_recording">Delete recording</string>
 </resources>

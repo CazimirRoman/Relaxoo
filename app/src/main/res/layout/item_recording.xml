@@ -45,7 +45,7 @@
     </LinearLayout>
 
     <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/delete_recording"
+        android:id="@+id/options_recording"
         style="@style/UpperButtons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

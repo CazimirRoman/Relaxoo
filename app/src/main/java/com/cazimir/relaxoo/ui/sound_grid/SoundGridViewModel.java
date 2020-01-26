@@ -28,8 +28,8 @@ public class SoundGridViewModel extends ViewModel {
 
   private static final String TAG = "SoundGridViewModel";
   private static final int MAX_SOUNDS = 5;
-  private List<Sound> allSounds = new ArrayList<>();
-  private MutableLiveData<List<Sound>> soundsLiveData = new MutableLiveData<>();
+  private ArrayList<Sound> allSounds = new ArrayList<>();
+  private MutableLiveData<ArrayList<Sound>> soundsLiveData = new MutableLiveData<>();
   private List<Sound> playingSounds = new ArrayList<>();
   private MutableLiveData<List<Sound>> playingSoundsLiveData = new MutableLiveData<>();
   /** used to show notification in MainActivity to let user know that a sound is playing */
@@ -63,26 +63,26 @@ public class SoundGridViewModel extends ViewModel {
     // Read from the database
     soundsRef.addListenerForSingleValueEvent(
             new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
+              @Override
+              public void onDataChange(DataSnapshot dataSnapshot) {
 
-                    for (DataSnapshot soundsSnapshot : dataSnapshot.getChildren()) {
-                        Sound sound = soundsSnapshot.getValue(Sound.class);
-                        if (sound != null) {
-                            soundsInFirebase.add(0, sound);
-                        }
-                    }
-
-                    if (soundsInFirebase.size() > 0) {
-                        getAssetsFromFirebaseStorage(soundsInFirebase);
-                    }
+                for (DataSnapshot soundsSnapshot : dataSnapshot.getChildren()) {
+                  Sound sound = soundsSnapshot.getValue(Sound.class);
+                  if (sound != null) {
+                    soundsInFirebase.add(0, sound);
+                  }
                 }
 
-                @Override
-                public void onCancelled(DatabaseError error) {
-                    // Failed to read value
-                    Log.w(TAG, "Failed to read value.", error.toException());
+                if (soundsInFirebase.size() > 0) {
+                  getAssetsFromFirebaseStorage(soundsInFirebase);
                 }
+              }
+
+              @Override
+              public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w(TAG, "Failed to read value.", error.toException());
+              }
             });
   }
 
@@ -92,19 +92,19 @@ public class SoundGridViewModel extends ViewModel {
 
     // check if files already downloaded locally
 
-      File soundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/sounds");
-      File logosFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/logos");
+    File soundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/sounds");
+    File logosFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/logos");
 
-      if (!soundsFolder.exists()) {
-          soundsFolder.mkdirs();
+    if (!soundsFolder.exists()) {
+      soundsFolder.mkdirs();
     }
 
     // check locally to see how many files there are
-      File soundsDirectory = new File(soundsFolder.getAbsolutePath());
-      File[] files = soundsDirectory.listFiles();
+    File soundsDirectory = new File(soundsFolder.getAbsolutePath());
+    File[] files = soundsDirectory.listFiles();
 
     // there are some sounds missing locally
-      if (files == null || files.length < sounds.size()) {
+    if (files == null || files.length < sounds.size()) {
       Log.d(TAG, "getAssetsFromFirebaseStorage: loading assets from firebase");
       // get sounds
       for (Sound sound : sounds) {
@@ -115,42 +115,42 @@ public class SoundGridViewModel extends ViewModel {
         StorageReference imageReference =
                 FirebaseStorage.getInstance().getReference().child("logos").child(sound.getLogoPath());
 
-          if (!logosFolder.exists()) {
-              logosFolder.mkdirs();
-          }
+        if (!logosFolder.exists()) {
+          logosFolder.mkdirs();
+        }
 
-          final File soundFile = new File(soundsFolder, sound.getFilePath());
-          final File logoFile = new File(logosFolder, sound.getLogoPath());
+        final File soundFile = new File(soundsFolder, sound.getFilePath());
+        final File logoFile = new File(logosFolder, sound.getLogoPath());
 
-        // download from Firebase
+        // download sound from Firebase
         soundReference
                 .getFile(soundFile)
                 .addOnSuccessListener(
                         soundSnapshot -> {
-                            Log.d(TAG, "onSuccess: called");
+                          Log.d(TAG, "onSuccess: called");
 
-                            // now download the image
+                          // now download the image
+                          imageReference
+                                  .getFile(logoFile)
+                                  .addOnSuccessListener(
+                                          imageSnapshot -> {
+                                            Log.d(TAG, "onSuccess: called");
 
-                            imageReference
-                                    .getFile(logoFile)
-                                    .addOnSuccessListener(
-                                            imageSnapshot -> {
-                                                Log.d(TAG, "onSuccess: called");
-
-                                                Sound fetchedSound =
+                                            Sound fetchedSound =
                                 Sound.SoundBuilder.aSound()
                                         .withName(sound.getName())
                                         .withLogo(logoFile.getPath())
+                                        .withPro(sound.isPro())
                                         .withFilePath(soundFile.getPath())
                                         .build();
 
-                                                allSounds.addAll(Arrays.asList(fetchedSound));
+                                            allSounds.addAll(Arrays.asList(fetchedSound));
 
-                                                if (allSounds.size() == sounds.size()) {
-                                                    refreshSoundLiveData();
-                                                }
-                                            })
-                                    .addOnFailureListener(e -> Log.d(TAG, "onFailure: " + e.getMessage()));
+                                            if (allSounds.size() == sounds.size()) {
+                                              refreshSoundLiveData();
+                                            }
+                                          })
+                                  .addOnFailureListener(e -> Log.d(TAG, "onFailure: " + e.getMessage()));
                         })
                 .addOnFailureListener(e -> Log.d(TAG, "onFailure: " + e.getMessage()));
       }
@@ -160,13 +160,14 @@ public class SoundGridViewModel extends ViewModel {
 
       Log.d(TAG, "getAssetsFromFirebaseStorage: loading assets from local storage");
 
-          File logosDirectory = new File(logosFolder.getAbsolutePath());
+      File logosDirectory = new File(logosFolder.getAbsolutePath());
 
       for (int i = 0; i < sounds.size(); i++) {
         Sound localSound =
                 Sound.SoundBuilder.aSound()
                         .withName(sounds.get(i).getName())
                         .withLogo(logosDirectory + "/" + sounds.get(i).getLogoPath())
+                        .withPro(sounds.get(i).isPro())
                         .withFilePath(soundsDirectory + "/" + sounds.get(i).getFilePath())
                         .build();
 
@@ -179,10 +180,10 @@ public class SoundGridViewModel extends ViewModel {
     }
   }
 
-  MutableLiveData<List<Sound>> sounds() {
+  MutableLiveData<ArrayList<Sound>> sounds() {
 
     if (soundsLiveData.getValue() == null) {
-      soundsLiveData.setValue(Collections.emptyList());
+      soundsLiveData.setValue(new ArrayList<>());
     }
 
     return soundsLiveData;
@@ -207,7 +208,7 @@ public class SoundGridViewModel extends ViewModel {
     playingSoundsLiveData.setValue(playingSounds);
   }
 
-  void addToSounds(List<Sound> sounds) {
+  void addToSounds(ArrayList<Sound> sounds) {
     this.allSounds = sounds;
     refreshSoundLiveData();
   }

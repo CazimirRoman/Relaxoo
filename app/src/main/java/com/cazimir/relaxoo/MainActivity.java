@@ -7,17 +7,22 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.MediatorLiveData;
@@ -29,6 +34,7 @@ import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog;
 import com.cazimir.relaxoo.dialog.OnTimerDialogCallback;
 import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
 import com.cazimir.relaxoo.dialog.TimerDialog;
+import com.cazimir.relaxoo.model.Recording;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment;
@@ -46,6 +52,8 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
+
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -319,9 +327,9 @@ public class MainActivity extends FragmentActivity
   }
 
   @Override
-  public void showBottomDialog() {
+  public void showBottomDialogForPro() {
     BottomSheetDialog dialog = new BottomSheetDialog(this);
-    final View form = getLayoutInflater().inflate(R.layout.dialog_bottom, null);
+    final View form = getLayoutInflater().inflate(R.layout.dialog_bottom_unlock_pro, null);
 
     //    TextView textView = form.findViewById(R.id.proIcon);
     //    textView.setOnClickListener(new View.OnClickListener() {
@@ -364,6 +372,93 @@ public class MainActivity extends FragmentActivity
     checkRecordingPermission();
   }
 
+  @Override
+  public void showBottomDialogForRecording(Recording recording) {
+    BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+    final View form = getLayoutInflater().inflate(R.layout.dialog_bottom_recording, null);
+
+    LinearLayout deleteRecording = form.findViewById(R.id.delete_recording);
+    deleteRecording.setOnClickListener(
+            new View.OnClickListener() {
+              @Override
+              public void onClick(View v) {
+
+                bottomSheetDialog.dismiss();
+
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Delete?")
+                        .setMessage("Are you sure you want to delete?")
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setPositiveButton(
+                                android.R.string.yes,
+                                new DialogInterface.OnClickListener() {
+
+                                  public void onClick(DialogInterface dialog, int whichButton) {
+                                    getCreateSoundFragment().deleteRecording(recording);
+                                  }
+                                })
+                        .setNegativeButton(android.R.string.no, null)
+                        .show();
+              }
+            });
+
+    LinearLayout editRecording = form.findViewById(R.id.edit_recording_name);
+
+    editRecording.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        bottomSheetDialog.dismiss();
+
+        LayoutInflater li = LayoutInflater.from(MainActivity.this);
+        View promptsView = li.inflate(R.layout.edit_recording, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                MainActivity.this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+
+        final EditText userInput = (EditText) promptsView
+                .findViewById(R.id.new_recording_name);
+
+        userInput.setText(FilenameUtils.removeExtension(recording.getFile().getName()));
+
+        // set dialog message
+        alertDialogBuilder
+                .setTitle("Rename created sound")
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                          public void onClick(DialogInterface dialog, int id) {
+                            // get user input and set it to result
+                            // edit text
+
+                            // rename file on disk
+                            getCreateSoundFragment().renameRecording(recording, userInput.getText().toString());
+                          }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                          public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                          }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+        // show it
+        alertDialog.show();
+      }
+    });
+
+
+    bottomSheetDialog.setContentView(form);
+    bottomSheetDialog.show();
+  }
+
   private void checkRecordingPermission() {
     Dexter.withActivity(this)
             .withPermission(Manifest.permission.RECORD_AUDIO)
@@ -394,7 +489,6 @@ public class MainActivity extends FragmentActivity
     if (requestCode == 0) {
       if (resultCode == RESULT_OK) {
         showToast("Sound saved to file");
-
         getCreateSoundFragment().updateList();
 
         // Great! User has recorded and saved the audio file
@@ -411,7 +505,7 @@ public class MainActivity extends FragmentActivity
       ownSoundsFolder.mkdir();
     }
 
-    String fileName = new SimpleDateFormat("yyyyMMddHHmm'.wav'").format(new Date());
+    String fileName = new SimpleDateFormat("yyyyMMddHHmmss'.wav'").format(new Date());
     String filePath = Environment.getExternalStorageDirectory() + "/Relaxoo/own_sounds/" + fileName;
 
     int color = getResources().getColor(R.color.colorPrimaryDark);
