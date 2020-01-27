@@ -7,7 +7,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/sound_image"
         android:layout_width="100dp"
         android:layout_height="100dp"
@@ -25,12 +25,12 @@
         android:visibility="invisible"
         app:layout_constraintTop_toBottomOf="@+id/sound_image" />
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/pro_icon"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:visibility="gone"
-        android:src="@drawable/ic_pro"
+        app:srcCompat="@drawable/ic_pro"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

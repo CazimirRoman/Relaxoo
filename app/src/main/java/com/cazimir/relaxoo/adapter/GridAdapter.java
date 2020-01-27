@@ -2,6 +2,8 @@ package com.cazimir.relaxoo.adapter;
 
 import android.content.Context;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -66,6 +68,14 @@ public class GridAdapter extends ArrayAdapter<Sound> {
     viewHolderItem.soundVolume.setProgress(Math.round(sound.volume() * 100));
     viewHolderItem.soundVolume.setVisibility(sound.isPlaying() ? View.VISIBLE : View.INVISIBLE);
       viewHolderItem.soundImage.setImageBitmap(BitmapFactory.decodeFile(sound.getLogoPath()));
+
+      // because playing the sound refreshes the grid change color based on playing status
+      if (sound.isPlaying()) {
+          viewHolderItem.soundImage.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
+      } else {
+          viewHolderItem.soundImage.setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
+      }
+
       viewHolderItem.proIcon.setVisibility(sound.isPro() ? View.VISIBLE : View.INVISIBLE);
 
     viewHolderItem.parentLayout.setOnClickListener(
