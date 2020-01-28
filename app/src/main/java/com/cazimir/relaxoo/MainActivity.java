@@ -36,7 +36,6 @@ import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
 import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.model.Recording;
 import com.cazimir.relaxoo.model.SavedCombo;
-import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment;
 import com.cazimir.relaxoo.ui.create_sound.OnRecordingStarted;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
@@ -44,6 +43,7 @@ import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.tabs.TabLayout;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -102,6 +102,8 @@ public class MainActivity extends FragmentActivity
     setContentView(R.layout.main_activity);
     ViewPager pager = findViewById(R.id.pager);
     pager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
+      TabLayout tabLayout = findViewById(R.id.tabDots);
+      tabLayout.setupWithViewPager(pager, true);
     setupNotifications();
     startColorChangeAnimation();
     checkPermissions();
@@ -341,14 +343,6 @@ public class MainActivity extends FragmentActivity
 
     dialog.setContentView(form);
     dialog.show();
-  }
-
-  @Override
-  public void showIfFileStillThere(List<Sound> sounds) {
-
-    if (!sounds.isEmpty()) {
-      Log.d(TAG, "stored File: " + sounds.get(0).getFilePath());
-    }
   }
 
   @Override

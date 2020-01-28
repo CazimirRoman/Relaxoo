@@ -16,4 +16,5 @@
     <string name="convert_to_white_noise">Convert to white noise</string>
     <string name="edit_recording_name">Edit name</string>
     <string name="delete_recording">Delete recording</string>
+    <string name="loading_sounds">Loading sounds...</string>
 </resources>

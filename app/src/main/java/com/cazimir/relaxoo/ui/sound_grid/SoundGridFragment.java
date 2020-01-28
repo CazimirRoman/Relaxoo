@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -43,11 +42,10 @@ public class SoundGridFragment extends Fragment {
 
   private static final String TAG = "SoundGridFragment";
 
-  @BindView(R.id.progress_bar)
-  ProgressBar progressBar;
-
   @BindView(R.id.upper_buttons)
   LinearLayout upperButtons;
+    @BindView(R.id.progress_layout)
+    LinearLayout progressLayout;
 
   private GridAdapter gridArrayAdapter;
   private SoundPool soundPool;
@@ -143,7 +141,8 @@ public class SoundGridFragment extends Fragment {
 
     soundPool.setOnLoadCompleteListener(
             (soundPool, sampleId, status) -> {
-              Log.d(TAG, "onLoadComplete: " + sampleId);
+                Log.d(TAG, "onLoadComplete: " + sampleId);
+                viewModel.addedSound();
             });
 
     // region Observers
@@ -190,62 +189,49 @@ public class SoundGridFragment extends Fragment {
             // TODO: 19.12.2019 move in a separate file or inner class
             getViewLifecycleOwner(),
                 sounds -> {
-                  saveTemporaryFileToPersistence(sounds);
+                    Log.d(TAG, "Sound list changed: " + sounds);
 
-                  Log.d(TAG, "Sound list changed: " + sounds);
-
-                  if (!sounds.isEmpty()) {
-                    activityCallback.soundsFetchedAndSaved();
-                  }
-
-                  if (gridArrayAdapter != null) {
-
-                    gridArrayAdapter.clear();
-
-                    gridArrayAdapter.addAll(sounds);
-
-                    gridArrayAdapter.notifyDataSetChanged();
-
-                  } else {
+                    if (!sounds.isEmpty()) {
+                        activityCallback.soundsFetchedAndSaved();
+                    }
                     gridArrayAdapter =
                             new GridAdapter(
                                     getContext(),
                                     sounds,
                                     new OnSoundClickListener() {
-                                      @Override
-                                      public void clicked(
-                                              int soundId, boolean playing, int streamId, boolean pro) {
+                                        @Override
+                                        public void clicked(
+                                                int soundId, boolean playing, int streamId, boolean pro) {
 
-                                        if (pro) {
-                                          activityCallback.showBottomDialogForPro();
-                                        } else {
-                                          playStopSound(soundId, playing, streamId);
+                                            if (pro) {
+                                                activityCallback.showBottomDialogForPro();
+                                            } else {
+                                                playStopSound(soundId, playing, streamId);
+                                            }
                                         }
-                                      }
 
-                                      @Override
-                                      public void volumeChange(int streamId, int progress) {
-                                        // TODO: 18.12.2019 refactor this float to string to double
-                                        // transformation
-                                        Log.d(
-                                                TAG,
-                                                "volumeChange: called with volume: " + (double) progress / 100);
-                                        soundPool.setVolume(
-                                                streamId,
-                                                Float.valueOf(String.valueOf((double) progress / 100)),
-                                                Float.valueOf(String.valueOf((double) progress / 100)));
-                                      }
+                                        @Override
+                                        public void volumeChange(int streamId, int progress) {
+                                            // TODO: 18.12.2019 refactor this float to string to double
+                                            // transformation
+                                            Log.d(
+                                                    TAG,
+                                                    "volumeChange: called with volume: " + (double) progress / 100);
+                                            soundPool.setVolume(
+                                                    streamId,
+                                                    Float.valueOf(String.valueOf((double) progress / 100)),
+                                                    Float.valueOf(String.valueOf((double) progress / 100)));
+                                        }
                                     });
-                  }
+//              }
 
-                  gridView.setAdapter(gridArrayAdapter);
 
-                  hideProgressBar();
+                    gridView.setAdapter(gridArrayAdapter);
 
-                  // if sound not loaded yet and sounds list not yet populated
-                  if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
-                    loadToSoundPool(sounds);
-                  }
+                    // if sound not loaded yet and sounds list not yet populated
+                    if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
+                        loadToSoundPool(sounds);
+                    }
                 });
 
     // listen to the playing sounds live data object to change the play stop getLogoPath icon on top
@@ -289,11 +275,24 @@ public class SoundGridFragment extends Fragment {
           }
         });
 
+
+      viewModel.getSoundsLoadedToSoundPool().observe(getViewLifecycleOwner(), new Observer<Integer>() {
+          @Override
+          public void onChanged(Integer soundsAdded) {
+
+              if (viewModel.sounds().getValue().size() != 0) {
+                  if (soundsAdded == viewModel.sounds().getValue().size()) {
+                      hideProgressBar();
+                  }
+              }
+          }
+      });
+
     // endregion
   }
 
   private void hideProgressBar() {
-    progressBar.setVisibility(View.GONE);
+      progressLayout.setVisibility(View.GONE);
     upperButtons.setVisibility(View.VISIBLE);
   }
 
@@ -305,11 +304,6 @@ public class SoundGridFragment extends Fragment {
     }
 
     return false;
-  }
-
-  private void saveTemporaryFileToPersistence(List<Sound> sounds) {
-
-    activityCallback.showIfFileStillThere(sounds);
   }
 
   // region Listeners for buttons on top

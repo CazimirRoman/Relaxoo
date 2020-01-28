@@ -47,6 +47,12 @@ public class SoundGridViewModel extends ViewModel {
     return isAtLeastOneSoundPlaying;
   }
 
+  MutableLiveData<Integer> soundsLoadedToSoundPool = new MutableLiveData<>();
+
+  public SoundGridViewModel() {
+    soundsLoadedToSoundPool.setValue(0);
+  }
+
   void fetchSounds() {
 
     Log.d(TAG, "fetchSounds: called");
@@ -84,6 +90,10 @@ public class SoundGridViewModel extends ViewModel {
                 Log.w(TAG, "Failed to read value.", error.toException());
               }
             });
+  }
+
+  public MutableLiveData<Integer> getSoundsLoadedToSoundPool() {
+    return soundsLoadedToSoundPool;
   }
 
   private void getAssetsFromFirebaseStorage(ArrayList<Sound> sounds) {
@@ -274,5 +284,9 @@ public class SoundGridViewModel extends ViewModel {
       soundPool = new SoundPool(MAX_SOUNDS, STREAM_MUSIC, 0);
     }
     return soundPool;
+  }
+
+  public void addedSound() {
+    soundsLoadedToSoundPool.setValue(soundsLoadedToSoundPool.getValue() + 1);
   }
 }

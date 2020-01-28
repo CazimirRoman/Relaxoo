@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,83 +9,108 @@
     android:orientation="vertical"
     tools:context=".ui.sound_grid.SoundGridFragment">
 
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center" />
-
     <LinearLayout
-        android:id="@+id/upper_buttons"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:gravity="center_vertical"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/mute_button"
-            style="@style/UpperButtons"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            app:srcCompat="@drawable/ic_mute_on" />
+        <LinearLayout
+            android:id="@+id/upper_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp">
 
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/random_button"
-            style="@style/UpperButtons"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            app:srcCompat="@drawable/ic_random" />
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/mute_button"
+                style="@style/UpperButtons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                app:srcCompat="@drawable/ic_mute_on" />
 
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/play_button"
-            style="@style/UpperButtons"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            app:srcCompat="@drawable/ic_play" />
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/random_button"
+                style="@style/UpperButtons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                app:srcCompat="@drawable/ic_random" />
 
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/save_fav_button"
-            style="@style/UpperButtons"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            app:srcCompat="@drawable/ic_save_fav" />
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/play_button"
+                style="@style/UpperButtons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                app:srcCompat="@drawable/ic_play" />
 
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/set_timer_button"
-            style="@style/UpperButtons"
-            android:layout_width="wrap_content"
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/save_fav_button"
+                style="@style/UpperButtons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                app:srcCompat="@drawable/ic_save_fav" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/set_timer_button"
+                style="@style/UpperButtons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                app:srcCompat="@drawable/ic_timer_on" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/timerText"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            app:srcCompat="@drawable/ic_timer_on" />
+            android:gravity="center_horizontal"
+            android:text="Sounds will stop in 00:04:30"
+            android:textColor="@android:color/white"
+            android:visibility="invisible" />
+
+        <GridView
+            android:id="@+id/gridView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:columnWidth="100dp"
+            android:gravity="center"
+            android:numColumns="2"
+            android:stretchMode="columnWidth" />
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/timerText"
+    <LinearLayout
+        android:id="@+id/progress_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:text="Sounds will stop in 00:04:30"
-        android:textColor="@android:color/white"
-        android:visibility="invisible" />
+        android:layout_gravity="center"
+        android:orientation="vertical">
 
-    <GridView
-        android:id="@+id/gridView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:columnWidth="100dp"
-        android:gravity="center"
-        android:numColumns="2"
-        android:stretchMode="columnWidth" />
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
 
-</LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/loading_sounds"
+            android:textColor="@android:color/white">
+
+        </TextView>
+
+    </LinearLayout>
+
+</FrameLayout>
