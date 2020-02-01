@@ -18,11 +18,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.MediatorLiveData;
@@ -64,6 +66,8 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder;
 import cafe.adriel.androidaudiorecorder.model.AudioChannel;
 import cafe.adriel.androidaudiorecorder.model.AudioSampleRate;
@@ -83,6 +87,13 @@ public class MainActivity extends FragmentActivity
   private static final String CHANNEL_WHATEVER = "" + "";
   private static final int RECORDING_REQ_CODE = 0;
   private static int NOTIFY_ID = 1337;
+
+    @BindView(R.id.splash)
+    AppCompatImageView splash;
+
+    @BindView(R.id.main_layout)
+    LinearLayout mainLayout;
+
   private NotificationManager notificationManager;
   private int previousColor = R.color.colorPrimary;
   private int nextColor = 0;
@@ -100,6 +111,7 @@ public class MainActivity extends FragmentActivity
     mergePermissionFragmentStarted = new MergePermissionFragmentStarted.Builder().build();
 
     setContentView(R.layout.main_activity);
+      ButterKnife.bind(this);
     ViewPager pager = findViewById(R.id.pager);
     pager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
       TabLayout tabLayout = findViewById(R.id.tabDots);
@@ -113,40 +125,40 @@ public class MainActivity extends FragmentActivity
     result.addSource(
             areWritePermissionsGranted,
             permissionsGranted -> {
-              Log.d(TAG, "permissions granted: " + permissionsGranted);
-              mergePermissionFragmentStarted =
-                      MergePermissionFragmentStarted.withPermissionGranted(
-                              mergePermissionFragmentStarted, permissionsGranted);
-              result.setValue(mergePermissionFragmentStarted);
+                Log.d(TAG, "permissions granted: " + permissionsGranted);
+                mergePermissionFragmentStarted =
+                        MergePermissionFragmentStarted.withPermissionGranted(
+                                mergePermissionFragmentStarted, permissionsGranted);
+                result.setValue(mergePermissionFragmentStarted);
             });
 
     result.addSource(
             isSoundGridFragmentStarted,
             fragmentStarted -> {
-              Log.d(TAG, "fragment recordingStarted: " + fragmentStarted);
-              mergePermissionFragmentStarted =
-                      MergePermissionFragmentStarted.withFragmentInstantiated(
-                              mergePermissionFragmentStarted, fragmentStarted);
-              result.setValue(mergePermissionFragmentStarted);
+                Log.d(TAG, "fragment recordingStarted: " + fragmentStarted);
+                mergePermissionFragmentStarted =
+                        MergePermissionFragmentStarted.withFragmentInstantiated(
+                                mergePermissionFragmentStarted, fragmentStarted);
+                result.setValue(mergePermissionFragmentStarted);
             });
 
     result.observe(
             this,
             mergePermissionFragmentStarted -> {
-              Log.d(
-                      TAG,
-                      "onChanged() called with: mergePermissionFragmentStarted: "
-                              + mergePermissionFragmentStarted.toString());
+                Log.d(
+                        TAG,
+                        "onChanged() called with: mergePermissionFragmentStarted: "
+                                + mergePermissionFragmentStarted.toString());
 
-              if (mergePermissionFragmentStarted.isFragmentStarted()
-                      && mergePermissionFragmentStarted.isPermissionsGranted()) {
+                if (mergePermissionFragmentStarted.isFragmentStarted()
+                        && mergePermissionFragmentStarted.isPermissionsGranted()) {
 
-                if (!getSoundGridFragment().soundsAlreadyFetched()) {
-                  Log.d(
-                          TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched());
-                  getSoundGridFragment().fetchSounds();
+                    if (!getSoundGridFragment().soundsAlreadyFetched()) {
+                        Log.d(
+                                TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched());
+                        getSoundGridFragment().fetchSounds();
+                    }
                 }
-              }
             });
   }
 
@@ -156,30 +168,30 @@ public class MainActivity extends FragmentActivity
                     Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
             .withListener(
                     new MultiplePermissionsListener() {
-                      @Override
-                      public void onPermissionsChecked(MultiplePermissionsReport report) {
-                        Log.d(
-                                TAG,
-                                "onPermissionsChecked: " + report.getGrantedPermissionResponses().toString());
-                        if (report.areAllPermissionsGranted()) {
-                          areWritePermissionsGranted.setValue(true);
+                        @Override
+                        public void onPermissionsChecked(MultiplePermissionsReport report) {
+                            Log.d(
+                                    TAG,
+                                    "onPermissionsChecked: " + report.getGrantedPermissionResponses().toString());
+                            if (report.areAllPermissionsGranted()) {
+                                areWritePermissionsGranted.setValue(true);
+                            }
                         }
-                      }
 
-                      @Override
-                      public void onPermissionRationaleShouldBeShown(
-                              List<PermissionRequest> permissions, PermissionToken token) {
-                        Log.d(TAG, "onPermissionRationaleShouldBeShown: called");
+                        @Override
+                        public void onPermissionRationaleShouldBeShown(
+                                List<PermissionRequest> permissions, PermissionToken token) {
+                            Log.d(TAG, "onPermissionRationaleShouldBeShown: called");
 
-                        /* ... */
-                      }
+                            /* ... */
+                        }
                     })
             .check();
   }
 
   private void startColorChangeAnimation() {
 
-    final LinearLayout parentLayout = findViewById(R.id.parentLayout);
+      final FrameLayout parentLayout = findViewById(R.id.parentLayout);
 
     Timer timer = new Timer();
     // Set the schedule function
@@ -356,6 +368,12 @@ public class MainActivity extends FragmentActivity
     isSoundGridFragmentStarted.setValue(true);
   }
 
+    @Override
+    public void hideSplash() {
+        splash.setVisibility(View.GONE);
+        mainLayout.setVisibility(View.VISIBLE);
+    }
+
   private void checkIfFileIsThere() {
 
     Log.d(TAG, "checkIfFileIsThere() called with: ");
@@ -374,80 +392,83 @@ public class MainActivity extends FragmentActivity
     LinearLayout deleteRecording = form.findViewById(R.id.delete_recording);
     deleteRecording.setOnClickListener(
             new View.OnClickListener() {
-              @Override
-              public void onClick(View v) {
+                @Override
+                public void onClick(View v) {
 
-                bottomSheetDialog.dismiss();
+                    bottomSheetDialog.dismiss();
 
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Delete?")
-                        .setMessage("Are you sure you want to delete?")
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setPositiveButton(
-                                android.R.string.yes,
-                                new DialogInterface.OnClickListener() {
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Delete?")
+                            .setMessage("Are you sure you want to delete?")
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setPositiveButton(
+                                    android.R.string.yes,
+                                    new DialogInterface.OnClickListener() {
 
-                                  public void onClick(DialogInterface dialog, int whichButton) {
-                                    getCreateSoundFragment().deleteRecording(recording);
-                                  }
-                                })
-                        .setNegativeButton(android.R.string.no, null)
-                        .show();
-              }
+                                        public void onClick(DialogInterface dialog, int whichButton) {
+                                            getCreateSoundFragment().deleteRecording(recording);
+                                        }
+                                    })
+                            .setNegativeButton(android.R.string.no, null)
+                            .show();
+                }
             });
 
     LinearLayout editRecording = form.findViewById(R.id.edit_recording_name);
 
-    editRecording.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        bottomSheetDialog.dismiss();
+      editRecording.setOnClickListener(
+              new View.OnClickListener() {
+                  @Override
+                  public void onClick(View v) {
+                      bottomSheetDialog.dismiss();
 
-        LayoutInflater li = LayoutInflater.from(MainActivity.this);
-        View promptsView = li.inflate(R.layout.edit_recording, null);
+                      LayoutInflater li = LayoutInflater.from(MainActivity.this);
+                      View promptsView = li.inflate(R.layout.edit_recording, null);
 
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
-                MainActivity.this);
+                      AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
 
-        // set prompts.xml to alertdialog builder
-        alertDialogBuilder.setView(promptsView);
+                      // set prompts.xml to alertdialog builder
+                      alertDialogBuilder.setView(promptsView);
 
-        final EditText userInput = (EditText) promptsView
-                .findViewById(R.id.new_recording_name);
+                      final EditText userInput = promptsView.findViewById(R.id.new_recording_name);
 
-        userInput.setText(FilenameUtils.removeExtension(recording.getFile().getName()));
+                      userInput.setText(FilenameUtils.removeExtension(recording.getFile().getName()));
 
-        // set dialog message
-        alertDialogBuilder
+                      // set dialog message
+                      alertDialogBuilder
                 .setTitle("Rename created sound")
                 .setCancelable(false)
-                .setPositiveButton("OK",
-                        new DialogInterface.OnClickListener() {
-                          public void onClick(DialogInterface dialog, int id) {
-                            // get user input and set it to result
-                            // edit text
+                              .setPositiveButton(
+                                      "OK",
+                                      new DialogInterface.OnClickListener() {
+                                          public void onClick(DialogInterface dialog, int id) {
+                                              // get user input and set it to result
+                                              // edit text
 
-                            // rename file on disk
-                            getCreateSoundFragment().renameRecording(recording, userInput.getText().toString());
-                          }
-                        })
-                .setNegativeButton("Cancel",
-                        new DialogInterface.OnClickListener() {
-                          public void onClick(DialogInterface dialog, int id) {
-                            dialog.cancel();
-                          }
-                        });
+                                              // rename file on disk
+                                              getCreateSoundFragment()
+                                                      .renameRecording(recording, userInput.getText().toString());
+                                          }
+                                      })
+                              .setNegativeButton(
+                                      "Cancel",
+                                      new DialogInterface.OnClickListener() {
+                                          public void onClick(DialogInterface dialog, int id) {
+                                              dialog.cancel();
+                                          }
+                                      });
 
-        // create alert dialog
-        AlertDialog alertDialog = alertDialogBuilder.create();
+                      // create alert dialog
+                      AlertDialog alertDialog = alertDialogBuilder.create();
 
-        alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+                      alertDialog
+                              .getWindow()
+                              .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
-        // show it
-        alertDialog.show();
-      }
-    });
-
+                      // show it
+                      alertDialog.show();
+                  }
+              });
 
     bottomSheetDialog.setContentView(form);
     bottomSheetDialog.show();
@@ -458,21 +479,21 @@ public class MainActivity extends FragmentActivity
             .withPermission(Manifest.permission.RECORD_AUDIO)
             .withListener(
                     new PermissionListener() {
-                      @Override
-                      public void onPermissionGranted(PermissionGrantedResponse response) {
-                        startRecordingActivity();
-                      }
+                        @Override
+                        public void onPermissionGranted(PermissionGrantedResponse response) {
+                            startRecordingActivity();
+                        }
 
-                      @Override
-                      public void onPermissionDenied(PermissionDeniedResponse response) {
-                        showToast("You need to grant recording permissions to record your own sound");
-                      }
+                        @Override
+                        public void onPermissionDenied(PermissionDeniedResponse response) {
+                            showToast("You need to grant recording permissions to record your own sound");
+                        }
 
-                      @Override
-                      public void onPermissionRationaleShouldBeShown(
-                              PermissionRequest permission, PermissionToken token) {
-                        /* ... */
-                      }
+                        @Override
+                        public void onPermissionRationaleShouldBeShown(
+                                PermissionRequest permission, PermissionToken token) {
+                            /* ... */
+                        }
                     })
             .check();
   }

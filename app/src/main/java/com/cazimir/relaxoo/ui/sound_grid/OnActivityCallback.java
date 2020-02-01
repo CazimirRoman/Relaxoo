@@ -24,4 +24,6 @@ public interface OnActivityCallback {
   void soundsFetchedAndSaved();
 
   void soundGridFragmentStarted();
+
+    void hideSplash();
 }
