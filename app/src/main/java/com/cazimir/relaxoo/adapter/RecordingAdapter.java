@@ -149,6 +149,7 @@ public class RecordingAdapter extends RecyclerView.Adapter<RecordingAdapter.View
                     .withFileName(recordedSound.getFile().getName())
                     .withPlaying(false)
                     .build());
+    currentlyPlaying = null;
     notifyDataSetChanged();
   }
 
