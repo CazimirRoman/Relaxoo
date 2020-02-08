@@ -289,4 +289,9 @@ public class SoundGridViewModel extends ViewModel {
   public void addedSound() {
     soundsLoadedToSoundPool.setValue(soundsLoadedToSoundPool.getValue() + 1);
   }
+
+  public void updateVolume(Sound sound, Float volume) {
+    allSounds.set(allSounds.indexOf(sound), Sound.withVolume(sound, volume));
+    soundsLiveData.setValue(allSounds);
+  }
 }

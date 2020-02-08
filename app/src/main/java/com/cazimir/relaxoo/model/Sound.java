@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 
 import com.google.firebase.database.Exclude;
 
+import java.util.Objects;
+
 public class Sound {
 
   private String id;
@@ -34,6 +36,28 @@ public class Sound {
     this.logoPath = logoPath;
     this.playing = playing;
     this.pro = pro;
+    this.volume = volume;
+  }
+
+  public static Sound withVolume(Sound sound, float volume) {
+    return new Sound(
+            sound.id,
+            sound.soundPoolId,
+            sound.streamId,
+            sound.name,
+            sound.logoPath,
+            sound.filePath,
+            sound.playing,
+            volume,
+            sound.pro);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Sound sound = (Sound) o;
+    return soundPoolId == sound.soundPoolId;
   }
 
   public Sound() {
@@ -81,14 +105,19 @@ public class Sound {
   public static Sound withPlaying(Sound sound) {
     return new Sound(
             sound.id,
-        sound.soundPoolId,
-        sound.streamId,
-        sound.name,
+            sound.soundPoolId,
+            sound.streamId,
+            sound.name,
             sound.logoPath,
             sound.filePath,
-        !sound.isPlaying(),
+            !sound.isPlaying(),
             sound.volume,
             sound.pro);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(soundPoolId);
   }
 
   public String getId() {
