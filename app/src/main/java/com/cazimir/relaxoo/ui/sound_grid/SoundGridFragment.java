@@ -194,47 +194,47 @@ public class SoundGridFragment extends Fragment {
             // TODO: 19.12.2019 move in a separate file or inner class
             getViewLifecycleOwner(),
                 sounds -> {
-                    Log.d(TAG, "Sound list changed: " + sounds);
+                  Log.d(TAG, "Sound list changed: " + sounds);
 
-                    if (!sounds.isEmpty()) {
-                        activityCallback.soundsFetchedAndSaved();
-                    }
-                    gridArrayAdapter =
-                            new GridAdapter(
-                                    getContext(),
-                                    sounds,
-                                    new OnSoundClickListener() {
-                                        @Override
-                                        public void clicked(
-                                                int soundId, boolean playing, int streamId, boolean pro) {
+                  if (!sounds.isEmpty()) {
+                    activityCallback.soundsFetchedAndSaved();
+                  }
+                  gridArrayAdapter =
+                          new GridAdapter(
+                                  getContext(),
+                                  sounds,
+                                  new OnSoundClickListener() {
+                                    @Override
+                                    public void clicked(
+                                            int soundId, boolean playing, int streamId, boolean pro) {
 
-                                            if (pro) {
-                                                activityCallback.showBottomDialogForPro();
-                                            } else {
-                                                playStopSound(soundId, playing, streamId);
-                                            }
-                                        }
+                                      if (pro) {
+                                        activityCallback.showBottomDialogForPro();
+                                      } else {
+                                        playStopSound(soundId, playing, streamId);
+                                      }
+                                    }
 
-                                        @Override
-                                        public void volumeChange(int streamId, int progress) {
-                                            // TODO: 18.12.2019 refactor this float to string to double
-                                            // transformation
-                                            Log.d(
-                                                    TAG, "volumeChange: called with volume: " + (double) progress / 100);
-                                            soundPool.setVolume(
-                                                    streamId,
-                                                    Float.valueOf(String.valueOf((double) progress / 100)),
-                                                    Float.valueOf(String.valueOf((double) progress / 100)));
-                                        }
-                                    });
-                    //              }
+                                    @Override
+                                    public void volumeChange(int streamId, int progress) {
+                                      // TODO: 18.12.2019 refactor this float to string to double
+                                      // transformation
+                                      Log.d(
+                                              TAG, "volumeChange: called with volume: " + (double) progress / 100);
+                                      soundPool.setVolume(
+                                              streamId,
+                                              Float.valueOf(String.valueOf((double) progress / 100)),
+                                              Float.valueOf(String.valueOf((double) progress / 100)));
+                                    }
+                                  });
+                  //              }
 
-                    gridView.setAdapter(gridArrayAdapter);
+                  gridView.setAdapter(gridArrayAdapter);
 
-                    // if sound not loaded yet and sounds list not yet populated
-                    if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
-                        loadToSoundPool(sounds);
-                    }
+                  // if sound not loaded yet and sounds list not yet populated
+                  if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
+                    loadToSoundPool(sounds);
+                  }
                 });
 
     // listen to the playing sounds live data object to change the play stop getLogoPath icon on top
@@ -283,15 +283,15 @@ public class SoundGridFragment extends Fragment {
             .observe(
                     getViewLifecycleOwner(),
                     new Observer<Integer>() {
-                        @Override
-                        public void onChanged(Integer soundsAdded) {
+                      @Override
+                      public void onChanged(Integer soundsAdded) {
 
-                            if (viewModel.sounds().getValue().size() != 0) {
+                        if (viewModel.sounds().getValue().size() != 0) {
                   if (soundsAdded == viewModel.sounds().getValue().size()) {
                     activityCallback.hideSplash();
                   }
-                            }
                         }
+                      }
                     });
 
     // endregion

@@ -59,14 +59,14 @@ public class GridAdapter extends ArrayAdapter<Sound> {
     } else {
       // we've just avoided calling findviewbyid on resource everytime
       // just use the viewHolder
-      viewHolderItem = (ViewHolderItem) convertView.getTag();
+        viewHolderItem = (ViewHolderItem) convertView.getTag();
     }
 
-    // object item based on the position
-    final Sound sound = getItem(position);
+      // object item based on the position
+      final Sound sound = getItem(position);
 
-    viewHolderItem.soundVolume.setProgress(Math.round(sound.volume() * 100));
-    viewHolderItem.soundVolume.setVisibility(sound.isPlaying() ? View.VISIBLE : View.INVISIBLE);
+      viewHolderItem.soundVolume.setProgress(Math.round(sound.volume() * 100));
+      viewHolderItem.soundVolume.setVisibility(sound.isPlaying() ? View.VISIBLE : View.INVISIBLE);
       viewHolderItem.soundImage.setImageBitmap(BitmapFactory.decodeFile(sound.getLogoPath()));
 
       // because playing the sound refreshes the grid change color based on playing status
@@ -78,14 +78,14 @@ public class GridAdapter extends ArrayAdapter<Sound> {
 
       viewHolderItem.proIcon.setVisibility(sound.isPro() ? View.VISIBLE : View.INVISIBLE);
 
-    viewHolderItem.parentLayout.setOnClickListener(
-        new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
+      viewHolderItem.parentLayout.setOnClickListener(
+              new View.OnClickListener() {
+                  @Override
+                  public void onClick(View v) {
 
-              listener.clicked(
-                      sound.soundPoolId(), sound.isPlaying(), sound.streamId(), sound.isPro());
-          }
+                      listener.clicked(
+                              sound.soundPoolId(), sound.isPlaying(), sound.streamId(), sound.isPro());
+                  }
         });
 
     viewHolderItem.soundVolume.setOnSeekBarChangeListener(
@@ -94,14 +94,19 @@ public class GridAdapter extends ArrayAdapter<Sound> {
           public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             Log.d(TAG, "onProgressChanged: current value: " + progress);
             Sound sound = getItem(position);
-            listener.volumeChange(sound.streamId(), progress);
+              listener.volumeChange(sound, progress);
           }
 
           @Override
           public void onStartTrackingTouch(SeekBar seekBar) {}
 
-          @Override
-          public void onStopTrackingTouch(SeekBar seekBar) {}
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                Log.d(TAG, "onStopTrackingTouch() called");
+                // update ViewModel date only when user lets go of the progressbar, otherwise refreshing
+                // the view to many times results in stuttering
+                listener.volumeChangeStopped(sound, seekBar.getProgress());
+            }
         });
 
     return convertView;

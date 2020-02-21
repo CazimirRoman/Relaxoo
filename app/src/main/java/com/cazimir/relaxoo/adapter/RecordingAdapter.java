@@ -25,7 +25,6 @@ import java.util.Date;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-
 public class RecordingAdapter extends RecyclerView.Adapter<RecordingAdapter.ViewHolder> {
 
   private static final String TAG = "RecordingAdapter";
