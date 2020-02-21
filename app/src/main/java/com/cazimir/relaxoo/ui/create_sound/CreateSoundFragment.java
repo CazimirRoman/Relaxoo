@@ -22,6 +22,7 @@ import com.cazimir.relaxoo.MainActivity;
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.RecordingAdapter;
 import com.cazimir.relaxoo.model.Recording;
+import com.cazimir.relaxoo.repository.SoundRepository;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
@@ -129,6 +130,10 @@ public class CreateSoundFragment extends Fragment {
     super.onActivityCreated(savedInstanceState);
       viewModel = ViewModelProviders.of(this).get(CreateSoundViewModel.class);
 
+      viewModel.repository = new SoundRepository();
+
+      viewModel.refreshList();
+
       viewModel
               .getRecordingsLive()
               .observe(
@@ -158,7 +163,7 @@ public class CreateSoundFragment extends Fragment {
     }
 
     public void updateList() {
-        viewModel.listChanged();
+        viewModel.refreshList();
     }
 
     public void deleteRecording(Recording recording) {
