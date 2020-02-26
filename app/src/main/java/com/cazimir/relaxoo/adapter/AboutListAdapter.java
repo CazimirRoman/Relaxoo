@@ -63,7 +63,7 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        // do something on click
+                        interactor.onItemClick(item);
                     }
                 });
     }
