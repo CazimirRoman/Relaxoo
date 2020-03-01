@@ -13,14 +13,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.DialogFragment;
 
 import com.cazimir.relaxoo.R;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class TimerDialog extends DialogFragment {
+public class TimerDialog extends RetainableDialogFragment {
 
   private static final String TAG = TimerDialog.class.getSimpleName();
   private List<Integer> timers = Arrays.asList(5, 10, 15, 30, 45, 60, 120, 999);
@@ -28,6 +27,10 @@ public class TimerDialog extends DialogFragment {
 
   public TimerDialog(OnTimerDialogCallback callback) {
     this.callback = callback;
+    setRetainInstance(true);
+  }
+
+  public TimerDialog() {
   }
 
   public static String getCountTimeByLong(long finishTime) {
@@ -67,8 +70,6 @@ public class TimerDialog extends DialogFragment {
 
   @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-    // instatiate callback
 
     final View form = getActivity().getLayoutInflater().inflate(R.layout.dialog_timer, null);
 

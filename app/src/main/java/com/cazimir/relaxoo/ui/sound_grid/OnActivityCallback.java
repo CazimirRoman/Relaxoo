@@ -25,5 +25,7 @@ public interface OnActivityCallback {
 
   void soundGridFragmentStarted();
 
-    void hideSplash();
+  void hideSplash();
+
+  void removeAds();
 }

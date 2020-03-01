@@ -4,7 +4,6 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.media.SoundPool;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,13 +16,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.GridAdapter;
-import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.model.Sound;
 
@@ -33,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -72,9 +68,6 @@ public class SoundGridFragment extends Fragment {
 
   private boolean muted;
   private OnActivityCallback activityCallback;
-
-  private MutableLiveData<Boolean> timerEnabled = new MutableLiveData<>();
-  private CountDownTimer countDownTimer;
 
   private TimePickerDialog.OnTimeSetListener timerPickerListener =
           (view, hours, minutes) -> toggleCountdownTimer((hours * 60) + minutes);
@@ -115,9 +108,9 @@ public class SoundGridFragment extends Fragment {
   @Override
   @NonNull
   public void onAttach(Context context) {
-    super.onAttach(context);
-    Log.d(TAG, "SoundGridFragment onAttach() called with: ");
-    activityCallback = (OnActivityCallback) context;
+      super.onAttach(context);
+      Log.d(TAG, "SoundGridFragment onAttach() called");
+      activityCallback = (OnActivityCallback) context;
   }
 
   private boolean stopAllSounds() {
@@ -137,28 +130,28 @@ public class SoundGridFragment extends Fragment {
 
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
-    viewModel = ViewModelProviders.of(this).get(SoundGridViewModel.class);
+      super.onActivityCreated(savedInstanceState);
+      viewModel = ViewModelProviders.of(this).get(SoundGridViewModel.class);
 
-    soundPool = viewModel.createOrGetSoundPool();
+      soundPool = viewModel.createOrGetSoundPool();
 
-    setListenersForButtons();
+      setListenersForButtons();
 
-    soundPool.setOnLoadCompleteListener(
-            (soundPool, sampleId, status) -> {
-                Log.d(TAG, "onLoadComplete: " + sampleId);
-                viewModel.addedSound();
-            });
+      soundPool.setOnLoadCompleteListener(
+              (soundPool, sampleId, status) -> {
+                  Log.d(TAG, "onLoadComplete: " + sampleId);
+                  viewModel.addedSound();
+              });
 
-    // region Observers
+      // region Observers
 
-    // change icon to unmute
-    viewModel
-        .mutedLiveData()
-        .observe(
-            getViewLifecycleOwner(),
-            new Observer<Boolean>() {
-              @Override
+      // change icon to unmute
+      viewModel
+              .mutedLiveData()
+              .observe(
+                      getViewLifecycleOwner(),
+                      new Observer<Boolean>() {
+                          @Override
               public void onChanged(Boolean muted) {
                 if (muted) {
                   muteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_mute_off));
@@ -191,54 +184,54 @@ public class SoundGridFragment extends Fragment {
     viewModel
         .sounds()
         .observe(
-            // TODO: 19.12.2019 move in a separate file or inner class
-            getViewLifecycleOwner(),
+                // TODO: 19.12.2019 move in a separate file or inner class
+                getViewLifecycleOwner(),
                 sounds -> {
-                  Log.d(TAG, "Sound list changed: " + sounds);
+                    Log.d(TAG, "Sound list changed: " + sounds);
 
-                  if (!sounds.isEmpty()) {
-                    activityCallback.soundsFetchedAndSaved();
-                  }
-                  gridArrayAdapter =
-                          new GridAdapter(
-                                  getContext(),
-                                  sounds,
-                                  new OnSoundClickListener() {
-                                    @Override
-                                    public void clicked(
-                                            int soundId, boolean playing, int streamId, boolean pro) {
+                    if (!sounds.isEmpty()) {
+                        activityCallback.soundsFetchedAndSaved();
+                    }
+                    gridArrayAdapter =
+                            new GridAdapter(
+                                    getContext(),
+                                    sounds,
+                                    new OnSoundClickListener() {
+                                        @Override
+                                        public void clicked(
+                                                int soundId, boolean playing, int streamId, boolean pro) {
 
-                                        if (pro) {
-                                            activityCallback.showBottomDialogForPro();
-                                        } else {
-                                            playStopSound(soundId, playing, streamId);
+                                            if (pro) {
+                                                activityCallback.showBottomDialogForPro();
+                                            } else {
+                                                playStopSound(soundId, playing, streamId);
+                                            }
                                         }
-                                    }
 
-                                      @Override
-                                      public void volumeChange(Sound sound, int volume) {
-                                          // TODO: 18.12.2019 refactor this float to string to double
-                                          // transformation
+                                        @Override
+                                        public void volumeChange(Sound sound, int volume) {
+                                            // TODO: 18.12.2019 refactor this float to string to double
+                                            // transformation
 
-                                          float volumeToSet =
-                                                  Float.parseFloat(String.valueOf((double) volume / 100));
-                                          Log.d(TAG, "volumeChange: called with volume: " + volumeToSet);
+                                            float volumeToSet =
+                                                    Float.parseFloat(String.valueOf((double) volume / 100));
+                                            Log.d(TAG, "volumeChange: called with volume: " + volumeToSet);
 
-                                          soundPool.setVolume(sound.streamId(), volumeToSet, volumeToSet);
-                                      }
+                                            soundPool.setVolume(sound.streamId(), volumeToSet, volumeToSet);
+                                        }
 
-                                      @Override
-                                      public void volumeChangeStopped(Sound sound, int progress) {
-                                          viewModel.updateVolume(
-                                                  sound, Float.parseFloat(String.valueOf((double) progress / 100)));
-                                      }
-                                  });
+                                        @Override
+                                        public void volumeChangeStopped(Sound sound, int progress) {
+                                            viewModel.updateVolume(
+                                                    sound, Float.parseFloat(String.valueOf((double) progress / 100)));
+                                        }
+                                    });
 
                     gridView.setAdapter(gridArrayAdapter);
 
                     // if sound not loaded yet and sounds list not yet populated
                     if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
-                        loadToSoundPool(sounds);
+                        loadListToSoundPool(sounds);
                     }
                 });
 
@@ -251,55 +244,77 @@ public class SoundGridFragment extends Fragment {
               @Override
               public void onChanged(List<Sound> playingList) {
                 if (playingList.isEmpty()) {
-                  playStopButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_play));
-                  setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_on));
-                  if (countDownTimer != null) {
-                    timerEnabled.setValue(false);
-                  }
+                    playStopButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_play));
+                    setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_on));
+                    if (viewModel.countDownTimer() != null) {
+                        viewModel.timerEnabled().setValue(false);
+                    }
                 } else {
-                  playStopButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_stop));
+                    playStopButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_stop));
                 }
               }
             });
 
-    // TODO: 06-Jan-20 move this to viewmodel
-    timerEnabled.observe(
-        getViewLifecycleOwner(),
-        new Observer<Boolean>() {
-          @Override
-          public void onChanged(Boolean isTimerEnabled) {
+      // TODO: 06-Jan-20 move this to viewmodel
+      viewModel
+              .timerEnabled()
+              .observe(
+                      getViewLifecycleOwner(),
+                      new Observer<Boolean>() {
+                          @Override
+                          public void onChanged(Boolean isTimerEnabled) {
 
-            Log.d(TAG, "timerEnabled: " + isTimerEnabled);
+                              Log.d(TAG, "timerEnabled: " + isTimerEnabled);
 
-            if (isTimerEnabled) {
-              showTimerText();
-              setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_off));
-            } else {
-              hideTimerText();
-              setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_on));
-              countDownTimer.cancel();
-              Log.d(TAG, "countDownTimer canceled!");
-            }
-          }
-        });
+                              if (isTimerEnabled) {
+                                  showTimerText();
+                                  setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_off));
+                              } else {
+                                  hideTimerText();
+                                  setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_on));
+                                  viewModel.countDownTimer().cancel();
+                                  Log.d(TAG, "countDownTimer canceled!");
+                              }
+                          }
+                      });
 
-    viewModel
-            .getSoundsLoadedToSoundPool()
-            .observe(
-                    getViewLifecycleOwner(),
-                    new Observer<Integer>() {
-                      @Override
-                      public void onChanged(Integer soundsAdded) {
+      viewModel
+              .getSoundsLoadedToSoundPool()
+              .observe(
+                      getViewLifecycleOwner(),
+                      new Observer<Integer>() {
+                          @Override
+                          public void onChanged(Integer soundsAdded) {
 
-                        if (viewModel.sounds().getValue().size() != 0) {
-                  if (soundsAdded == viewModel.sounds().getValue().size()) {
-                    activityCallback.hideSplash();
-                  }
-                        }
-                      }
-                    });
+                              if (viewModel.sounds().getValue().size() != 0) {
+                                  if (soundsAdded == viewModel.sounds().getValue().size()) {
+                                      activityCallback.hideSplash();
+                                  }
+                              }
+                          }
+                      });
 
-    // endregion
+      viewModel
+              .timerFinished()
+              .observe(
+                      getViewLifecycleOwner(),
+                      finished -> {
+                          if (finished) {
+                              setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_on));
+                              viewModel.timerEnabled().setValue(false);
+                              stopAllSounds();
+                              hideTimerText();
+                          }
+                      });
+
+      viewModel
+              .timerText()
+              .observe(
+                      getViewLifecycleOwner(),
+                      timerText -> {
+                          setTimerText(timerText);
+                      });
+      // endregion
   }
 
   private boolean atLeastOneSoundWithoutSoundPoolId(List<Sound> sounds) {
@@ -395,10 +410,10 @@ public class SoundGridFragment extends Fragment {
 
             if (atLeastOneIsPlaying != null && atLeastOneIsPlaying) {
 
-              Boolean timerIsRunning = timerEnabled.getValue();
+                Boolean timerIsRunning = viewModel.timerEnabled().getValue();
 
               if (timerIsRunning != null && timerIsRunning) {
-                timerEnabled.setValue(false);
+                  viewModel.timerEnabled().setValue(false);
               } else {
                 // show TimerDialog fragment created with getFilePath template
                 activityCallback.showTimerDialog();
@@ -424,22 +439,22 @@ public class SoundGridFragment extends Fragment {
 
   // endregion
 
-  private void loadToSoundPool(List<Sound> sounds) {
+    private void loadListToSoundPool(List<Sound> sounds) {
 
-    Log.d(TAG, "loadToSoundPool: called");
+        Log.d(TAG, "loadToSoundPool: called");
 
-    ArrayList<Sound> sounds1 = new ArrayList<>();
+        ArrayList<Sound> sounds1 = new ArrayList<>();
 
-    for (Sound sound : sounds) {
+        for (Sound sound : sounds) {
 
-      if (sound.soundPoolId() == 0) {
-        // add to arraylist with soundId from soundpool
-        int soundId = soundPool.load(sound.getFilePath(), 1);
-        sounds1.add(Sound.withSoundPoolId(sound, soundId));
-      } else {
-        sounds1.add(sound);
-      }
-    }
+            if (sound.soundPoolId() == 0) {
+                // add to arraylist with soundId from soundpool
+                int soundId = soundPool.load(sound.getFilePath(), 1);
+                sounds1.add(Sound.withSoundPoolId(sound, soundId));
+            } else {
+                sounds1.add(sound);
+            }
+        }
 
     Log.d(TAG, "loadToSoundPool: sounds: " + sounds1);
 
@@ -456,7 +471,8 @@ public class SoundGridFragment extends Fragment {
   }
 
   private void setTimerText(String text) {
-    timerText.setText(text);
+      Log.d(TAG, "setTimerText() called with: ".concat(text));
+      timerText.setText(text);
   }
 
   public void startCountDownTimer(Integer minutes) {
@@ -472,52 +488,50 @@ public class SoundGridFragment extends Fragment {
 
   private void toggleCountdownTimer(int minutes) {
 
-    if (timerEnabled.getValue() != null && timerEnabled.getValue() && countDownTimer != null) {
-      timerEnabled.setValue(false);
-    } else {
-      countDownTimer =
-          new CountDownTimer(TimeUnit.MINUTES.toMillis(minutes), 1000) {
+      if (viewModel.timerEnabled().getValue() != null
+              && viewModel.timerEnabled().getValue()
+              && viewModel.countDownTimer() != null) {
+          viewModel.timerEnabled().setValue(false);
+      } else {
+          viewModel.setCountDownTimer(minutes);
+          viewModel.timerEnabled().setValue(true);
+      }
+  }
 
-            public void onTick(long millisUntilFinished) {
+    public void triggerCombo(SavedCombo savedCombo) {
 
-              setTimerText(
-                  String.format(
-                      "Sound%s will stop in " + TimerDialog.getCountTimeByLong(millisUntilFinished),
-                      viewModel.playingSounds().getValue().size() > 1 ? "s" : ""));
-            }
+        boolean areSoundsStillPlaying = stopAllSounds();
 
-            public void onFinish() {
-              setTimer.setImageDrawable(getResources().getDrawable(R.drawable.ic_timer_on));
-              timerEnabled.setValue(false);
-              stopAllSounds();
-              hideTimerText();
-            }
-          }.start();
-
-      timerEnabled.setValue(true);
+        for (Map.Entry<Integer, Integer> entry : savedCombo.getSoundPoolParameters().entrySet()) {
+            playStopSound(entry.getKey(), areSoundsStillPlaying, entry.getValue());
+        }
     }
-  }
 
-  public void triggerCombo(SavedCombo savedCombo) {
-
-    boolean areSoundsStillPlaying = stopAllSounds();
-
-    for (Map.Entry<Integer, Integer> entry : savedCombo.getSoundPoolParameters().entrySet()) {
-      playStopSound(entry.getKey(), areSoundsStillPlaying, entry.getValue());
+    public void fetchSounds() {
+        viewModel.fetchSounds();
     }
-  }
 
-  public void fetchSounds() {
-    viewModel.fetchSounds();
-  }
+    @Override
+    public void onStart() {
+        Log.d(TAG, "onStart() in SoundGridFragment called");
+        super.onStart();
+    }
 
-  @Override
-  public void onStart() {
-    super.onStart();
-    activityCallback.soundGridFragmentStarted();
-  }
+    @Override
+    public void onResume() {
+        Log.d(TAG, "onResume() called in: " + TAG);
+        activityCallback.soundGridFragmentStarted();
+        super.onResume();
+    }
 
-  public boolean soundsAlreadyFetched() {
-    return viewModel.getSoundsAlreadyFetched();
-  }
+    public boolean soundsAlreadyFetched() {
+        return viewModel.getSoundsAlreadyFetched();
+    }
+
+    public void addRecordingToSoundPool(Sound sound) {
+        int soundId = soundPool.load(sound.getFilePath(), 1);
+        ArrayList<Sound> newList = viewModel.sounds().getValue();
+        newList.add(Sound.withSoundPoolId(sound, soundId));
+        viewModel.addToSounds(newList);
+    }
 }

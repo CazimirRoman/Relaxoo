@@ -17,6 +17,7 @@ public class Sound {
   private boolean playing;
   private float volume = 0.5f;
   private boolean pro;
+  private boolean custom;
 
   private Sound(
           String id,
@@ -27,7 +28,8 @@ public class Sound {
           String file,
           boolean playing,
           float volume,
-          boolean pro) {
+          boolean pro,
+          boolean custom) {
     this.id = id;
     this.soundPoolId = soundPoolId;
     this.streamId = streamId;
@@ -37,6 +39,10 @@ public class Sound {
     this.playing = playing;
     this.pro = pro;
     this.volume = volume;
+    this.custom = custom;
+  }
+
+  public Sound() {
   }
 
   public static Sound withVolume(Sound sound, float volume) {
@@ -49,18 +55,8 @@ public class Sound {
             sound.filePath,
             sound.playing,
             volume,
-            sound.pro);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Sound sound = (Sound) o;
-    return soundPoolId == sound.soundPoolId;
-  }
-
-  public Sound() {
+            sound.pro,
+            sound.custom);
   }
 
   public static Sound withId(Sound sound, String id) {
@@ -73,33 +69,36 @@ public class Sound {
             sound.filePath,
             sound.playing,
             sound.volume,
-            sound.pro);
+            sound.pro,
+            sound.custom);
   }
 
   public static Sound withSoundPoolId(Sound sound, int soundPoolId) {
     return new Sound(
             sound.id,
-        soundPoolId,
-        sound.streamId,
-        sound.name,
+            soundPoolId,
+            sound.streamId,
+            sound.name,
             sound.logoPath,
             sound.filePath,
-        sound.playing,
+            sound.playing,
             sound.volume,
-            sound.pro);
+            sound.pro,
+            sound.custom);
   }
 
   public static Sound withStreamId(Sound sound, int streamId) {
     return new Sound(
             sound.id,
-        sound.soundPoolId,
-        streamId,
-        sound.name,
+            sound.soundPoolId,
+            streamId,
+            sound.name,
             sound.logoPath,
             sound.filePath,
-        sound.playing,
+            sound.playing,
             sound.volume,
-            sound.pro);
+            sound.pro,
+            sound.custom);
   }
 
   public static Sound withPlaying(Sound sound) {
@@ -112,7 +111,30 @@ public class Sound {
             sound.filePath,
             !sound.isPlaying(),
             sound.volume,
-            sound.pro);
+            sound.pro,
+            sound.custom);
+  }
+
+  public static Sound withCustom(Sound sound, boolean custom) {
+    return new Sound(
+            sound.id,
+            sound.soundPoolId,
+            sound.streamId,
+            sound.name,
+            sound.logoPath,
+            sound.filePath,
+            sound.isPlaying(),
+            sound.volume,
+            sound.pro,
+            custom);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Sound sound = (Sound) o;
+    return soundPoolId == sound.soundPoolId;
   }
 
   @Override
@@ -173,6 +195,7 @@ public class Sound {
     sb.append(", playing=").append(playing);
     sb.append(", volume=").append(volume);
     sb.append(", isPro=").append(pro);
+    sb.append(", isCustom=").append(custom);
     sb.append('}');
     return sb.toString();
   }
@@ -188,6 +211,7 @@ public class Sound {
     private boolean playing;
     private float volume = 0.5f;
     private boolean pro;
+    private boolean custom;
 
     private SoundBuilder() {}
 
@@ -240,8 +264,14 @@ public class Sound {
       return this;
     }
 
+    public SoundBuilder withCustom(boolean custom) {
+      this.custom = custom;
+      return this;
+    }
+
     public Sound build() {
-      return new Sound(id, soundPoolId, streamId, name, logoPath, filePath, playing, volume, pro);
+      return new Sound(
+              id, soundPoolId, streamId, name, logoPath, filePath, playing, volume, pro, custom);
     }
   }
 }

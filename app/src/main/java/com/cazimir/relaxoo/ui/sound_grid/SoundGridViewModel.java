@@ -1,12 +1,14 @@
 package com.cazimir.relaxoo.ui.sound_grid;
 
 import android.media.SoundPool;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.model.Sound;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static android.media.AudioManager.STREAM_MUSIC;
 
@@ -28,32 +31,51 @@ public class SoundGridViewModel extends ViewModel {
 
   private static final String TAG = "SoundGridViewModel";
   private static final int MAX_SOUNDS = 5;
+  MutableLiveData<Integer> soundsLoadedToSoundPool = new MutableLiveData<>();
+  MutableLiveData<String> _timerText = new MutableLiveData<>();
+  MutableLiveData<Boolean> _timerFinished = new MutableLiveData<>();
   private ArrayList<Sound> allSounds = new ArrayList<>();
-  private MutableLiveData<ArrayList<Sound>> soundsLiveData = new MutableLiveData<>();
+  private MutableLiveData<ArrayList<Sound>> _soundsLiveData = new MutableLiveData<>();
   private List<Sound> playingSounds = new ArrayList<>();
-  private MutableLiveData<List<Sound>> playingSoundsLiveData = new MutableLiveData<>();
-  /** used to show notification in MainActivity to let user know that a sound is playing */
-  private MutableLiveData<Boolean> isAtLeastOneSoundPlaying = new MutableLiveData<>();
+  private MutableLiveData<List<Sound>> _playingSoundsLiveData = new MutableLiveData<>();
+  /**
+   * used to show notification in MainActivity to let user know that a sound is playing
+   */
+  private MutableLiveData<Boolean> _isAtLeastOneSoundPlaying = new MutableLiveData<>();
 
-  private MutableLiveData<Boolean> mutedLiveData = new MutableLiveData<>();
+  private MutableLiveData<Boolean> _mutedLiveData = new MutableLiveData<>();
   private boolean soundsFetched = false;
   private SoundPool soundPool;
-
-  MutableLiveData<Boolean> mutedLiveData() {
-    return mutedLiveData;
-  }
-
-  MutableLiveData<Boolean> isAtLeastOneSoundPlaying() {
-    return isAtLeastOneSoundPlaying;
-  }
-
-  MutableLiveData<Integer> soundsLoadedToSoundPool = new MutableLiveData<>();
+  private MutableLiveData<Boolean> _timerEnabled = new MutableLiveData<>();
+  private CountDownTimer countDownTimer;
 
   public SoundGridViewModel() {
     soundsLoadedToSoundPool.setValue(0);
   }
 
+  public MutableLiveData<Boolean> timerFinished() {
+    return _timerFinished;
+  }
+
+  public MutableLiveData<String> timerText() {
+    return _timerText;
+  }
+
+  public MutableLiveData<Boolean> timerEnabled() {
+    return _timerEnabled;
+  }
+
+  MutableLiveData<Boolean> mutedLiveData() {
+    return _mutedLiveData;
+  }
+
+  MutableLiveData<Boolean> isAtLeastOneSoundPlaying() {
+    return _isAtLeastOneSoundPlaying;
+  }
+
   void fetchSounds() {
+
+    // TODO: 01-Mar-20 Move to repository class so you can test
 
     Log.d(TAG, "fetchSounds: called");
 
@@ -147,12 +169,12 @@ public class SoundGridViewModel extends ViewModel {
                                             Log.d(TAG, "onSuccess: called");
 
                                             Sound fetchedSound =
-                                Sound.SoundBuilder.aSound()
-                                        .withName(sound.getName())
-                                        .withLogo(logoFile.getPath())
-                                        .withPro(sound.isPro())
-                                        .withFilePath(soundFile.getPath())
-                                        .build();
+                                                    Sound.SoundBuilder.aSound()
+                                                            .withName(sound.getName())
+                                                            .withLogo(logoFile.getPath())
+                                                            .withPro(sound.isPro())
+                                                            .withFilePath(soundFile.getPath())
+                                                            .build();
 
                                             allSounds.addAll(Arrays.asList(fetchedSound));
 
@@ -192,30 +214,30 @@ public class SoundGridViewModel extends ViewModel {
 
   MutableLiveData<ArrayList<Sound>> sounds() {
 
-    if (soundsLiveData.getValue() == null) {
-      soundsLiveData.setValue(new ArrayList<>());
+    if (_soundsLiveData.getValue() == null) {
+      _soundsLiveData.setValue(new ArrayList<>());
     }
 
-    return soundsLiveData;
+    return _soundsLiveData;
   }
 
   MutableLiveData<List<Sound>> playingSounds() {
 
-    if (playingSoundsLiveData.getValue() == null) {
-      playingSoundsLiveData.setValue(Collections.emptyList());
+    if (_playingSoundsLiveData.getValue() == null) {
+      _playingSoundsLiveData.setValue(Collections.emptyList());
     }
 
-    return playingSoundsLiveData;
+    return _playingSoundsLiveData;
   }
 
   private void refreshSoundLiveData() {
     Log.d(TAG, "refreshSoundLiveData: called: " + allSounds.toString());
-    soundsLiveData.setValue(allSounds);
+    _soundsLiveData.setValue(allSounds);
   }
 
   private void refreshPlayingSoundLiveData() {
     Log.d(TAG, "refreshPlayingSoundLiveData: called: size: " + playingSounds.size());
-    playingSoundsLiveData.setValue(playingSounds);
+    _playingSoundsLiveData.setValue(playingSounds);
   }
 
   void addToSounds(ArrayList<Sound> sounds) {
@@ -232,16 +254,16 @@ public class SoundGridViewModel extends ViewModel {
       if (sound.soundPoolId() == soundPoolId) {
         allSounds.set(
                 allSounds.indexOf(sound),
-            Sound.SoundBuilder.aSound()
-                .withSoundPoolId(soundPoolId)
-                .withStreamId(streamId)
-                    .withName(sound.getName())
-                    .withLogo(sound.getLogoPath())
-                    .withFilePath(sound.getFilePath())
-                .withPlaying(!sound.isPlaying())
-                .withVolume(sound.volume())
-                    .withPro(sound.isPro())
-                .build());
+                Sound.SoundBuilder.aSound()
+                        .withSoundPoolId(soundPoolId)
+                        .withStreamId(streamId)
+                        .withName(sound.getName())
+                        .withLogo(sound.getLogoPath())
+                        .withFilePath(sound.getFilePath())
+                        .withPlaying(!sound.isPlaying())
+                        .withVolume(sound.volume())
+                        .withPro(sound.isPro())
+                        .build());
 
         break;
       }
@@ -262,7 +284,7 @@ public class SoundGridViewModel extends ViewModel {
       playingSounds.clear();
     }
 
-    isAtLeastOneSoundPlaying.setValue(atLeastOneIsPlaying);
+    _isAtLeastOneSoundPlaying.setValue(atLeastOneIsPlaying);
 
     refreshSoundLiveData();
     refreshPlayingSoundLiveData();
@@ -271,7 +293,7 @@ public class SoundGridViewModel extends ViewModel {
   }
 
   void updateMuteLiveData(Boolean muted) {
-    mutedLiveData.setValue(muted);
+    _mutedLiveData.setValue(muted);
   }
 
   public boolean getSoundsAlreadyFetched() {
@@ -292,6 +314,34 @@ public class SoundGridViewModel extends ViewModel {
 
   public void updateVolume(Sound sound, Float volume) {
     allSounds.set(allSounds.indexOf(sound), Sound.withVolume(sound, volume));
-    soundsLiveData.setValue(allSounds);
+    _soundsLiveData.setValue(allSounds);
+  }
+
+  public CountDownTimer countDownTimer() {
+    return countDownTimer;
+  }
+
+  public void setCountDownTimer(int minutes) {
+    this.countDownTimer =
+            new CountDownTimer(TimeUnit.MINUTES.toMillis(minutes), 1000) {
+
+              public void onTick(long millisUntilFinished) {
+
+                // updateLiveDataHere() observe from Fragment
+                timerText()
+                        .setValue(
+                                String.format(
+                                        "Sound%s will stop in "
+                                                + TimerDialog.getCountTimeByLong(millisUntilFinished),
+                                        playingSounds().getValue().size() > 1 ? "s" : ""));
+              }
+
+              public void onFinish() {
+                // live data observe timer finished
+                timerFinished().setValue(true);
+              }
+            }.start();
+
+    timerFinished().setValue(false);
   }
 }

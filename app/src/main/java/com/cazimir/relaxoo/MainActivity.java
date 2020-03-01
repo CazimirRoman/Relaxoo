@@ -29,8 +29,16 @@ import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager.widget.ViewPager;
 
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesUpdatedListener;
+import com.android.billingclient.api.SkuDetails;
+import com.android.billingclient.api.SkuDetailsParams;
 import com.cazimir.relaxoo.adapter.PagerAdapter;
 import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog;
 import com.cazimir.relaxoo.dialog.OnTimerDialogCallback;
@@ -38,12 +46,17 @@ import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
 import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.model.Recording;
 import com.cazimir.relaxoo.model.SavedCombo;
+import com.cazimir.relaxoo.model.Sound;
+import com.cazimir.relaxoo.shared.SplashViewModel;
 import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment;
 import com.cazimir.relaxoo.ui.create_sound.OnRecordingStarted;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayout;
 import com.karumi.dexter.Dexter;
@@ -59,6 +72,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -73,20 +87,23 @@ import cafe.adriel.androidaudiorecorder.model.AudioChannel;
 import cafe.adriel.androidaudiorecorder.model.AudioSampleRate;
 import cafe.adriel.androidaudiorecorder.model.AudioSource;
 
+import static com.android.billingclient.api.BillingClient.newBuilder;
+
 public class MainActivity extends FragmentActivity
         implements OnActivityCallback,
         OnFavoriteSaved,
         OnTimerDialogCallback,
         OnFavoriteDeleted,
-        OnRecordingStarted {
+        OnRecordingStarted,
+        PurchasesUpdatedListener {
 
-  private static final String TAG = "MainActivity";
-  private static final String FAVORITE_FRAGMENT = ":1";
-  private static final String SOUND_GRID_FRAGMENT = ":0";
-  private static final String CREATE_SOUND_FRAGMENT = ":2";
-  private static final String CHANNEL_WHATEVER = "" + "";
-  private static final int RECORDING_REQ_CODE = 0;
-  private static int NOTIFY_ID = 1337;
+    private static final String TAG = "MainActivity";
+    private static final String FAVORITE_FRAGMENT = ":1";
+    private static final String SOUND_GRID_FRAGMENT = ":0";
+    private static final String CREATE_SOUND_FRAGMENT = ":2";
+    private static final String CHANNEL_WHATEVER = "" + "";
+    private static final int RECORDING_REQ_CODE = 0;
+    private static int NOTIFY_ID = 1337;
 
     @BindView(R.id.splash)
     AppCompatImageView splash;
@@ -94,99 +111,181 @@ public class MainActivity extends FragmentActivity
     @BindView(R.id.main_layout)
     LinearLayout mainLayout;
 
-  private NotificationManager notificationManager;
-  private int previousColor = R.color.colorPrimary;
-  private int nextColor = 0;
-  private MutableLiveData<Boolean> areWritePermissionsGranted = new MutableLiveData<>();
-  private MutableLiveData<Boolean> isSoundGridFragmentStarted = new MutableLiveData<>();
-  private MergePermissionFragmentStarted mergePermissionFragmentStarted;
+    @BindView(R.id.adBannerLayout)
+    LinearLayout adBannerLayout;
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+    private NotificationManager notificationManager;
+    private int previousColor = R.color.colorPrimary;
+    private int nextColor = 0;
+    private MutableLiveData<Boolean> areWritePermissionsGranted = new MutableLiveData<>();
+    private MutableLiveData<Boolean> isSoundGridFragmentStarted = new MutableLiveData<>();
+    private MergePermissionFragmentStarted mergePermissionFragmentStarted;
+    private AdView adView;
 
-    areWritePermissionsGranted.setValue(false);
-    isSoundGridFragmentStarted.setValue(false);
+    private BillingClient billingClient;
+    private List<String> skuList = Arrays.asList("remove_ads");
+    private SplashViewModel splashViewModel;
+    private TimerDialog timerdialog;
+    private SoundGridFragment soundGridFragment;
 
-    mergePermissionFragmentStarted = new MergePermissionFragmentStarted.Builder().build();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    setContentView(R.layout.main_activity);
-      ButterKnife.bind(this);
-    ViewPager pager = findViewById(R.id.pager);
-    pager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
-      TabLayout tabLayout = findViewById(R.id.tabDots);
-      tabLayout.setupWithViewPager(pager, true);
-    setupNotifications();
-    startColorChangeAnimation();
-    checkPermissions();
+        splashViewModel = new ViewModelProvider(this).get(SplashViewModel.class);
 
-    final MediatorLiveData<MergePermissionFragmentStarted> result = new MediatorLiveData<>();
+        areWritePermissionsGranted.setValue(false);
+        isSoundGridFragmentStarted.setValue(false);
 
-    result.addSource(
-            areWritePermissionsGranted,
-            permissionsGranted -> {
-                Log.d(TAG, "permissions granted: " + permissionsGranted);
-                mergePermissionFragmentStarted =
-                        MergePermissionFragmentStarted.withPermissionGranted(
-                                mergePermissionFragmentStarted, permissionsGranted);
-                result.setValue(mergePermissionFragmentStarted);
-            });
+        mergePermissionFragmentStarted = new MergePermissionFragmentStarted.Builder().build();
 
-    result.addSource(
-            isSoundGridFragmentStarted,
-            fragmentStarted -> {
-                Log.d(TAG, "fragment recordingStarted: " + fragmentStarted);
-                mergePermissionFragmentStarted =
-                        MergePermissionFragmentStarted.withFragmentInstantiated(
-                                mergePermissionFragmentStarted, fragmentStarted);
-                result.setValue(mergePermissionFragmentStarted);
-            });
+        setContentView(R.layout.main_activity);
+        ButterKnife.bind(this);
+        shouldShowSplash();
+        ViewPager pager = findViewById(R.id.pager);
+        pager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
+        TabLayout tabLayout = findViewById(R.id.tabDots);
+        tabLayout.setupWithViewPager(pager, true);
+        setupNotifications();
+        startColorChangeAnimation();
+        checkPermissions();
+        launchAds();
+        setupBillingClient();
 
-    result.observe(
-            this,
-            mergePermissionFragmentStarted -> {
-                Log.d(
-                        TAG,
-                        "onChanged() called with: mergePermissionFragmentStarted: "
-                                + mergePermissionFragmentStarted.toString());
+        final MediatorLiveData<MergePermissionFragmentStarted> result = new MediatorLiveData<>();
 
-                if (mergePermissionFragmentStarted.isFragmentStarted()
+        result.addSource(
+                areWritePermissionsGranted,
+                permissionsGranted -> {
+                    Log.d(TAG, "permissions granted: " + permissionsGranted);
+                    mergePermissionFragmentStarted =
+                            MergePermissionFragmentStarted.withPermissionGranted(
+                                    mergePermissionFragmentStarted, permissionsGranted);
+                    result.setValue(mergePermissionFragmentStarted);
+                });
+
+        result.addSource(
+                isSoundGridFragmentStarted,
+                fragmentStarted -> {
+                    Log.d(TAG, "fragment recordingStarted: " + fragmentStarted);
+                    mergePermissionFragmentStarted =
+                            MergePermissionFragmentStarted.withFragmentInstantiated(
+                                    mergePermissionFragmentStarted, fragmentStarted);
+                    result.setValue(mergePermissionFragmentStarted);
+                });
+
+        result.observe(
+                this,
+                mergePermissionFragmentStarted -> {
+                    Log.d(
+                            TAG,
+                            "onChanged() called with: mergePermissionFragmentStarted: "
+                                    + mergePermissionFragmentStarted.toString());
+
+                    if (mergePermissionFragmentStarted.isFragmentStarted()
                         && mergePermissionFragmentStarted.isPermissionsGranted()) {
 
-                    if (!getSoundGridFragment().soundsAlreadyFetched()) {
-                        Log.d(
-                                TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched());
-                        getSoundGridFragment().fetchSounds();
-                    }
-                }
-            });
-  }
-
-  private void checkPermissions() {
-    Dexter.withActivity(this)
-            .withPermissions(
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
-            .withListener(
-                    new MultiplePermissionsListener() {
-                        @Override
-                        public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        if (!getSoundGridFragment().soundsAlreadyFetched()) {
                             Log.d(
-                                    TAG,
-                                    "onPermissionsChecked: " + report.getGrantedPermissionResponses().toString());
-                            if (report.areAllPermissionsGranted()) {
-                                areWritePermissionsGranted.setValue(true);
+                                    TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched());
+                            getSoundGridFragment().fetchSounds();
+                        }
+                    }
+                });
+    }
+
+    private void shouldShowSplash() {
+        if (splashViewModel.getSplashShown()) {
+            hideSplash();
+        }
+    }
+
+    private void setupBillingClient() {
+        billingClient = newBuilder(this).enablePendingPurchases().setListener(this).build();
+
+        billingClient.startConnection(
+                new BillingClientStateListener() {
+                    @Override
+                    public void onBillingSetupFinished(BillingResult billingResult) {
+                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                            Log.d(TAG, "onBillingSetupFinished() called with: success!");
+                            loadAllSKUs();
+                        }
+                    }
+
+                    @Override
+                    public void onBillingServiceDisconnected() {
+                        Log.d(TAG, "onBillingServiceDisconnected() called with: failed");
+                        // Try to restart the connection on the next request to
+                        // Google Play by calling the startConnection() method.
+                    }
+                });
+    }
+
+    private void loadAllSKUs() {
+        if (billingClient.isReady()) {
+            SkuDetailsParams skuDetailsParams =
+                    SkuDetailsParams.newBuilder()
+                            .setSkusList(skuList)
+                            .setType(BillingClient.SkuType.INAPP)
+                            .build();
+
+            billingClient.querySkuDetailsAsync(
+                    skuDetailsParams,
+                    (billingResult, skuDetailsList) -> {
+                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
+                                && !skuDetailsList.isEmpty()) {
+                            for (SkuDetails skuDetail : skuDetailsList) {
+                                Toast.makeText(this, skuDetail.getDescription(), Toast.LENGTH_SHORT).show();
                             }
+                        } else {
+                            Log.d(TAG, "loadAllSKUs() called with: skuDetailsList is empty");
                         }
+                    });
+        } else {
+            Log.d(TAG, "loadAllSKUs() called with: billingClient is not ready");
+        }
+    }
 
-                        @Override
-                        public void onPermissionRationaleShouldBeShown(
-                                List<PermissionRequest> permissions, PermissionToken token) {
-                            Log.d(TAG, "onPermissionRationaleShouldBeShown: called");
+    private void launchAds() {
 
-                            /* ... */
-                        }
-                    })
-            .check();
+        this.adView = new AdView(this);
+        adView.setAdSize(AdSize.BANNER);
+        if (BuildConfig.DEBUG) {
+            adView.setAdUnitId(getResources().getString(R.string.ad_test));
+        } else {
+            adView.setAdUnitId(getResources().getString(R.string.ad_prod));
+        }
+        adBannerLayout.addView(adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
+    }
+
+    private void checkPermissions() {
+        Dexter.withActivity(this)
+                .withPermissions(
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
+                .withListener(
+                        new MultiplePermissionsListener() {
+                            @Override
+                            public void onPermissionsChecked(MultiplePermissionsReport report) {
+                                Log.d(
+                                        TAG,
+                                        "onPermissionsChecked: " + report.getGrantedPermissionResponses().toString());
+                                if (report.areAllPermissionsGranted()) {
+                                    areWritePermissionsGranted.setValue(true);
+                                }
+                            }
+
+                            @Override
+                            public void onPermissionRationaleShouldBeShown(
+                                    List<PermissionRequest> permissions, PermissionToken token) {
+                                Log.d(TAG, "onPermissionRationaleShouldBeShown: called");
+
+                                /* ... */
+                            }
+                        })
+                .check();
   }
 
   private void startColorChangeAnimation() {
@@ -289,7 +388,11 @@ public class MainActivity extends FragmentActivity
 
   @Override
   public void showTimerDialog() {
-    new TimerDialog(this).show(getSupportFragmentManager(), "timer");
+      if (timerdialog == null) {
+          timerdialog = new TimerDialog(this);
+      }
+
+      timerdialog.show(getSupportFragmentManager(), "timer");
   }
 
   @Override
@@ -325,14 +428,14 @@ public class MainActivity extends FragmentActivity
   }
 
   private CreateSoundFragment getCreateSoundFragment() {
-    return (CreateSoundFragment)
-            getSupportFragmentManager()
-                    .findFragmentByTag("android:switcher:" + R.id.pager + CREATE_SOUND_FRAGMENT);
+      return (CreateSoundFragment)
+              getSupportFragmentManager()
+                      .findFragmentByTag("android:switcher:" + R.id.pager + CREATE_SOUND_FRAGMENT);
   }
 
   @Override
   public void startCountDownTimer(Integer minutes) {
-    getSoundGridFragment().startCountDownTimer(minutes);
+      soundGridFragment.startCountDownTimer(minutes);
   }
 
   @Override
@@ -353,48 +456,56 @@ public class MainActivity extends FragmentActivity
     //      }
     //    });
 
-    dialog.setContentView(form);
-    dialog.show();
+      dialog.setContentView(form);
+      dialog.show();
   }
 
-  @Override
-  public void soundsFetchedAndSaved() {
-    Log.d(TAG, "soundsFetchedAndSaved() called");
-    checkIfFileIsThere();
-  }
+    @Override
+    public void soundsFetchedAndSaved() {
+        Log.d(TAG, "soundsFetchedAndSaved() called");
+        checkIfFileIsThere();
+    }
 
-  @Override
-  public void soundGridFragmentStarted() {
-    isSoundGridFragmentStarted.setValue(true);
-  }
+    @Override
+    public void soundGridFragmentStarted() {
+        Log.d(TAG, "soundGridFragmentStarted() called");
+        isSoundGridFragmentStarted.setValue(true);
+        this.soundGridFragment = getSoundGridFragment();
+    }
 
     @Override
     public void hideSplash() {
         splash.setVisibility(View.GONE);
         mainLayout.setVisibility(View.VISIBLE);
+        this.splashViewModel.splashShown();
     }
 
-  private void checkIfFileIsThere() {
+    @Override
+    public void removeAds() {
 
-    Log.d(TAG, "checkIfFileIsThere() called with: ");
-  }
+        //      billingClient
 
-  @Override
-  public void recordingStarted() {
-    checkRecordingPermission();
-  }
+        //    adBannerLayout.removeView(adView);
+    }
 
-  @Override
-  public void showBottomDialogForRecording(Recording recording) {
-    BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
-    final View form = getLayoutInflater().inflate(R.layout.dialog_bottom_recording, null);
+    private void checkIfFileIsThere() {
 
-    LinearLayout deleteRecording = form.findViewById(R.id.delete_recording);
-    deleteRecording.setOnClickListener(
-            new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+        Log.d(TAG, "checkIfFileIsThere() called with: ");
+    }
 
+    @Override
+    public void recordingStarted() {
+        checkRecordingPermission();
+    }
+
+    @Override
+    public void showBottomDialogForRecording(Recording recording) {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        final View form = getLayoutInflater().inflate(R.layout.dialog_bottom_recording, null);
+
+        LinearLayout deleteRecording = form.findViewById(R.id.delete_recording);
+        deleteRecording.setOnClickListener(
+                view -> {
                     bottomSheetDialog.dismiss();
 
                     new AlertDialog.Builder(MainActivity.this)
@@ -411,10 +522,9 @@ public class MainActivity extends FragmentActivity
                                     })
                             .setNegativeButton(android.R.string.no, null)
                             .show();
-                }
-            });
+                });
 
-    LinearLayout editRecording = form.findViewById(R.id.edit_recording_name);
+        LinearLayout editRecording = form.findViewById(R.id.edit_recording_name);
 
       editRecording.setOnClickListener(
               new View.OnClickListener() {
@@ -436,8 +546,8 @@ public class MainActivity extends FragmentActivity
 
                       // set dialog message
                       alertDialogBuilder
-                .setTitle("Rename created sound")
-                .setCancelable(false)
+                              .setTitle("Rename created sound")
+                              .setCancelable(false)
                               .setPositiveButton(
                                       "OK",
                                       new DialogInterface.OnClickListener() {
@@ -470,32 +580,51 @@ public class MainActivity extends FragmentActivity
                   }
               });
 
-    bottomSheetDialog.setContentView(form);
-    bottomSheetDialog.show();
-  }
+        LinearLayout pinToDashboard = form.findViewById(R.id.pin_to_dashboard);
+
+        pinToDashboard.setOnClickListener(
+                view -> {
+                    bottomSheetDialog.dismiss();
+
+                    // add to sounds array on soundgridfragment
+                    // add to sound pool
+                    Sound sound =
+                            Sound.SoundBuilder.aSound()
+                                    .withCustom(true)
+                                    .withFilePath(recording.getFile().getPath())
+                                    .withLogo("/storage/emulated/0/Relaxoo/logos/thunder.png")
+                                    .withName("Custom")
+                                    .build();
+
+                    getSoundGridFragment().addRecordingToSoundPool(sound);
+                });
+
+        bottomSheetDialog.setContentView(form);
+        bottomSheetDialog.show();
+    }
 
   private void checkRecordingPermission() {
-    Dexter.withActivity(this)
-            .withPermission(Manifest.permission.RECORD_AUDIO)
-            .withListener(
-                    new PermissionListener() {
-                        @Override
-                        public void onPermissionGranted(PermissionGrantedResponse response) {
-                            startRecordingActivity();
-                        }
+      Dexter.withActivity(this)
+              .withPermission(Manifest.permission.RECORD_AUDIO)
+              .withListener(
+                      new PermissionListener() {
+                          @Override
+                          public void onPermissionGranted(PermissionGrantedResponse response) {
+                              startRecordingActivity();
+                          }
 
-                        @Override
-                        public void onPermissionDenied(PermissionDeniedResponse response) {
-                            showToast("You need to grant recording permissions to record your own sound");
-                        }
+                          @Override
+                          public void onPermissionDenied(PermissionDeniedResponse response) {
+                              showToast("You need to grant recording permissions to record your own sound");
+                          }
 
-                        @Override
-                        public void onPermissionRationaleShouldBeShown(
-                                PermissionRequest permission, PermissionToken token) {
-                            /* ... */
-                        }
-                    })
-            .check();
+                          @Override
+                          public void onPermissionRationaleShouldBeShown(
+                                  PermissionRequest permission, PermissionToken token) {
+                              /* ... */
+                          }
+                      })
+              .check();
   }
 
   @Override
@@ -515,28 +644,32 @@ public class MainActivity extends FragmentActivity
 
   private void startRecordingActivity() {
 
-    File ownSoundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/own_sounds");
-    if (!ownSoundsFolder.exists()) {
-      ownSoundsFolder.mkdir();
-    }
+      File ownSoundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/own_sounds");
+      if (!ownSoundsFolder.exists()) {
+          ownSoundsFolder.mkdir();
+      }
 
-    String fileName = new SimpleDateFormat("yyyyMMddHHmmss'.wav'").format(new Date());
-    String filePath = Environment.getExternalStorageDirectory() + "/Relaxoo/own_sounds/" + fileName;
+      String fileName = new SimpleDateFormat("yyyyMMddHHmmss'.wav'").format(new Date());
+      String filePath = Environment.getExternalStorageDirectory() + "/Relaxoo/own_sounds/" + fileName;
 
-    int color = getResources().getColor(R.color.colorPrimaryDark);
-    int requestCode = RECORDING_REQ_CODE;
-    AndroidAudioRecorder.with(this)
-            // Required
-            .setFilePath(filePath)
-            .setColor(color)
-            .setRequestCode(requestCode)
-            // Optional
-            .setSource(AudioSource.MIC)
-            .setChannel(AudioChannel.STEREO)
-            .setSampleRate(AudioSampleRate.HZ_48000)
-            .setAutoStart(false)
-            .setKeepDisplayOn(true)
-            // Start recording
-            .record();
+      int color = getResources().getColor(R.color.colorPrimaryDark);
+      int requestCode = RECORDING_REQ_CODE;
+      AndroidAudioRecorder.with(this)
+              // Required
+              .setFilePath(filePath)
+              .setColor(color)
+              .setRequestCode(requestCode)
+              // Optional
+              .setSource(AudioSource.MIC)
+              .setChannel(AudioChannel.STEREO)
+              .setSampleRate(AudioSampleRate.HZ_48000)
+              .setAutoStart(false)
+              .setKeepDisplayOn(true)
+              // Start recording
+              .record();
   }
+
+    @Override
+    public void onPurchasesUpdated(BillingResult billingResult, @Nullable List<Purchase> purchases) {
+    }
 }

@@ -7,7 +7,7 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/convert_to_sound"
+        android:id="@+id/pin_to_dashboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">

@@ -3,7 +3,6 @@ package com.cazimir.relaxoo.ui.about;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,18 +10,19 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.cazimir.relaxoo.MainActivity;
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.AboutListAdapter;
 import com.cazimir.relaxoo.model.AboutItem;
+import com.cazimir.relaxoo.model.MenuItemType;
+import com.cazimir.relaxoo.ui.MoreAppsActivity;
+import com.cazimir.relaxoo.ui.PrivacyPolicyActivity;
 import com.cazimir.relaxoo.ui.settings.SettingsActivity;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -34,17 +34,11 @@ public class AboutFragment extends Fragment {
 
   @BindView(R.id.about_recycler_view)
   RecyclerView aboutRecyclerView;
-  private AboutViewModel aboutViewModel;
+
   private OnActivityCallback activityCallback;
 
   public static AboutFragment newInstance() {
     return new AboutFragment();
-  }
-
-  @Override
-  public void onAttach(@NonNull Context context) {
-    super.onAttach(context);
-    activityCallback = (MainActivity) context;
   }
 
   @Override
@@ -63,48 +57,74 @@ public class AboutFragment extends Fragment {
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    aboutViewModel = ViewModelProviders.of(this).get(AboutViewModel.class);
-    aboutViewModel.populateAboutItems();
+    aboutRecyclerView.setAdapter(
+            new AboutListAdapter(
+                    getContext(),
+                    populateAboutItems(),
+                    item -> {
+                      switch (item.getName()) {
+                        case REMOVE_ADS:
+                          startRemoveAdsAction();
+                        case SETTINGS:
+                          startSettingsActivity();
+                          break;
+                        case SHARE:
+                          startShareAction();
+                          break;
+                        case PRIVACY_POLICY:
+                          startPrivacyPolicyActivity();
+                          break;
+                        case RATE_APP:
+                          startRateAppAction();
+                          break;
+                        case MORE_APPS:
+                          startMoreAppsActivity();
+                          break;
+                      }
+                    }));
+  }
 
-    aboutViewModel.aboutItems().observe(getViewLifecycleOwner(), new Observer<List<AboutItem>>() {
-      @Override
-      public void onChanged(List<AboutItem> aboutItems) {
-        Log.d(TAG, "aboutItems fetched!");
-        aboutRecyclerView.setAdapter(new AboutListAdapter(getContext(), aboutItems, new AboutListAdapter.Interactor() {
-          @Override
-          public void onItemClick(AboutItem item) {
-            switch (item.getName()) {
-              case "Settings":
-                aboutViewModel.settings();
+  private void startRemoveAdsAction() {
+    activityCallback.removeAds();
+  }
 
-            }
-            activityCallback.showToast(String.format("Clicked on %s", item.getName()));
-          }
-        }));
-      }
+  @Override
+  public void onAttach(@NonNull Context context) {
+    super.onAttach(context);
+    this.activityCallback = (OnActivityCallback) context;
+  }
 
+  private void startMoreAppsActivity() {
+    startActivity(new Intent(getActivity(), MoreAppsActivity.class));
+  }
 
-    });
+  private void startPrivacyPolicyActivity() {
+    startActivity(new Intent(getActivity(), PrivacyPolicyActivity.class));
+  }
 
-    aboutViewModel.get_removeAds().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
-      @Override
-      public void onChanged(Boolean aBoolean) {
-        // hide ads on view
-      }
-    });
+  private void startRateAppAction() {
+  }
 
-    aboutViewModel.get_settings().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
-      @Override
-      public void onChanged(Boolean settingsClicked) {
-        startActivity(new Intent(getActivity(), SettingsActivity.class));
-      }
-    });
+  private void startShareAction() {
+    Intent sendIntent = new Intent();
+    sendIntent.setAction(Intent.ACTION_SEND);
+    sendIntent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.share_text));
+    sendIntent.setType("text/plain");
+    startActivity(sendIntent);
+  }
 
-    aboutViewModel.get_share().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
-      @Override
-      public void onChanged(Boolean shareClicked) {
-        // open share dialog
-      }
-    });
+  private void startSettingsActivity() {
+    startActivity(new Intent(getActivity(), SettingsActivity.class));
+  }
+
+  private List<AboutItem> populateAboutItems() {
+    List<AboutItem> aboutItems = new ArrayList<>();
+    aboutItems.add(new AboutItem(MenuItemType.REMOVE_ADS, R.drawable.ic_message));
+    aboutItems.add(new AboutItem(MenuItemType.SETTINGS, R.drawable.ic_message));
+    aboutItems.add(new AboutItem(MenuItemType.SHARE, R.drawable.ic_message));
+    aboutItems.add(new AboutItem(MenuItemType.PRIVACY_POLICY, R.drawable.ic_message));
+    aboutItems.add(new AboutItem(MenuItemType.RATE_APP, R.drawable.ic_message));
+    aboutItems.add(new AboutItem(MenuItemType.MORE_APPS, R.drawable.ic_message));
+    return aboutItems;
   }
 }

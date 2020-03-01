@@ -51,9 +51,11 @@ dependencies {
     implementation 'com.karumi:dexter:6.0.1'
     implementation 'com.google.firebase:firebase-database:19.2.0'
     implementation 'com.jakewharton:butterknife:10.2.1'
-    implementation 'com.github.adrielcafe:AndroidAudioRecorder:0.3.0'
+    implementation 'com.github.CazimirRoman:AndroidAudioRecorder:0.3.2'
     implementation 'commons-io:commons-io:2.6'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
+    implementation 'com.google.firebase:firebase-ads:17.0.0'
+    implementation 'com.android.billingclient:billing:2.0.3'
     androidTestImplementation 'androidx.test:rules:1.3.0-alpha03'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
     testImplementation 'junit:junit:4.12'
@@ -63,5 +65,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test:rules:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    compile "org.jetbrains.kotlin:kotlin-reflect:1.3.50"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.50"
 }

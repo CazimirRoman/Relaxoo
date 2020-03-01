@@ -21,8 +21,7 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
     private List<AboutItem> data;
     private Interactor interactor;
 
-    public AboutListAdapter(Context context, List<AboutItem> data,
-                            Interactor interactor) {
+    public AboutListAdapter(Context context, List<AboutItem> data, Interactor interactor) {
         this.context = context;
         this.data = data;
         this.interactor = interactor;
@@ -44,8 +43,7 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
     }
 
     /**
-     * get item from list
-     * set listeners for views
+     * get item from list set listeners for views
      *
      * @param rowholder
      * @param position
@@ -56,16 +54,10 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
         final AboutItem item = data.get(position);
 
         // example
-        rowholder.name.setText(item.getName());
+        rowholder.name.setText(item.getName().toString());
         rowholder.icon.setImageResource(item.getIcon());
 
-        rowholder.name.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        interactor.onItemClick(item);
-                    }
-                });
+        rowholder.name.setOnClickListener(view -> interactor.onItemClick(item));
     }
 
     @Override
@@ -94,5 +86,4 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
             // rest of the views
         }
     }
-
 }
