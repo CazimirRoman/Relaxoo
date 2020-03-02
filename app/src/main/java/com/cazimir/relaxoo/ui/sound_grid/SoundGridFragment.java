@@ -534,4 +534,8 @@ public class SoundGridFragment extends Fragment {
         newList.add(Sound.withSoundPoolId(sound, soundId));
         viewModel.addToSounds(newList);
     }
+
+    public void scrollToBottom() {
+        gridView.smoothScrollToPosition(gridArrayAdapter.getCount());
+    }
 }

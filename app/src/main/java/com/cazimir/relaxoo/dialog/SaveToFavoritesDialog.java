@@ -10,7 +10,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.DialogFragment;
 
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.model.SavedCombo;
@@ -18,21 +17,21 @@ import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 
 import java.util.HashMap;
 
-public class SaveToFavoritesDialog extends DialogFragment
-    implements DialogInterface.OnClickListener {
+public class SaveToFavoritesDialog extends RetainableDialogFragment
+        implements DialogInterface.OnClickListener {
 
   private static final String TAG = "SaveToFavoritesDialog";
-  private OnFavoriteSaved addToListInFragmentCallback;
-
-  private View form = null;
   private final HashMap<Integer, Integer> playingSoundsParameters;
+  private OnFavoriteSaved addToListInFragmentCallback;
+  private View form = null;
 
   public SaveToFavoritesDialog(HashMap<Integer, Integer> playingSounds) {
     this.playingSoundsParameters = playingSounds;
+    setRetainInstance(true);
   }
 
   @NonNull
-    @Override
+  @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
 
     addToListInFragmentCallback = (OnFavoriteSaved) getContext();
@@ -52,8 +51,13 @@ public class SaveToFavoritesDialog extends DialogFragment
   @Override
   public void onClick(DialogInterface dialog, int which) {
     EditText comboName = form.findViewById(R.id.comboName);
-    //saving a new combo
-    SavedCombo savedCombo = new SavedCombo.Builder().withName(comboName.getText().toString()).withSoundPoolParameters(playingSoundsParameters).withPlaying(true).build();
+    // saving a new combo
+    SavedCombo savedCombo =
+            new SavedCombo.Builder()
+                    .withName(comboName.getText().toString())
+                    .withSoundPoolParameters(playingSoundsParameters)
+                    .withPlaying(true)
+                    .build();
     addToListInFragmentCallback.saved(savedCombo);
     Toast.makeText(getActivity(), "Saved combo!", Toast.LENGTH_LONG).show();
   }

@@ -13,25 +13,20 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cazimir.relaxoo.R;
+import com.cazimir.relaxoo.model.ListOfSavedCombos;
 import com.cazimir.relaxoo.model.SavedCombo;
-
-import java.util.List;
 
 public class SavedComboAdapter extends RecyclerView.Adapter<SavedComboAdapter.RowHolder> {
 
   private static final String TAG = SavedComboAdapter.class.getSimpleName();
   private final OnItemClickListener listener;
   private Context context;
-  private List<SavedCombo> list;
+  private ListOfSavedCombos list;
 
-  public SavedComboAdapter(Context context, List<SavedCombo> list, OnItemClickListener listener) {
+  public SavedComboAdapter(Context context, ListOfSavedCombos list, OnItemClickListener listener) {
     this.context = context;
     this.list = list;
     this.listener = listener;
-  }
-
-  public void addCombo(SavedCombo savedCombo) {
-   list.add(savedCombo);
   }
 
   /** Inflate custom layout to use
@@ -56,7 +51,7 @@ public class SavedComboAdapter extends RecyclerView.Adapter<SavedComboAdapter.Ro
   @Override
   public void onBindViewHolder(RowHolder holder, final int position) {
 
-    final SavedCombo savedCombo = list.get(position);
+    final SavedCombo savedCombo = list.getSavedComboList().get(position);
 
     holder.comboText.setText(savedCombo.name());
     holder.parentLayout.setOnClickListener(
@@ -64,7 +59,7 @@ public class SavedComboAdapter extends RecyclerView.Adapter<SavedComboAdapter.Ro
           @Override
           public void onClick(View v) {
             Log.d(TAG, "Clicked on combo in favorites list with active sounds: " + savedCombo.getSoundPoolParameters().toString());
-            listener.onItemClick(list.get(position));
+            listener.onItemClick(list.getSavedComboList().get(position));
           }
         });
 
@@ -78,12 +73,7 @@ public class SavedComboAdapter extends RecyclerView.Adapter<SavedComboAdapter.Ro
 
   @Override
   public int getItemCount() {
-    return list.size();
-  }
-
-  public void removeCombo(int position) {
-    list.remove(list.get(position));
-    notifyDataSetChanged();
+    return list.getSavedComboList().size();
   }
 
   public interface OnItemClickListener {

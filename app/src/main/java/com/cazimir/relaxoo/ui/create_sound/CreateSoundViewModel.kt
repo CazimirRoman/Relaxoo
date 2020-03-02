@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.repository.ISoundRepository
 import java.io.File
-import java.util.*
+import java.util.ArrayList
 
 class CreateSoundViewModel : ViewModel() {
 
@@ -14,7 +14,7 @@ class CreateSoundViewModel : ViewModel() {
     }
 
     private var recordings: Array<File>? = null
-    val recordingsLive = MutableLiveData<ArrayList<Recording>>()
+    val _recordingsLive = MutableLiveData<ArrayList<Recording>>()
 
     lateinit var repository: ISoundRepository
 
@@ -28,7 +28,7 @@ class CreateSoundViewModel : ViewModel() {
             recordingsList.add(Recording.Builder().withFile(file).withFileName(file.name).build())
         }
 
-        recordingsLive.value = recordingsList
+        _recordingsLive.value = recordingsList
     }
 
     fun deleteRecording(recording: Recording) {

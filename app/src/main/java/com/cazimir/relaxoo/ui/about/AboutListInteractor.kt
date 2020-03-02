@@ -9,7 +9,7 @@ class AboutListInteractor : IAboutListInteractor {
 
     override fun removeAds(): LiveData<Boolean> {
 
-        // so some work to remove ads
+        // do some work to remove ads
         // then set removedAds to either true or false
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

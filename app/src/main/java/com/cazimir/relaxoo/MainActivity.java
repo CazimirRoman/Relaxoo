@@ -47,7 +47,7 @@ import com.cazimir.relaxoo.dialog.TimerDialog;
 import com.cazimir.relaxoo.model.Recording;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.model.Sound;
-import com.cazimir.relaxoo.shared.SplashViewModel;
+import com.cazimir.relaxoo.shared.MainActivityViewModel;
 import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment;
 import com.cazimir.relaxoo.ui.create_sound.OnRecordingStarted;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
@@ -77,7 +77,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import java.util.Timer;
 import java.util.TimerTask;
 
 import butterknife.BindView;
@@ -115,8 +114,7 @@ public class MainActivity extends FragmentActivity
     LinearLayout adBannerLayout;
 
     private NotificationManager notificationManager;
-    private int previousColor = R.color.colorPrimary;
-    private int nextColor = 0;
+
     private MutableLiveData<Boolean> areWritePermissionsGranted = new MutableLiveData<>();
     private MutableLiveData<Boolean> isSoundGridFragmentStarted = new MutableLiveData<>();
     private MergePermissionFragmentStarted mergePermissionFragmentStarted;
@@ -124,15 +122,16 @@ public class MainActivity extends FragmentActivity
 
     private BillingClient billingClient;
     private List<String> skuList = Arrays.asList("remove_ads");
-    private SplashViewModel splashViewModel;
+    private MainActivityViewModel mainActivityViewModel;
     private TimerDialog timerdialog;
     private SoundGridFragment soundGridFragment;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        splashViewModel = new ViewModelProvider(this).get(SplashViewModel.class);
+        mainActivityViewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
 
         areWritePermissionsGranted.setValue(false);
         isSoundGridFragmentStarted.setValue(false);
@@ -142,10 +141,10 @@ public class MainActivity extends FragmentActivity
         setContentView(R.layout.main_activity);
         ButterKnife.bind(this);
         shouldShowSplash();
-        ViewPager pager = findViewById(R.id.pager);
-        pager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
+        this.viewPager = findViewById(R.id.pager);
+        viewPager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
         TabLayout tabLayout = findViewById(R.id.tabDots);
-        tabLayout.setupWithViewPager(pager, true);
+        tabLayout.setupWithViewPager(viewPager, true);
         setupNotifications();
         startColorChangeAnimation();
         checkPermissions();
@@ -183,7 +182,7 @@ public class MainActivity extends FragmentActivity
                                     + mergePermissionFragmentStarted.toString());
 
                     if (mergePermissionFragmentStarted.isFragmentStarted()
-                        && mergePermissionFragmentStarted.isPermissionsGranted()) {
+                            && mergePermissionFragmentStarted.isPermissionsGranted()) {
 
                         if (!getSoundGridFragment().soundsAlreadyFetched()) {
                             Log.d(
@@ -195,7 +194,7 @@ public class MainActivity extends FragmentActivity
     }
 
     private void shouldShowSplash() {
-        if (splashViewModel.getSplashShown()) {
+        if (mainActivityViewModel.getSplashShown()) {
             hideSplash();
         }
     }
@@ -292,51 +291,54 @@ public class MainActivity extends FragmentActivity
 
       final FrameLayout parentLayout = findViewById(R.id.parentLayout);
 
-    Timer timer = new Timer();
-    // Set the schedule function
-    timer.scheduleAtFixedRate(
-        new TimerTask() {
-          @Override
-          public void run() {
+      parentLayout.setBackgroundColor(mainActivityViewModel.getNextColor());
 
-            runOnUiThread(
-                new Runnable() {
-                  @Override
-                  public void run() {
-
-                    nextColor = getRandomColor();
-
-                    Log.d(
-                        TAG,
-                        String.format(
-                            "run: called. previousColor: %s and nextColor: %s",
-                            previousColor, nextColor));
-
-                    int duration = 1500;
-                    ObjectAnimator animator =
-                        ObjectAnimator.ofObject(
-                                parentLayout,
-                                "backgroundColor",
-                                new ArgbEvaluator(),
-                                previousColor,
-                                nextColor)
-                            .setDuration(duration);
-
-                    animator.addListener(
-                        new AnimatorListenerAdapter() {
+      mainActivityViewModel
+              .getTimer()
+              .scheduleAtFixedRate(
+                      new TimerTask() {
                           @Override
-                          public void onAnimationEnd(Animator animation) {
-                            previousColor = nextColor;
-                          }
-                        });
+                          public void run() {
 
-                    animator.start();
-                  }
-                });
-          }
-        },
-        2000,
-        10000);
+                              runOnUiThread(
+                                      new Runnable() {
+                                          @Override
+                                          public void run() {
+
+                                              mainActivityViewModel.setNextColor(getRandomColor());
+
+                                              Log.d(
+                                                      TAG,
+                                                      String.format(
+                                                              "run: called. previousColor: %s and nextColor: %s",
+                                                              mainActivityViewModel.getPreviousColor(),
+                                                              mainActivityViewModel.getNextColor()));
+
+                                              int duration = 1500;
+                                              ObjectAnimator animator =
+                                                      ObjectAnimator.ofObject(
+                                                              parentLayout,
+                                                              "backgroundColor",
+                                                              new ArgbEvaluator(),
+                                                              mainActivityViewModel.getPreviousColor(),
+                                                              mainActivityViewModel.getNextColor())
+                                                              .setDuration(duration);
+
+                                              animator.addListener(
+                                                      new AnimatorListenerAdapter() {
+                                                          @Override
+                                                          public void onAnimationEnd(Animator animation) {
+                                                              mainActivityViewModel.setPreviousColor(mainActivityViewModel.getNextColor());
+                                                          }
+                                                      });
+
+                                              animator.start();
+                                          }
+                                      });
+                          }
+                      },
+                      2000,
+                      10000);
   }
 
   private int getRandomColor() {
@@ -446,15 +448,15 @@ public class MainActivity extends FragmentActivity
   @Override
   public void showBottomDialogForPro() {
     BottomSheetDialog dialog = new BottomSheetDialog(this);
-    final View form = getLayoutInflater().inflate(R.layout.dialog_bottom_unlock_pro, null);
+      final View form = getLayoutInflater().inflate(R.layout.dialog_bottom_unlock_pro, null);
 
-    //    TextView textView = form.findViewById(R.id.proIcon);
-    //    textView.setOnClickListener(new View.OnClickListener() {
-    //      @Override
-    //      public void onClick(View v) {
-    //        showToast("clicken on Textview in Bottombar");
-    //      }
-    //    });
+      //    TextView textView = form.findViewById(R.id.proIcon);
+      //    textView.setOnClickListener(new View.OnClickListener() {
+      //      @Override
+      //      public void onClick(View v) {
+      //        showToast("clicken on Textview in Bottombar");
+      //      }
+      //    });
 
       dialog.setContentView(form);
       dialog.show();
@@ -477,7 +479,7 @@ public class MainActivity extends FragmentActivity
     public void hideSplash() {
         splash.setVisibility(View.GONE);
         mainLayout.setVisibility(View.VISIBLE);
-        this.splashViewModel.splashShown();
+        this.mainActivityViewModel.splashShown();
     }
 
     @Override
@@ -526,59 +528,59 @@ public class MainActivity extends FragmentActivity
 
         LinearLayout editRecording = form.findViewById(R.id.edit_recording_name);
 
-      editRecording.setOnClickListener(
-              new View.OnClickListener() {
-                  @Override
-                  public void onClick(View v) {
-                      bottomSheetDialog.dismiss();
+        editRecording.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        bottomSheetDialog.dismiss();
 
-                      LayoutInflater li = LayoutInflater.from(MainActivity.this);
-                      View promptsView = li.inflate(R.layout.edit_recording, null);
+                        LayoutInflater li = LayoutInflater.from(MainActivity.this);
+                        View promptsView = li.inflate(R.layout.edit_recording, null);
 
-                      AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
 
-                      // set prompts.xml to alertdialog builder
-                      alertDialogBuilder.setView(promptsView);
+                        // set prompts.xml to alertdialog builder
+                        alertDialogBuilder.setView(promptsView);
 
-                      final EditText userInput = promptsView.findViewById(R.id.new_recording_name);
+                        final EditText userInput = promptsView.findViewById(R.id.new_recording_name);
 
-                      userInput.setText(FilenameUtils.removeExtension(recording.getFile().getName()));
+                        userInput.setText(FilenameUtils.removeExtension(recording.getFile().getName()));
 
-                      // set dialog message
-                      alertDialogBuilder
-                              .setTitle("Rename created sound")
-                              .setCancelable(false)
-                              .setPositiveButton(
-                                      "OK",
-                                      new DialogInterface.OnClickListener() {
-                                          public void onClick(DialogInterface dialog, int id) {
-                                              // get user input and set it to result
-                                              // edit text
+                        // set dialog message
+                        alertDialogBuilder
+                                .setTitle("Rename created sound")
+                                .setCancelable(false)
+                                .setPositiveButton(
+                                        "OK",
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                // get user input and set it to result
+                                                // edit text
 
-                                              // rename file on disk
-                                              getCreateSoundFragment()
-                                                      .renameRecording(recording, userInput.getText().toString());
-                                          }
-                                      })
-                              .setNegativeButton(
-                                      "Cancel",
-                                      new DialogInterface.OnClickListener() {
-                                          public void onClick(DialogInterface dialog, int id) {
-                                              dialog.cancel();
-                                          }
-                                      });
+                                                // rename file on disk
+                                                getCreateSoundFragment()
+                                                        .renameRecording(recording, userInput.getText().toString());
+                                            }
+                                        })
+                                .setNegativeButton(
+                                        "Cancel",
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                dialog.cancel();
+                                            }
+                                        });
 
-                      // create alert dialog
-                      AlertDialog alertDialog = alertDialogBuilder.create();
+                        // create alert dialog
+                        AlertDialog alertDialog = alertDialogBuilder.create();
 
-                      alertDialog
-                              .getWindow()
-                              .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+                        alertDialog
+                                .getWindow()
+                                .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
-                      // show it
-                      alertDialog.show();
-                  }
-              });
+                        // show it
+                        alertDialog.show();
+                    }
+                });
 
         LinearLayout pinToDashboard = form.findViewById(R.id.pin_to_dashboard);
 
@@ -597,34 +599,40 @@ public class MainActivity extends FragmentActivity
                                     .build();
 
                     getSoundGridFragment().addRecordingToSoundPool(sound);
+                    scrollViewPager();
                 });
 
         bottomSheetDialog.setContentView(form);
         bottomSheetDialog.show();
     }
 
-  private void checkRecordingPermission() {
-      Dexter.withActivity(this)
-              .withPermission(Manifest.permission.RECORD_AUDIO)
-              .withListener(
-                      new PermissionListener() {
-                          @Override
-                          public void onPermissionGranted(PermissionGrantedResponse response) {
-                              startRecordingActivity();
-                          }
+    private void scrollViewPager() {
+        viewPager.setCurrentItem(0);
+        getSoundGridFragment().scrollToBottom();
+    }
 
-                          @Override
-                          public void onPermissionDenied(PermissionDeniedResponse response) {
-                              showToast("You need to grant recording permissions to record your own sound");
-                          }
+    private void checkRecordingPermission() {
+        Dexter.withActivity(this)
+                .withPermission(Manifest.permission.RECORD_AUDIO)
+                .withListener(
+                        new PermissionListener() {
+                            @Override
+                            public void onPermissionGranted(PermissionGrantedResponse response) {
+                                startRecordingActivity();
+                            }
 
-                          @Override
-                          public void onPermissionRationaleShouldBeShown(
-                                  PermissionRequest permission, PermissionToken token) {
-                              /* ... */
-                          }
-                      })
-              .check();
+                            @Override
+                            public void onPermissionDenied(PermissionDeniedResponse response) {
+                                showToast("You need to grant recording permissions to record your own sound");
+                            }
+
+                            @Override
+                            public void onPermissionRationaleShouldBeShown(
+                                    PermissionRequest permission, PermissionToken token) {
+                                /* ... */
+                            }
+                        })
+                .check();
   }
 
   @Override

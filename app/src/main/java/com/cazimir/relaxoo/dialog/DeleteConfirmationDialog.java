@@ -7,13 +7,12 @@ import android.os.Bundle;
 import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.DialogFragment;
 
 import com.cazimir.relaxoo.OnFavoriteDeleted;
 import com.cazimir.relaxoo.R;
 
-public class DeleteConfirmationDialog extends DialogFragment
-    implements DialogInterface.OnClickListener {
+public class DeleteConfirmationDialog extends RetainableDialogFragment
+        implements DialogInterface.OnClickListener {
 
   private static final String TAG = DeleteConfirmationDialog.class.getSimpleName();
   private int position;
@@ -21,6 +20,7 @@ public class DeleteConfirmationDialog extends DialogFragment
 
   public DeleteConfirmationDialog(int position) {
     this.position = position;
+    setRetainInstance(true);
   }
 
   @Override

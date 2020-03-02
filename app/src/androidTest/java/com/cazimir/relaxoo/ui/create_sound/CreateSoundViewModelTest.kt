@@ -17,7 +17,7 @@ import java.io.File
 class CreateSoundViewModelTest {
 
     @Rule
-    @JvmField
+    @JvmField    // A JUnit Test Rule that swaps the background executor used by the Architecture Components with a different one which executes each task synchronously.
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val recordingsObserver: Observer<ArrayList<Recording>> = mock()
@@ -32,7 +32,7 @@ class CreateSoundViewModelTest {
 
     @Before
     fun setUp() {
-        viewModel.recordingsLive.observeForever(recordingsObserver)
+        viewModel._recordingsLive.observeForever(recordingsObserver)
         viewModel.repository = mockSoundRepository
     }
 
