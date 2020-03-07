@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.SavedComboAdapter;
+import com.cazimir.relaxoo.dialog.FavoriteDeleted;
+import com.cazimir.relaxoo.dialog.OnDeleted;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 
@@ -66,6 +68,8 @@ public class FavoritesFragment extends Fragment {
                       // update recyclerview
                       favoritesList.setLayoutManager(new LinearLayoutManager(getContext()));
                       adapter = new SavedComboAdapter(getContext(), savedCombos, new SavedComboAdapter.OnItemClickListener() {
+                        private int positionToBeDeleted;
+
                         @Override
                         public void onItemClick(SavedCombo savedCombo) {
                           activityCallback.triggerCombo(savedCombo);
@@ -74,7 +78,15 @@ public class FavoritesFragment extends Fragment {
 
                         @Override
                         public void onItemDeleted(int position) {
-                          activityCallback.showDeleteConfirmationDialog(position);
+                          this.positionToBeDeleted = position;
+
+                          OnDeleted deleted = new FavoriteDeleted() {
+                            @Override
+                            public void deleted() {
+                              deleteFavorite(positionToBeDeleted);
+                            }
+                          };
+                          activityCallback.showDeleteConfirmationDialog(deleted);
                         }
                       });
                       favoritesList.setAdapter(adapter);

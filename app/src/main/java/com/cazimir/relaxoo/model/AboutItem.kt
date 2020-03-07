@@ -2,7 +2,7 @@ package com.cazimir.relaxoo.model
 
 class AboutItem(val name: MenuItemType, val icon: Int)
 
-enum class MenuItemType(name: String) {
+enum class MenuItemType(val itemName: String) {
     REMOVE_ADS("Remove Ads"),
     SETTINGS("Settings"),
     SHARE("Share"),

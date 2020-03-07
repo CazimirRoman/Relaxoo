@@ -27,7 +27,6 @@ public class TimerDialog extends RetainableDialogFragment {
 
   public TimerDialog(OnTimerDialogCallback callback) {
     this.callback = callback;
-    setRetainInstance(true);
   }
 
   public TimerDialog() {

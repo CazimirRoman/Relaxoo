@@ -65,6 +65,7 @@ public class AboutFragment extends Fragment {
                       switch (item.getName()) {
                         case REMOVE_ADS:
                           startRemoveAdsAction();
+                          break;
                         case SETTINGS:
                           startSettingsActivity();
                           break;

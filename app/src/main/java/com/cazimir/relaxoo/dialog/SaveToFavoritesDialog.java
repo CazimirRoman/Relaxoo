@@ -27,7 +27,6 @@ public class SaveToFavoritesDialog extends RetainableDialogFragment
 
   public SaveToFavoritesDialog(HashMap<Integer, Integer> playingSounds) {
     this.playingSoundsParameters = playingSounds;
-    setRetainInstance(true);
   }
 
   @NonNull

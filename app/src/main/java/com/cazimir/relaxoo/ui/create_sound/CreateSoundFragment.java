@@ -35,21 +35,19 @@ import butterknife.OnClick;
 public class CreateSoundFragment extends Fragment {
 
   private static final String TAG = "CreateSoundFragment";
-
   @BindView(R.id.add_recording)
   FloatingActionButton addRecordingButton;
-
   @BindView(R.id.recording_list)
   RecyclerView recordingList;
-
   @BindView(R.id.no_recordings_text)
   TextView noRecordingsText;
-
   private CreateSoundViewModel viewModel;
-
   private OnRecordingStarted activityCallback;
-
   private MediaPlayer mediaPlayer;
+
+  public CreateSoundFragment() {
+    setRetainInstance(true);
+  }
 
   public static CreateSoundFragment newInstance() {
     return new CreateSoundFragment();
@@ -57,9 +55,9 @@ public class CreateSoundFragment extends Fragment {
 
   @Override
   public View onCreateView(
-      @NonNull LayoutInflater inflater,
-      @Nullable ViewGroup container,
-      @Nullable Bundle savedInstanceState) {
+          @NonNull LayoutInflater inflater,
+          @Nullable ViewGroup container,
+          @Nullable Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.create_sound_fragment, container, false);
     ButterKnife.bind(this, view);
 

@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -54,10 +55,10 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
         final AboutItem item = data.get(position);
 
         // example
-        rowholder.name.setText(item.getName().toString());
+        rowholder.name.setText(item.getName().getItemName());
         rowholder.icon.setImageResource(item.getIcon());
 
-        rowholder.name.setOnClickListener(view -> interactor.onItemClick(item));
+        rowholder.rootLayout.setOnClickListener(view -> interactor.onItemClick(item));
     }
 
     @Override
@@ -74,6 +75,7 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
      */
     public static class RowHolder extends RecyclerView.ViewHolder {
 
+        private LinearLayout rootLayout;
         private TextView name;
         private ImageView icon;
 
@@ -82,6 +84,7 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
             // example
             name = view.findViewById(R.id.about_item_name);
             icon = view.findViewById(R.id.about_item_logo);
+            rootLayout = view.findViewById(R.id.rootLayout);
 
             // rest of the views
         }
