@@ -7,13 +7,16 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -29,20 +32,21 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.cazimir.relaxoo.adapter.PagerAdapter;
-import com.cazimir.relaxoo.dialog.BottomRecordingDialogFragment;
 import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog;
-import com.cazimir.relaxoo.dialog.FavoriteDeleted;
 import com.cazimir.relaxoo.dialog.OnDeleted;
-import com.cazimir.relaxoo.dialog.OnTimerDialogCallback;
-import com.cazimir.relaxoo.dialog.ProBottomDialogFragment;
-import com.cazimir.relaxoo.dialog.SaveToFavoritesDialog;
-import com.cazimir.relaxoo.dialog.TimerDialog;
+import com.cazimir.relaxoo.dialog.favorite.FavoriteDeleted;
+import com.cazimir.relaxoo.dialog.favorite.SaveToFavoritesDialog;
+import com.cazimir.relaxoo.dialog.pro.ProBottomDialogFragment;
+import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment;
+import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback;
+import com.cazimir.relaxoo.dialog.timer.TimerDialog;
 import com.cazimir.relaxoo.model.Recording;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.model.Sound;
@@ -120,32 +124,24 @@ public class MainActivity extends FragmentActivity
   private TimerDialog timerdialog;
   private SoundGridFragment soundGridFragment;
   private ViewPager viewPager;
-  private Runnable runnable;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
     mainActivityViewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
-
     areWritePermissionsGranted.setValue(false);
     isSoundGridFragmentStarted.setValue(false);
-
     mergePermissionFragmentStarted = new MergePermissionFragmentStarted.Builder().build();
-
     setContentView(R.layout.main_activity);
     ButterKnife.bind(this);
-
-
     shouldShowSplash();
-    this.viewPager = findViewById(R.id.pager);
-    viewPager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
-    TabLayout tabLayout = findViewById(R.id.tabDots);
-    tabLayout.setupWithViewPager(viewPager, true);
+    setupViewPager();
+    setupViewPagerDots();
     setupNotifications();
     startColorChangeAnimation();
     checkPermissions();
-    launchAds();
+    loadAds();
     setupBillingClient();
 
     final MediatorLiveData<MergePermissionFragmentStarted> result = new MediatorLiveData<>();
@@ -190,6 +186,16 @@ public class MainActivity extends FragmentActivity
             });
   }
 
+  private void setupViewPagerDots() {
+    TabLayout tabLayout = findViewById(R.id.tabDots);
+    tabLayout.setupWithViewPager(viewPager, true);
+  }
+
+  private void setupViewPager() {
+    this.viewPager = findViewById(R.id.pager);
+    viewPager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
+  }
+
   private void shouldShowSplash() {
     if (mainActivityViewModel.getSplashShown()) {
       hideSplash();
@@ -205,7 +211,6 @@ public class MainActivity extends FragmentActivity
               public void onBillingSetupFinished(BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                   Log.d(TAG, "onBillingSetupFinished() called with: success!");
-                  loadAllSKUs();
                 }
               }
 
@@ -232,6 +237,12 @@ public class MainActivity extends FragmentActivity
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
                         && !skuDetailsList.isEmpty()) {
                   for (SkuDetails skuDetail : skuDetailsList) {
+
+                    BillingFlowParams flowParams =
+                            BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build();
+
+                    billingClient.launchBillingFlow(this, flowParams);
+
                     Toast.makeText(this, skuDetail.getDescription(), Toast.LENGTH_SHORT).show();
                   }
                 } else {
@@ -243,21 +254,22 @@ public class MainActivity extends FragmentActivity
     }
   }
 
-  private void launchAds() {
+  private void loadAds() {
 
     this.adView = findViewById(R.id.ad_view);
-//    if (BuildConfig.DEBUG) {
-//      adView.setAdUnitId(getResources().getString(R.string.ad_test));
-//    } else {
-//      adView.setAdUnitId(getResources().getString(R.string.ad_prod));
-//    }
+    //    if (BuildConfig.DEBUG) {
+    //      adView.setAdUnitId(getResources().getString(R.string.ad_test));
+    //    } else {
+    //      adView.setAdUnitId(getResources().getString(R.string.ad_prod));
+    //    }
 
     AdRequest adRequest1 = mainActivityViewModel.getAdRequest();
 
     if (adRequest1 == null) {
       mainActivityViewModel.setAdRequest(new AdRequest.Builder().build());
-      adView.loadAd(adRequest1);
     }
+
+    adView.loadAd(mainActivityViewModel.getAdRequest());
   }
 
   private void checkPermissions() {
@@ -470,12 +482,6 @@ public class MainActivity extends FragmentActivity
   }
 
   @Override
-  public void soundsFetchedAndSaved() {
-    Log.d(TAG, "soundsFetchedAndSaved() called");
-    checkIfFileIsThere();
-  }
-
-  @Override
   public void soundGridFragmentStarted() {
     Log.d(TAG, "soundGridFragmentStarted() called");
     isSoundGridFragmentStarted.setValue(true);
@@ -492,9 +498,15 @@ public class MainActivity extends FragmentActivity
   @Override
   public void removeAds() {
 
-    //      billingClient
+    loadAllSKUs();
 
-    //    adBannerLayout.removeView(adView);
+    // removeAdsView();
+  }
+
+  private void removeAdsView() {
+    ViewGroup parent = (ViewGroup) adView.getParent();
+    parent.removeView(adView);
+    parent.invalidate();
   }
 
   @Override
@@ -504,14 +516,24 @@ public class MainActivity extends FragmentActivity
 
   @Override
   public void renameRecording(@NotNull Recording recording, @NotNull String newName) {
-    getCreateSoundFragment()
-            .renameRecording(recording, newName);
+    getCreateSoundFragment().renameRecording(recording, newName);
   }
 
   @Override
   public void pinToDashBoardActionCalled(@NotNull Sound sound) {
     getSoundGridFragment().addRecordingToSoundPool(sound);
     scrollViewPager();
+  }
+
+  private void redirectUserToPlayStore() {
+
+    final Uri marketUri =
+            Uri.parse("https://play.google.com/store/apps/details?id=com.cazimir.relaxoo");
+    try {
+      startActivity(new Intent(Intent.ACTION_VIEW, marketUri));
+    } catch (ActivityNotFoundException ex) {
+      Toast.makeText(this, "Couldn't find PlayStore on this device", Toast.LENGTH_SHORT).show();
+    }
   }
 
   private void checkIfFileIsThere() {

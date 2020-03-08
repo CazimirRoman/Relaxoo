@@ -42,23 +42,24 @@ public class GridAdapter extends ArrayAdapter<Sound> {
       // inflate de layout
       LayoutInflater inflater =
           (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-      if (inflater != null) {
-        convertView = inflater.inflate(R.layout.grid_item, parent, false);
-      }
+        if (inflater != null) {
+            convertView = inflater.inflate(R.layout.grid_item, parent, false);
+        }
 
-      // will set up the RowHolder
+        // will set up the RowHolder
 
-      viewHolderItem = new ViewHolderItem();
-      viewHolderItem.soundImage = convertView.findViewById(R.id.sound_image);
-      viewHolderItem.soundVolume = convertView.findViewById(R.id.sound_volume);
-      viewHolderItem.parentLayout = convertView.findViewById(R.id.cl);
+        viewHolderItem = new ViewHolderItem();
+        viewHolderItem.soundImage = convertView.findViewById(R.id.sound_image);
+        viewHolderItem.soundVolume = convertView.findViewById(R.id.sound_volume);
+        viewHolderItem.parentLayout = convertView.findViewById(R.id.cl);
         viewHolderItem.proIcon = convertView.findViewById(R.id.pro_icon);
+        viewHolderItem.moreOptions = convertView.findViewById(R.id.more_options);
 
-      // store the holder with the view.
-      convertView.setTag(viewHolderItem);
+        // store the holder with the view.
+        convertView.setTag(viewHolderItem);
     } else {
-      // we've just avoided calling findviewbyid on resource everytime
-      // just use the viewHolder
+        // we've just avoided calling findviewbyid on resource everytime
+        // just use the viewHolder
         viewHolderItem = (ViewHolderItem) convertView.getTag();
     }
 
@@ -67,6 +68,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
 
       viewHolderItem.soundVolume.setProgress(Math.round(sound.volume() * 100));
       viewHolderItem.soundVolume.setVisibility(sound.isPlaying() ? View.VISIBLE : View.INVISIBLE);
+      viewHolderItem.moreOptions.setVisibility(sound.isCustom() ? View.VISIBLE : View.INVISIBLE);
       viewHolderItem.soundImage.setImageBitmap(BitmapFactory.decodeFile(sound.getLogoPath()));
 
       // because playing the sound refreshes the grid change color based on playing status
@@ -78,7 +80,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
 
       viewHolderItem.proIcon.setVisibility(sound.isPro() ? View.VISIBLE : View.INVISIBLE);
 
-      viewHolderItem.parentLayout.setOnClickListener(
+      viewHolderItem.soundImage.setOnClickListener(
               new View.OnClickListener() {
                   @Override
                   public void onClick(View v) {
@@ -86,28 +88,37 @@ public class GridAdapter extends ArrayAdapter<Sound> {
                       listener.clicked(
                               sound.soundPoolId(), sound.isPlaying(), sound.streamId(), sound.isPro());
                   }
-        });
+              });
 
-    viewHolderItem.soundVolume.setOnSeekBarChangeListener(
-        new SeekBar.OnSeekBarChangeListener() {
-          @Override
-          public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            Log.d(TAG, "onProgressChanged: current value: " + progress);
-            Sound sound = getItem(position);
-              listener.volumeChange(sound, progress);
-          }
+      viewHolderItem.moreOptions.setOnClickListener(
+              new View.OnClickListener() {
+                  @Override
+                  public void onClick(View v) {
+                      listener.moreOptionsClicked(sound);
+                  }
+              });
 
-          @Override
-          public void onStartTrackingTouch(SeekBar seekBar) {}
+      viewHolderItem.soundVolume.setOnSeekBarChangeListener(
+              new SeekBar.OnSeekBarChangeListener() {
+                  @Override
+                  public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                      Log.d(TAG, "onProgressChanged: current value: " + progress);
+                      Sound sound = getItem(position);
+                      listener.volumeChange(sound, progress);
+                  }
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.d(TAG, "onStopTrackingTouch() called");
-                // update ViewModel date only when user lets go of the progressbar, otherwise refreshing
-                // the view to many times results in stuttering
-                listener.volumeChangeStopped(sound, seekBar.getProgress());
-            }
-        });
+                  @Override
+                  public void onStartTrackingTouch(SeekBar seekBar) {
+                  }
+
+                  @Override
+                  public void onStopTrackingTouch(SeekBar seekBar) {
+                      Log.d(TAG, "onStopTrackingTouch() called");
+                      // update ViewModel date only when user lets go of the progressbar, otherwise refreshing
+                      // the view to many times results in stuttering
+                      listener.volumeChangeStopped(sound, seekBar.getProgress());
+                  }
+              });
 
     return convertView;
   }
@@ -117,6 +128,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
     private ImageView soundImage;
     private SeekBar soundVolume;
     private ConstraintLayout parentLayout;
-    private ImageView proIcon;
+      private ImageView proIcon;
+      private ImageView moreOptions;
   }
 }

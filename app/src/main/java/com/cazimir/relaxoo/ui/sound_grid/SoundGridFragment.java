@@ -17,12 +17,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.GridAdapter;
+import com.cazimir.relaxoo.dialog.custom.BottomCustomDeleteFragment;
+import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.model.Sound;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,7 +110,6 @@ public class SoundGridFragment extends Fragment {
   }
 
   @Override
-  @NonNull
   public void onAttach(Context context) {
       super.onAttach(context);
       Log.d(TAG, "SoundGridFragment onAttach() called");
@@ -131,7 +134,7 @@ public class SoundGridFragment extends Fragment {
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
       super.onActivityCreated(savedInstanceState);
-      viewModel = ViewModelProviders.of(this).get(SoundGridViewModel.class);
+      viewModel = new ViewModelProvider(this).get(SoundGridViewModel.class);
 
       soundPool = viewModel.createOrGetSoundPool();
 
@@ -181,6 +184,7 @@ public class SoundGridFragment extends Fragment {
 
     // listen for changes to the sound lists live data object to set the adapter for the gridview
     // along with the callback methods (clicked & volume changed)
+
     viewModel
         .sounds()
         .observe(
@@ -189,9 +193,6 @@ public class SoundGridFragment extends Fragment {
                 sounds -> {
                     Log.d(TAG, "Sound list changed: " + sounds);
 
-                    if (!sounds.isEmpty()) {
-                        activityCallback.soundsFetchedAndSaved();
-                    }
                     gridArrayAdapter =
                             new GridAdapter(
                                     getContext(),
@@ -225,6 +226,16 @@ public class SoundGridFragment extends Fragment {
                                             viewModel.updateVolume(
                                                     sound, Float.parseFloat(String.valueOf((double) progress / 100)));
                                         }
+
+                                        @Override
+                                        public void moreOptionsClicked(Sound sound) {
+                                            new BottomCustomDeleteFragment(sound, new CustomBottomCallback() {
+                                                @Override
+                                                public void deletedClicked(@NotNull Sound sound) {
+                                                    removeRecordingFromSoundPool(sound);
+                                                }
+                                            }).show(getParentFragmentManager(), "deleteCustom");
+                                        }
                                     });
 
                     gridView.setAdapter(gridArrayAdapter);
@@ -233,6 +244,8 @@ public class SoundGridFragment extends Fragment {
                     if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
                         loadListToSoundPool(sounds);
                     }
+
+
                 });
 
     // listen to the playing sounds live data object to change the play stop getLogoPath icon on top
@@ -317,15 +330,15 @@ public class SoundGridFragment extends Fragment {
       // endregion
   }
 
-  private boolean atLeastOneSoundWithoutSoundPoolId(List<Sound> sounds) {
-    for (Sound sound : sounds) {
-      if (sound.soundPoolId() == 0) {
-        return true;
-      }
-    }
+    private boolean atLeastOneSoundWithoutSoundPoolId(List<Sound> sounds) {
+        for (Sound sound : sounds) {
+            if (sound.soundPoolId() == 0) {
+                return true;
+            }
+        }
 
-    return false;
-  }
+        return false;
+    }
 
   // region Listeners for buttons on top
   private void setListenersForButtons() {
@@ -526,6 +539,13 @@ public class SoundGridFragment extends Fragment {
 
     public boolean soundsAlreadyFetched() {
         return viewModel.getSoundsAlreadyFetched();
+    }
+
+    private void removeRecordingFromSoundPool(Sound sound) {
+        soundPool.unload(sound.soundPoolId());
+        ArrayList<Sound> newList = viewModel.sounds().getValue();
+        newList.remove(Sound.withSoundPoolId(sound, sound.soundPoolId()));
+        viewModel.addToSounds(newList);
     }
 
     public void addRecordingToSoundPool(Sound sound) {

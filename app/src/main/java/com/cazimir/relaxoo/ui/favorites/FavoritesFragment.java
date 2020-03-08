@@ -10,14 +10,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.SavedComboAdapter;
-import com.cazimir.relaxoo.dialog.FavoriteDeleted;
 import com.cazimir.relaxoo.dialog.OnDeleted;
+import com.cazimir.relaxoo.dialog.favorite.FavoriteDeleted;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 
@@ -55,9 +55,9 @@ public class FavoritesFragment extends Fragment {
 
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
-    viewModel = ViewModelProviders.of(this).get(FavoritesViewModel.class);
-    viewModel.repository = new FavoritesRepository();
+      super.onActivityCreated(savedInstanceState);
+      viewModel = new ViewModelProvider(this).get(FavoritesViewModel.class);
+      viewModel.repository = new FavoritesRepository();
     viewModel.fetchFavorites();
     viewModel
             .savedCombosLive()

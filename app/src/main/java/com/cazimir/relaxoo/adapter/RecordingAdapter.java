@@ -13,7 +13,7 @@ import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cazimir.relaxoo.R;
-import com.cazimir.relaxoo.dialog.TimerDialog;
+import com.cazimir.relaxoo.dialog.timer.TimerDialog;
 import com.cazimir.relaxoo.model.Recording;
 
 import org.apache.commons.io.FilenameUtils;

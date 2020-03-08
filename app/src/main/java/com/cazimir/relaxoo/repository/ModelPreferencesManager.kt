@@ -29,6 +29,7 @@ object ModelPreferencesManager {
      * @param `object` Object of model class (of type [T]) to save
      * @param key Key with which Shared preferences to
      **/
+
     fun <T> put(`object`: T, key: String) {
         //Convert object to JSON String.
         val jsonString = GsonBuilder().create().toJson(`object`)
@@ -41,6 +42,7 @@ object ModelPreferencesManager {
      *
      * @param key Shared Preference key with which object was saved.
      **/
+
     inline fun <reified T> get(key: String): T? {
         // we read JSON String which was saved.
         val value = preferences.getString(key, null)

@@ -8,6 +8,8 @@ import android.view.View;
 import androidx.appcompat.app.AlertDialog;
 
 import com.cazimir.relaxoo.R;
+import com.cazimir.relaxoo.dialog.favorite.FavoriteDeleted;
+import com.cazimir.relaxoo.dialog.recording.RecordingDeleted;
 
 public class DeleteConfirmationDialog extends RetainableDialogFragment
         implements DialogInterface.OnClickListener {

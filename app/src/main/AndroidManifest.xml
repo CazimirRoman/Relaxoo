@@ -18,8 +18,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ui.MoreAppsActivity"></activity>
-        <activity android:name=".ui.PrivacyPolicyActivity" />
+        <activity android:name=".ui.more_apps.MoreAppsActivity"></activity>
+        <activity android:name=".ui.privacy_policy.PrivacyPolicyActivity" />
         <activity android:name=".ui.settings.SettingsActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>

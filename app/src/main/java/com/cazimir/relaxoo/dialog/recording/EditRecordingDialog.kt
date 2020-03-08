@@ -1,4 +1,4 @@
-package com.cazimir.relaxoo.dialog
+package com.cazimir.relaxoo.dialog.recording
 
 import android.app.Dialog
 import android.content.DialogInterface
@@ -6,12 +6,13 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
 import com.cazimir.relaxoo.R
+import com.cazimir.relaxoo.dialog.RetainableDialogFragment
 import com.cazimir.relaxoo.model.Recording
 import kotlinx.android.synthetic.main.edit_recording.view.*
 import org.apache.commons.io.FilenameUtils
 
-class EditConfirmationDialog(val recording: Recording, val callback: BottomCallback) :
-    RetainableDialogFragment() {
+class EditRecordingDialog(val recording: Recording, val callback: RecordingBottomCallback) :
+        RetainableDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 

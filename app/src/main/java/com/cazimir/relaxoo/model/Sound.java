@@ -8,24 +8,29 @@ import java.util.Objects;
 
 public class Sound {
 
-  private String id;
-  private int soundPoolId;
-  private int streamId;
-  private String name;
-  private String logoPath;
-  private String filePath;
-  private boolean playing;
-  private float volume = 0.5f;
-  private boolean pro;
-  private boolean custom;
+    private String id;
+    private int soundPoolId;
+    private int streamId;
+    private String name;
+    private String logoPath;
+    private String filePath;
+    private boolean playing;
+    private float volume = 0.5f;
+    private boolean pro;
 
-  private Sound(
-          String id,
-          int soundPoolId,
-          int streamId,
-          String name,
-          String logoPath,
-          String file,
+    public boolean isCustom() {
+        return custom;
+    }
+
+    private boolean custom;
+
+    private Sound(
+            String id,
+            int soundPoolId,
+            int streamId,
+            String name,
+            String logoPath,
+            String file,
           boolean playing,
           float volume,
           boolean pro,

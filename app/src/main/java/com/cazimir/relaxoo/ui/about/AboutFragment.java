@@ -17,8 +17,8 @@ import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.AboutListAdapter;
 import com.cazimir.relaxoo.model.AboutItem;
 import com.cazimir.relaxoo.model.MenuItemType;
-import com.cazimir.relaxoo.ui.MoreAppsActivity;
-import com.cazimir.relaxoo.ui.PrivacyPolicyActivity;
+import com.cazimir.relaxoo.ui.more_apps.MoreAppsActivity;
+import com.cazimir.relaxoo.ui.privacy_policy.PrivacyPolicyActivity;
 import com.cazimir.relaxoo.ui.settings.SettingsActivity;
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback;
 
@@ -65,9 +65,6 @@ public class AboutFragment extends Fragment {
                       switch (item.getName()) {
                         case REMOVE_ADS:
                           startRemoveAdsAction();
-                          break;
-                        case SETTINGS:
-                          startSettingsActivity();
                           break;
                         case SHARE:
                           startShareAction();
@@ -121,7 +118,6 @@ public class AboutFragment extends Fragment {
   private List<AboutItem> populateAboutItems() {
     List<AboutItem> aboutItems = new ArrayList<>();
     aboutItems.add(new AboutItem(MenuItemType.REMOVE_ADS, R.drawable.ic_message));
-    aboutItems.add(new AboutItem(MenuItemType.SETTINGS, R.drawable.ic_message));
     aboutItems.add(new AboutItem(MenuItemType.SHARE, R.drawable.ic_message));
     aboutItems.add(new AboutItem(MenuItemType.PRIVACY_POLICY, R.drawable.ic_message));
     aboutItems.add(new AboutItem(MenuItemType.RATE_APP, R.drawable.ic_message));

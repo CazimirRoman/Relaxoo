@@ -28,10 +28,22 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/pro_icon"
         android:layout_width="50dp"
+        tools:visibility="visible"
         android:layout_height="50dp"
         android:visibility="gone"
         app:srcCompat="@drawable/ic_pro"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/more_options"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/sound_image"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/sound_volume"
+        app:srcCompat="@drawable/ic_more_vert"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

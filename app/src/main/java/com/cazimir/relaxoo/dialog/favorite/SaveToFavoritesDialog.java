@@ -1,4 +1,4 @@
-package com.cazimir.relaxoo.dialog;
+package com.cazimir.relaxoo.dialog.favorite;
 
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
 import com.cazimir.relaxoo.R;
+import com.cazimir.relaxoo.dialog.RetainableDialogFragment;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 

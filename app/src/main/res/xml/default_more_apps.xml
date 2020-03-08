@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>MORE_APPS_JSON</key>
+        <value>'{"apps":[{"logoUrl":"1","description":"Tom"},{"logoUrl":"1","description":"Tom"},{"logoUrl":"1","description":"Tom"}]}'
+        </value>
+    </entry>
+</defaultsMap>
+

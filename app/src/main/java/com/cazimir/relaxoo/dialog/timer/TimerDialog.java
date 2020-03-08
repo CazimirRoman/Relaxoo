@@ -1,4 +1,4 @@
-package com.cazimir.relaxoo.dialog;
+package com.cazimir.relaxoo.dialog.timer;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -15,6 +15,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 
 import com.cazimir.relaxoo.R;
+import com.cazimir.relaxoo.dialog.RetainableDialogFragment;
 
 import java.util.Arrays;
 import java.util.List;

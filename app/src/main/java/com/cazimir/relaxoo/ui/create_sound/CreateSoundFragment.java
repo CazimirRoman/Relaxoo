@@ -14,7 +14,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -125,8 +125,8 @@ public class CreateSoundFragment extends Fragment {
 
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
-    viewModel = ViewModelProviders.of(this).get(CreateSoundViewModel.class);
+      super.onActivityCreated(savedInstanceState);
+      viewModel = new ViewModelProvider(this).get(CreateSoundViewModel.class);
 
     viewModel.repository = new SoundRepository();
 

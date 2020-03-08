@@ -1,4 +1,4 @@
-package com.cazimir.relaxoo.dialog
+package com.cazimir.relaxoo.dialog.recording
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -39,11 +39,11 @@ class BottomRecordingDialogFragment(val recording: Recording, val callback: OnAc
         view.edit_recording_name.setOnClickListener {
             dismiss()
 
-            EditConfirmationDialog(recording, object : BottomCallback {
+            EditRecordingDialog(recording, object : RecordingBottomCallback {
                 override fun edited(recording: Recording, newName: String) {
                     callback.renameRecording(
-                        recording,
-                        newName
+                            recording,
+                            newName
                     )
                 }
             }).show(parentFragmentManager, "editRecording")

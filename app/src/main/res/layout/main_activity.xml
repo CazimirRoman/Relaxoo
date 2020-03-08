@@ -14,29 +14,32 @@
     <LinearLayout
         android:id="@+id/main_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
+        tools:visibility="visible"
         android:visibility="invisible">
 
         <androidx.viewpager.widget.ViewPager
             android:id="@+id/pager"
-            android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.8" />
+            android:layout_width="match_parent"
+            android:layout_weight="9" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabDots"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             app:tabBackground="@drawable/tab_selector"
             app:tabGravity="center"
             app:tabIndicatorHeight="0dp" />
 
         <com.google.android.gms.ads.AdView
             android:id="@+id/ad_view"
-            android:layout_height="wrap_content"
-            ads:adSize="SMART_BANNER"
             android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.9"
+            ads:adSize="SMART_BANNER"
             ads:adUnitId="@string/ad_test" />
 
     </LinearLayout>

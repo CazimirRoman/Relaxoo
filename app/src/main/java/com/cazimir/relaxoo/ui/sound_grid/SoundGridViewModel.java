@@ -8,7 +8,7 @@ import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.cazimir.relaxoo.dialog.TimerDialog;
+import com.cazimir.relaxoo.dialog.timer.TimerDialog;
 import com.cazimir.relaxoo.model.Sound;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -177,6 +177,8 @@ public class SoundGridViewModel extends ViewModel {
                                                             .build();
 
                                             allSounds.addAll(Arrays.asList(fetchedSound));
+
+                                            //addCustomSoundsAsWell();
 
                                             if (allSounds.size() == sounds.size()) {
                                               refreshSoundLiveData();

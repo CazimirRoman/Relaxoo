@@ -26,8 +26,6 @@ public interface OnActivityCallback {
 
   void showBottomDialogForPro();
 
-  void soundsFetchedAndSaved();
-
   void soundGridFragmentStarted();
 
   void hideSplash();

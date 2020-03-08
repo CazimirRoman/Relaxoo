@@ -1,4 +1,4 @@
-package com.cazimir.relaxoo.dialog
+package com.cazimir.relaxoo.dialog.pro
 
 import android.os.Bundle
 import android.view.LayoutInflater

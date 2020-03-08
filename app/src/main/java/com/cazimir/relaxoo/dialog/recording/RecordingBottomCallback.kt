@@ -1,7 +1,7 @@
-package com.cazimir.relaxoo.dialog
+package com.cazimir.relaxoo.dialog.recording
 
 import com.cazimir.relaxoo.model.Recording
 
-interface BottomCallback {
+interface RecordingBottomCallback {
     fun edited(recording: Recording, newName: String)
 }
