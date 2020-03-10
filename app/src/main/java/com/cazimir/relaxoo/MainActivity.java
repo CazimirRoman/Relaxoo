@@ -50,7 +50,7 @@ import com.cazimir.relaxoo.dialog.timer.TimerDialog;
 import com.cazimir.relaxoo.model.Recording;
 import com.cazimir.relaxoo.model.SavedCombo;
 import com.cazimir.relaxoo.model.Sound;
-import com.cazimir.relaxoo.shared.MainActivityViewModel;
+import com.cazimir.relaxoo.shared.SharedViewModel;
 import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment;
 import com.cazimir.relaxoo.ui.create_sound.OnRecordingStarted;
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment;
@@ -120,7 +120,7 @@ public class MainActivity extends FragmentActivity
 
   private BillingClient billingClient;
   private List<String> skuList = Arrays.asList("remove_ads");
-  private MainActivityViewModel mainActivityViewModel;
+  private SharedViewModel sharedViewModel;
   private TimerDialog timerdialog;
   private SoundGridFragment soundGridFragment;
   private ViewPager viewPager;
@@ -129,7 +129,7 @@ public class MainActivity extends FragmentActivity
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    mainActivityViewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
+    sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
     areWritePermissionsGranted.setValue(false);
     isSoundGridFragmentStarted.setValue(false);
     mergePermissionFragmentStarted = new MergePermissionFragmentStarted.Builder().build();
@@ -142,6 +142,7 @@ public class MainActivity extends FragmentActivity
     startColorChangeAnimation();
     checkPermissions();
     loadAds();
+    //should also be done in onResume()
     setupBillingClient();
 
     final MediatorLiveData<MergePermissionFragmentStarted> result = new MediatorLiveData<>();
@@ -184,6 +185,15 @@ public class MainActivity extends FragmentActivity
                 }
               }
             });
+
+    sharedViewModel.getAdsBought().observe(this, adsBought -> {
+      if (adsBought) {
+        removeAdsView();
+        viewPager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
+        viewPager.setCurrentItem(3);
+      }
+    });
+
   }
 
   private void setupViewPagerDots() {
@@ -197,7 +207,7 @@ public class MainActivity extends FragmentActivity
   }
 
   private void shouldShowSplash() {
-    if (mainActivityViewModel.getSplashShown()) {
+    if (sharedViewModel.getSplashShown()) {
       hideSplash();
     }
   }
@@ -211,6 +221,11 @@ public class MainActivity extends FragmentActivity
               public void onBillingSetupFinished(BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                   Log.d(TAG, "onBillingSetupFinished() called with: success!");
+                  Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
+                  if (purchasesResult.getPurchasesList().size() != 0 && purchasesResult.getPurchasesList().get(0).getSku().equals("remove_ads")) {
+                    removeAdsView();
+                    sharedViewModel.adsBought(true);
+                  }
                 }
               }
 
@@ -223,7 +238,7 @@ public class MainActivity extends FragmentActivity
             });
   }
 
-  private void loadAllSKUs() {
+  private void launchFlowToRemoveAds() {
     if (billingClient.isReady()) {
       SkuDetailsParams skuDetailsParams =
               SkuDetailsParams.newBuilder()
@@ -263,13 +278,13 @@ public class MainActivity extends FragmentActivity
     //      adView.setAdUnitId(getResources().getString(R.string.ad_prod));
     //    }
 
-    AdRequest adRequest1 = mainActivityViewModel.getAdRequest();
+    AdRequest adRequest1 = sharedViewModel.getAdRequest();
 
     if (adRequest1 == null) {
-      mainActivityViewModel.setAdRequest(new AdRequest.Builder().build());
+      sharedViewModel.setAdRequest(new AdRequest.Builder().build());
     }
 
-    adView.loadAd(mainActivityViewModel.getAdRequest());
+    adView.loadAd(sharedViewModel.getAdRequest());
   }
 
   private void checkPermissions() {
@@ -303,9 +318,9 @@ public class MainActivity extends FragmentActivity
 
     final FrameLayout parentLayout = findViewById(R.id.parentLayout);
 
-    parentLayout.setBackgroundColor(mainActivityViewModel.getNextColor());
+    parentLayout.setBackgroundColor(sharedViewModel.getNextColor());
 
-    mainActivityViewModel
+    sharedViewModel
             .getTimer()
             .scheduleAtFixedRate(
                     new TimerTask() {
@@ -317,14 +332,14 @@ public class MainActivity extends FragmentActivity
                                   @Override
                                   public void run() {
 
-                                    mainActivityViewModel.setNextColor(getRandomColor());
+                                    sharedViewModel.setNextColor(getRandomColor());
 
                                     Log.d(
                                             TAG,
                                             String.format(
                                                     "run: called. previousColor: %s and nextColor: %s",
-                                                    mainActivityViewModel.getPreviousColor(),
-                                                    mainActivityViewModel.getNextColor()));
+                                                    sharedViewModel.getPreviousColor(),
+                                                    sharedViewModel.getNextColor()));
 
                                     int duration = 1500;
                                     ObjectAnimator animator =
@@ -332,16 +347,16 @@ public class MainActivity extends FragmentActivity
                                                     parentLayout,
                                                     "backgroundColor",
                                                     new ArgbEvaluator(),
-                                                    mainActivityViewModel.getPreviousColor(),
-                                                    mainActivityViewModel.getNextColor())
+                                                    sharedViewModel.getPreviousColor(),
+                                                    sharedViewModel.getNextColor())
                                                     .setDuration(duration);
 
                                     animator.addListener(
                                             new AnimatorListenerAdapter() {
                                               @Override
                                               public void onAnimationEnd(Animator animation) {
-                                                mainActivityViewModel.setPreviousColor(
-                                                        mainActivityViewModel.getNextColor());
+                                                sharedViewModel.setPreviousColor(
+                                                        sharedViewModel.getNextColor());
                                               }
                                             });
 
@@ -492,21 +507,22 @@ public class MainActivity extends FragmentActivity
   public void hideSplash() {
     splash.setVisibility(View.GONE);
     mainLayout.setVisibility(View.VISIBLE);
-    this.mainActivityViewModel.splashShown();
+    this.sharedViewModel.splashShown();
   }
 
   @Override
   public void removeAds() {
-
-    loadAllSKUs();
-
-    // removeAdsView();
+    launchFlowToRemoveAds();
   }
 
   private void removeAdsView() {
     ViewGroup parent = (ViewGroup) adView.getParent();
-    parent.removeView(adView);
-    parent.invalidate();
+
+    // doing this null check because of line 223 - query if remove_ads purchase bought
+    if (parent != null) {
+      parent.removeView(adView);
+      parent.invalidate();
+    }
   }
 
   @Override
@@ -625,5 +641,12 @@ public class MainActivity extends FragmentActivity
 
   @Override
   public void onPurchasesUpdated(BillingResult billingResult, @Nullable List<Purchase> purchases) {
+    Log.d(TAG, "onPurchasesUpdated: called with: " + billingResult);
+
+    int responseCode = billingResult.getResponseCode();
+    if (responseCode == BillingClient.BillingResponseCode.OK || responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+      Log.d(TAG, "onPurchasesUpdated: called with: " + "Purchase successfull or Item already purchased");
+      sharedViewModel.adsBought(true);
+    }
   }
 }

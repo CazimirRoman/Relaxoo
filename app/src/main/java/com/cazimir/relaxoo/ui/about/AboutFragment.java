@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,6 +18,7 @@ import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.adapter.AboutListAdapter;
 import com.cazimir.relaxoo.model.AboutItem;
 import com.cazimir.relaxoo.model.MenuItemType;
+import com.cazimir.relaxoo.shared.SharedViewModel;
 import com.cazimir.relaxoo.ui.more_apps.MoreAppsActivity;
 import com.cazimir.relaxoo.ui.privacy_policy.PrivacyPolicyActivity;
 import com.cazimir.relaxoo.ui.settings.SettingsActivity;
@@ -36,6 +38,8 @@ public class AboutFragment extends Fragment {
   RecyclerView aboutRecyclerView;
 
   private OnActivityCallback activityCallback;
+  private SharedViewModel sharedViewModel;
+  private List<AboutItem> aboutItems;
 
   public static AboutFragment newInstance() {
     return new AboutFragment();
@@ -43,9 +47,9 @@ public class AboutFragment extends Fragment {
 
   @Override
   public View onCreateView(
-      @NonNull LayoutInflater inflater,
-      @Nullable ViewGroup container,
-      @Nullable Bundle savedInstanceState) {
+          @NonNull LayoutInflater inflater,
+          @Nullable ViewGroup container,
+          @Nullable Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.about_fragment, container, false);
     ButterKnife.bind(this, view);
 
@@ -57,10 +61,15 @@ public class AboutFragment extends Fragment {
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
+
+    sharedViewModel = new ViewModelProvider(getActivity()).get(SharedViewModel.class);
+
+    aboutItems = populateAboutItems(sharedViewModel.getAdsBought().getValue());
+
     aboutRecyclerView.setAdapter(
             new AboutListAdapter(
                     getContext(),
-                    populateAboutItems(),
+                    aboutItems,
                     item -> {
                       switch (item.getName()) {
                         case REMOVE_ADS:
@@ -115,9 +124,12 @@ public class AboutFragment extends Fragment {
     startActivity(new Intent(getActivity(), SettingsActivity.class));
   }
 
-  private List<AboutItem> populateAboutItems() {
+  private List<AboutItem> populateAboutItems(Boolean adsBought) {
     List<AboutItem> aboutItems = new ArrayList<>();
-    aboutItems.add(new AboutItem(MenuItemType.REMOVE_ADS, R.drawable.ic_message));
+
+    if (!adsBought) {
+      aboutItems.add(new AboutItem(MenuItemType.REMOVE_ADS, R.drawable.ic_message));
+    }
     aboutItems.add(new AboutItem(MenuItemType.SHARE, R.drawable.ic_message));
     aboutItems.add(new AboutItem(MenuItemType.PRIVACY_POLICY, R.drawable.ic_message));
     aboutItems.add(new AboutItem(MenuItemType.RATE_APP, R.drawable.ic_message));

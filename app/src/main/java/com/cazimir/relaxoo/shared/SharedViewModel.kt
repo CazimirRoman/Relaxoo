@@ -1,10 +1,13 @@
 package com.cazimir.relaxoo.shared
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.ads.AdRequest
 import java.util.Timer
 
-class MainActivityViewModel : ViewModel() {
+class SharedViewModel : ViewModel() {
+
+    var adsBought: MutableLiveData<Boolean> = MutableLiveData(false)
 
     companion object {
         private const val TAG = "MainActivityViewModel"
@@ -29,5 +32,9 @@ class MainActivityViewModel : ViewModel() {
 
     fun splashShown() {
         splashShown = true
+    }
+
+    fun adsBought(bought: Boolean) {
+        adsBought.value = bought
     }
 }
