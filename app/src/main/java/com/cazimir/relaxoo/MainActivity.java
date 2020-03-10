@@ -128,7 +128,6 @@ public class MainActivity extends FragmentActivity
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-
     sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
     areWritePermissionsGranted.setValue(false);
     isSoundGridFragmentStarted.setValue(false);
@@ -318,55 +317,58 @@ public class MainActivity extends FragmentActivity
 
     final FrameLayout parentLayout = findViewById(R.id.parentLayout);
 
-    parentLayout.setBackgroundColor(sharedViewModel.getNextColor());
-
     sharedViewModel
-            .getTimer()
-            .scheduleAtFixedRate(
-                    new TimerTask() {
-                      @Override
-                      public void run() {
+            .getNextColor()
+            .observe(
+                    this,
+                    backgroundColor -> {
+                      int duration = 1500;
+                      ObjectAnimator animator =
+                              ObjectAnimator.ofObject(
+                                      parentLayout,
+                                      "backgroundColor",
+                                      new ArgbEvaluator(),
+                                      sharedViewModel.getPreviousColor(),
+                                      sharedViewModel.getNextColor().getValue())
+                                      .setDuration(duration);
 
-                        runOnUiThread(
-                                new Runnable() {
-                                  @Override
-                                  public void run() {
+                      animator.addListener(
+                              new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                  Log.d(TAG, "onAnimationEnd: called");
+                                  sharedViewModel.setPreviousColor(sharedViewModel.getNextColor().getValue());
+                                }
+                              });
 
-                                    sharedViewModel.setNextColor(getRandomColor());
+                      animator.start();
+                    });
 
-                                    Log.d(
-                                            TAG,
-                                            String.format(
-                                                    "run: called. previousColor: %s and nextColor: %s",
-                                                    sharedViewModel.getPreviousColor(),
-                                                    sharedViewModel.getNextColor()));
+    if (sharedViewModel.getTimerTaskExtended() == null) {
+      sharedViewModel.setTimerTaskExtended(
+              this,
+              new TimerTask() {
+                @Override
+                public void run() {
+                  runOnUiThread(
+                          new Runnable() {
+                            @Override
+                            public void run() {
 
-                                    int duration = 1500;
-                                    ObjectAnimator animator =
-                                            ObjectAnimator.ofObject(
-                                                    parentLayout,
-                                                    "backgroundColor",
-                                                    new ArgbEvaluator(),
-                                                    sharedViewModel.getPreviousColor(),
-                                                    sharedViewModel.getNextColor())
-                                                    .setDuration(duration);
+                              sharedViewModel.getNextColor().setValue(getRandomColor());
 
-                                    animator.addListener(
-                                            new AnimatorListenerAdapter() {
-                                              @Override
-                                              public void onAnimationEnd(Animator animation) {
-                                                sharedViewModel.setPreviousColor(
-                                                        sharedViewModel.getNextColor());
-                                              }
-                                            });
+                              Log.d(
+                                      TAG,
+                                      String.format(
+                                              "run: called. previousColor: %s and nextColor: %s",
+                                              sharedViewModel.getPreviousColor(), sharedViewModel.getNextColor().getValue()));
+                            }
+                          });
+                }
+              });
 
-                                    animator.start();
-                                  }
-                                });
-                      }
-                    },
-                    2000,
-                    10000);
+      sharedViewModel.startOrStop();
+    }
   }
 
   private int getRandomColor() {
