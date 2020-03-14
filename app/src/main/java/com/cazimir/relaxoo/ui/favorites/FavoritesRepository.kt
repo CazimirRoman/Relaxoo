@@ -10,7 +10,7 @@ class FavoritesRepository : IFavoritesRepository {
     }
 
     override fun addUpdatedList(updatedList: ListOfSavedCombos) {
-        ModelPreferencesManager.put(updatedList, COMBO_LIST)
+        ModelPreferencesManager.save(updatedList, COMBO_LIST)
     }
 
     override fun getFavorites(): ListOfSavedCombos? {

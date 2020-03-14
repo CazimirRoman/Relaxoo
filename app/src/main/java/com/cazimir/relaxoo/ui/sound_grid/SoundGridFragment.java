@@ -100,7 +100,6 @@ public class SoundGridFragment extends Fragment {
       Log.d(TAG, "stopping sound");
       soundPool.stop(streamId);
       // update viewmodel for favorites fragment somehow - perhaps through activity?
-
       viewModel.updateSoundList(soundPoolId, 0);
     } else {
       int newStreamId = soundPool.play(soundPoolId, 0.5f, 0.5f, 0, -1, 1);
@@ -136,6 +135,7 @@ public class SoundGridFragment extends Fragment {
       super.onActivityCreated(savedInstanceState);
       viewModel = new ViewModelProvider(this).get(SoundGridViewModel.class);
 
+      //perhaps use a kotlin object - looks like a singleton?
       soundPool = viewModel.createOrGetSoundPool();
 
       setListenersForButtons();
@@ -291,8 +291,7 @@ public class SoundGridFragment extends Fragment {
                           }
                       });
 
-      viewModel
-              .getSoundsLoadedToSoundPool()
+      viewModel.getSoundsLoadedToSoundPool()
               .observe(
                       getViewLifecycleOwner(),
                       new Observer<Integer>() {
@@ -300,6 +299,7 @@ public class SoundGridFragment extends Fragment {
                           public void onChanged(Integer soundsAdded) {
 
                               if (viewModel.sounds().getValue().size() != 0) {
+                                  // hide splash if viewmodel sound livedata size equals the number of sounds added to the soundpool
                                   if (soundsAdded == viewModel.sounds().getValue().size()) {
                                       activityCallback.hideSplash();
                                   }
@@ -532,9 +532,10 @@ public class SoundGridFragment extends Fragment {
 
     @Override
     public void onResume() {
+        super.onResume();
         Log.d(TAG, "onResume() called in: " + TAG);
         activityCallback.soundGridFragmentStarted();
-        super.onResume();
+
     }
 
     public boolean soundsAlreadyFetched() {
@@ -551,7 +552,8 @@ public class SoundGridFragment extends Fragment {
     public void addRecordingToSoundPool(Sound sound) {
         int soundId = soundPool.load(sound.getFilePath(), 1);
         ArrayList<Sound> newList = viewModel.sounds().getValue();
-        newList.add(Sound.withSoundPoolId(sound, soundId));
+        Sound sound1 = Sound.withSoundPoolId(sound, soundId);
+        newList.add(sound1);
         viewModel.addToSounds(newList);
     }
 

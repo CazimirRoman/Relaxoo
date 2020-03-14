@@ -30,7 +30,7 @@ object ModelPreferencesManager {
      * @param key Key with which Shared preferences to
      **/
 
-    fun <T> put(`object`: T, key: String) {
+    fun <T> save(`object`: T, key: String) {
         //Convert object to JSON String.
         val jsonString = GsonBuilder().create().toJson(`object`)
         // save that string in shared preferences
@@ -47,7 +47,7 @@ object ModelPreferencesManager {
         // we read JSON String which was saved.
         val value = preferences.getString(key, null)
         // json string was found which means object can be read.
-        // we convert this JSON strng to model object.
+        // we convert this JSON string to model object.
         return GsonBuilder().create().fromJson(value, T::class.java)
     }
 }
