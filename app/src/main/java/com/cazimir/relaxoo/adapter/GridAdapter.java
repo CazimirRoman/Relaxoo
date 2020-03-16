@@ -84,9 +84,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
               new View.OnClickListener() {
                   @Override
                   public void onClick(View v) {
-
-                      listener.clicked(
-                              sound.soundPoolId(), sound.isPlaying(), sound.streamId(), sound.isPro());
+                      listener.clicked(sound);
                   }
               });
 

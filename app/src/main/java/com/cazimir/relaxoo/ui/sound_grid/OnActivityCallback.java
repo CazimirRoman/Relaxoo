@@ -37,4 +37,6 @@ public interface OnActivityCallback {
   void renameRecording(@NotNull Recording recording, @NotNull String toString);
 
   void pinToDashBoardActionCalled(@NotNull Sound sound);
+
+  void playRewardAd();
 }

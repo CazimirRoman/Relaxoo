@@ -21,4 +21,6 @@
     <string name="ad_test">ca-app-pub-3940256099942544/6300978111</string>
     <string name="ad_prod">ca-app-pub-7748272108558557/1855871257</string>
     <string name="delete_custom_sound">Delete sound</string>
+    <string name="reward_ad_test">ca-app-pub-3940256099942544/5224354917</string>
+    <string name="reward_ad_prod">ca-app-pub-7748272108558557/3205446097</string>
 </resources>

@@ -18,11 +18,12 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FileDownloadTask
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
-import java.util.*
+import java.util.Arrays
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 class SoundGridViewModel : ViewModel() {
+    @JvmField
+    var currentlyClickedProSound: Sound? = null
     var soundsLoadedToSoundPool = MutableLiveData(0)
     var _timerText = MutableLiveData<String>()
     var _timerFinished = MutableLiveData<Boolean>()

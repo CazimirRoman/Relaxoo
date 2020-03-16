@@ -63,6 +63,10 @@ import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.reward.RewardItem
+import com.google.android.gms.ads.reward.RewardedVideoAd
+import com.google.android.gms.ads.reward.RewardedVideoAdListener
 import com.google.gson.JsonSyntaxException
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
@@ -80,12 +84,13 @@ import java.util.Random
 import java.util.TimerTask
 
 class MainActivity : FragmentActivity(),
-        OnActivityCallback,
-        OnFavoriteSaved,
-        OnTimerDialogCallback,
-        OnDeleted,
-        OnRecordingStarted,
-        PurchasesUpdatedListener {
+    OnActivityCallback,
+    OnFavoriteSaved,
+    OnTimerDialogCallback,
+    OnDeleted,
+    OnRecordingStarted,
+    PurchasesUpdatedListener,
+    RewardedVideoAdListener {
 
     companion object {
         private val TAG = "MainActivity"
@@ -98,9 +103,12 @@ class MainActivity : FragmentActivity(),
         private val NOTIFY_ID = 1337
     }
 
+    private lateinit var adUnitId: String
     private lateinit var notificationManager: NotificationManager
     private lateinit var sharedViewModel: SharedViewModel
     private lateinit var billingClient: BillingClient
+
+    private lateinit var rewardedVideoAd: RewardedVideoAd
 
     private val areWritePermissionsGranted = MutableLiveData<Boolean>()
     private val isSoundGridFragmentStarted = MutableLiveData<Boolean>()
@@ -126,6 +134,7 @@ class MainActivity : FragmentActivity(),
         checkPermissions()
         //should also be done in onResume()
         setupBillingClient()
+        setupRewardVideoAd()
 
         val result = MediatorLiveData<MergePermissionFragmentStarted?>()
 
@@ -173,12 +182,38 @@ class MainActivity : FragmentActivity(),
         })
     }
 
+    private fun setupRewardVideoAd() {
+        this.adUnitId =
+            if (BuildConfig.DEBUG) resources.getString(R.string.reward_ad_test) else resources.getString(
+                R.string.reward_ad_prod
+            )
+        MobileAds.initialize(this, adUnitId)
+        rewardedVideoAd = MobileAds.getRewardedVideoAdInstance(this)
+        rewardedVideoAd.rewardedVideoAdListener = this
+        loadRewardedVideoAd()
+    }
+
     private fun setupViewPagerDots() {
         tabDots.setupWithViewPager(pager, true)
     }
 
     private fun setupViewPager() {
         pager.adapter = PagerAdapter(supportFragmentManager)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        rewardedVideoAd.pause(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        rewardedVideoAd.resume(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        rewardedVideoAd.destroy(this)
     }
 
     private fun shouldShowSplash() {
@@ -188,7 +223,8 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun setupBillingClient() {
-        billingClient = BillingClient.newBuilder(this).enablePendingPurchases().setListener(this).build()
+        billingClient =
+            BillingClient.newBuilder(this).enablePendingPurchases().setListener(this).build()
         billingClient.startConnection(
                 object : BillingClientStateListener {
                     override fun onBillingSetupFinished(billingResult: BillingResult) {
@@ -408,7 +444,7 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun showBottomDialogForPro() {
-        ProBottomDialogFragment().show(supportFragmentManager, "pro")
+        ProBottomDialogFragment(this).show(supportFragmentManager, "pro")
     }
 
     override fun soundGridFragmentStarted() {
@@ -462,12 +498,20 @@ class MainActivity : FragmentActivity(),
         scrollViewPager()
     }
 
+    override fun playRewardAd() {
+        if (rewardedVideoAd.isLoaded) {
+            rewardedVideoAd.show()
+        }
+    }
+
     private fun redirectUserToPlayStore() {
-        val marketUri = Uri.parse("https://play.google.com/store/apps/details?id=com.cazimir.relaxoo")
+        val marketUri =
+            Uri.parse("https://play.google.com/store/apps/details?id=com.cazimir.relaxoo")
         try {
             startActivity(Intent(Intent.ACTION_VIEW, marketUri))
         } catch (ex: ActivityNotFoundException) {
-            Toast.makeText(this, "Couldn't find PlayStore on this device", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Couldn't find PlayStore on this device", Toast.LENGTH_SHORT)
+                .show()
         }
     }
 
@@ -543,8 +587,49 @@ class MainActivity : FragmentActivity(),
         Log.d(TAG, "onPurchasesUpdated: called with: $billingResult")
         val responseCode = billingResult.responseCode
         if (responseCode == BillingClient.BillingResponseCode.OK || responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
-            Log.d(TAG, "onPurchasesUpdated: called with: " + "Purchase successfull or Item already purchased")
+            Log.d(
+                TAG,
+                "onPurchasesUpdated: called with: " + "Purchase successfull or Item already purchased"
+            )
             sharedViewModel.adsBought(true)
         }
+    }
+
+    override fun onRewardedVideoAdClosed() {
+        loadRewardedVideoAd()
+    }
+
+    override fun onRewardedVideoAdLeftApplication() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onRewardedVideoAdLoaded() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onRewardedVideoAdOpened() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onRewardedVideoCompleted() {
+        Log.d(TAG, "onRewardedVideoCompleted: called")
+        getSoundGridFragment()?.rewardUserByPlayingProSound()
+        loadRewardedVideoAd()
+    }
+
+    private fun loadRewardedVideoAd() {
+        rewardedVideoAd.loadAd(adUnitId, AdRequest.Builder().build())
+    }
+
+    override fun onRewarded(p0: RewardItem?) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onRewardedVideoStarted() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onRewardedVideoAdFailedToLoad(p0: Int) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

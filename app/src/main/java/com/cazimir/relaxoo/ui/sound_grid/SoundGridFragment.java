@@ -199,13 +199,13 @@ public class SoundGridFragment extends Fragment {
                                     sounds,
                                     new OnSoundClickListener() {
                                         @Override
-                                        public void clicked(
-                                                int soundId, boolean playing, int streamId, boolean pro) {
+                                        public void clicked(Sound sound) {
 
-                                            if (pro) {
+                                            if (sound.isPro() && !sound.isPlaying()) {
+                                                viewModel.currentlyClickedProSound = sound;
                                                 activityCallback.showBottomDialogForPro();
                                             } else {
-                                                playStopSound(soundId, playing, streamId);
+                                                playStopSound(sound.soundPoolId(), sound.isPlaying(), sound.streamId());
                                             }
                                         }
 
@@ -559,5 +559,10 @@ public class SoundGridFragment extends Fragment {
 
     public void scrollToBottom() {
         gridView.smoothScrollToPosition(gridArrayAdapter.getCount());
+    }
+
+    public void rewardUserByPlayingProSound() {
+        Sound currentlyClickedProSound = viewModel.currentlyClickedProSound;
+        playStopSound(currentlyClickedProSound.soundPoolId(), currentlyClickedProSound.isPlaying(), currentlyClickedProSound.streamId());
     }
 }
