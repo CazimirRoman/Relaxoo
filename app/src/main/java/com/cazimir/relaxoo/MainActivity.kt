@@ -30,7 +30,14 @@ import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder
 import cafe.adriel.androidaudiorecorder.model.AudioChannel
 import cafe.adriel.androidaudiorecorder.model.AudioSampleRate
 import cafe.adriel.androidaudiorecorder.model.AudioSource
-import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.SkuDetails
+import com.android.billingclient.api.SkuDetailsParams
 import com.cazimir.relaxoo.adapter.PagerAdapter
 import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog
 import com.cazimir.relaxoo.dialog.OnDeleted
@@ -54,6 +61,8 @@ import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
 import com.google.gson.JsonSyntaxException
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
@@ -65,7 +74,10 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.main_activity.*
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.HashMap
+import java.util.Random
+import java.util.TimerTask
 
 class MainActivity : FragmentActivity(),
         OnActivityCallback,
@@ -112,9 +124,9 @@ class MainActivity : FragmentActivity(),
         setupNotifications()
         startColorChangeAnimation()
         checkPermissions()
-        loadAds()
         //should also be done in onResume()
         setupBillingClient()
+
         val result = MediatorLiveData<MergePermissionFragmentStarted?>()
 
         Log.d(TAG, "onCreate: called before result add source")
@@ -151,11 +163,12 @@ class MainActivity : FragmentActivity(),
                     }
                 })
 
+        //remove ads logic - listen to observer in viewmodel
         sharedViewModel.adsBought.observe(this, Observer { adsBought: Boolean ->
             if (adsBought) {
                 removeAdsView()
-                //        viewPager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
-//        viewPager.setCurrentItem(3);
+            } else {
+                loadAds()
             }
         })
     }
@@ -183,7 +196,6 @@ class MainActivity : FragmentActivity(),
                             Log.d(TAG, "onBillingSetupFinished() called with: success!")
                             val purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP)
                             if (purchasesResult.purchasesList.size != 0 && (purchasesResult.purchasesList[0].sku == "remove_ads")) {
-                                removeAdsView()
                                 sharedViewModel.adsBought(true)
                             }
                         }
@@ -223,16 +235,26 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun loadAds() {
-        //    if (BuildConfig.DEBUG) {
-//      adView.setAdUnitId(getResources().getString(R.string.ad_test));
-//    } else {
-//      adView.setAdUnitId(getResources().getString(R.string.ad_prod));
-//    }
+
+        val adView = AdView(this)
+        adView.adSize = AdSize.SMART_BANNER
+        adView.id = View.generateViewId()
+
+        if (BuildConfig.DEBUG) {
+            adView.adUnitId = resources.getString(R.string.ad_test)
+        } else {
+            adView.adUnitId = resources.getString(R.string.ad_prod)
+        }
+
+        adMobView.addView(adView)
+
+        sharedViewModel.adView = adView
+
         val adRequest1 = sharedViewModel.adRequest
         if (adRequest1 == null) {
             sharedViewModel.adRequest = AdRequest.Builder().build()
         }
-        ad_view.loadAd(sharedViewModel.adRequest)
+        adView.loadAd(sharedViewModel.adRequest)
     }
 
     private fun checkPermissions() {
@@ -406,10 +428,12 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun removeAdsView() {
-        val parent: ViewGroup? = ad_view.parent as ViewGroup
-        // doing this null check because of line 223 - query if remove_ads purchase bought
-        if (parent != null) {
-            parent.removeView(ad_view)
+
+        val adView = sharedViewModel.adView
+
+        adView.parent?.let {
+            val parent: ViewGroup = it as ViewGroup
+            parent.removeView(adView)
             parent.invalidate()
         }
     }

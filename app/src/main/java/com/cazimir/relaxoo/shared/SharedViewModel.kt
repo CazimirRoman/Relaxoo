@@ -5,11 +5,13 @@ import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import java.util.Timer
 import java.util.TimerTask
 
 class SharedViewModel : ViewModel() {
 
+    lateinit var adView: AdView
     val timer: Timer = Timer()
 
     var timerTaskExtended: TimerTaskExtended? = null

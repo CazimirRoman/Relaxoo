@@ -19,6 +19,6 @@
     <string name="loading_sounds">Loading sounds...</string>
     <string name="share_text">Relaxoo - Help you concentrate at day and easy to fall asleep at night</string>
     <string name="ad_test">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="ad_prod">XXXXX</string>
+    <string name="ad_prod">ca-app-pub-7748272108558557/1855871257</string>
     <string name="delete_custom_sound">Delete sound</string>
 </resources>
