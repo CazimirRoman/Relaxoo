@@ -103,6 +103,7 @@ class MainActivity : FragmentActivity(),
         private val NOTIFY_ID = 1337
     }
 
+    private lateinit var adView: AdView
     private lateinit var adUnitId: String
     private lateinit var notificationManager: NotificationManager
     private lateinit var sharedViewModel: SharedViewModel
@@ -271,8 +272,7 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun loadAds() {
-
-        val adView = AdView(this)
+        this.adView = AdView(this)
         adView.adSize = AdSize.SMART_BANNER
         adView.id = View.generateViewId()
 
@@ -283,14 +283,8 @@ class MainActivity : FragmentActivity(),
         }
 
         adMobView.addView(adView)
-
-        sharedViewModel.adView = adView
-
-        val adRequest1 = sharedViewModel.adRequest
-        if (adRequest1 == null) {
-            sharedViewModel.adRequest = AdRequest.Builder().build()
-        }
-        adView.loadAd(sharedViewModel.adRequest)
+        val adRequest = AdRequest.Builder().build()
+        adView.loadAd(adRequest)
     }
 
     private fun checkPermissions() {
@@ -464,8 +458,6 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun removeAdsView() {
-
-        val adView = sharedViewModel.adView
 
         adView.parent?.let {
             val parent: ViewGroup = it as ViewGroup

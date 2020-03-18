@@ -4,14 +4,11 @@ import TimerTaskExtended
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdView
 import java.util.Timer
 import java.util.TimerTask
 
 class SharedViewModel : ViewModel() {
 
-    lateinit var adView: AdView
     val timer: Timer = Timer()
 
     var timerTaskExtended: TimerTaskExtended? = null
@@ -22,11 +19,6 @@ class SharedViewModel : ViewModel() {
         super.onCleared()
         timer.cancel()
     }
-
-    var adRequest: AdRequest? = null
-        set(value) {
-            field = value
-        }
 
     var previousColor: Int? = 0
         set(value) {

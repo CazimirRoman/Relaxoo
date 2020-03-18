@@ -1,7 +1,9 @@
 package com.cazimir.relaxoo.ui.about;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -102,14 +104,33 @@ public class AboutFragment extends Fragment {
   }
 
   private void startMoreAppsActivity() {
-    startActivity(new Intent(getActivity(), MoreAppsActivity.class));
+    Intent intent = new Intent(getActivity(), MoreAppsActivity.class);
+    startActivity(putAdsBoughExtra(intent));
   }
 
   private void startPrivacyPolicyActivity() {
-    startActivity(new Intent(getActivity(), PrivacyPolicyActivity.class));
+    Intent intent = new Intent(getActivity(), PrivacyPolicyActivity.class);
+    startActivity(putAdsBoughExtra(intent));
+  }
+
+  private Intent putAdsBoughExtra(Intent intent) {
+    return intent.putExtra("ads_bought", sharedViewModel.getAdsBought().getValue());
   }
 
   private void startRateAppAction() {
+    Uri uri = Uri.parse("market://details?id=" + getContext().getPackageName());
+    Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+    // To count with Play market backstack, After pressing back button,
+    // to taken back to our application, we need to add following flags to intent.
+    goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+            Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+            Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+    try {
+      startActivity(goToMarket);
+    } catch (ActivityNotFoundException e) {
+      startActivity(new Intent(Intent.ACTION_VIEW,
+              Uri.parse("http://play.google.com/store/apps/details?id=" + getContext().getPackageName())));
+    }
   }
 
   private void startShareAction() {
