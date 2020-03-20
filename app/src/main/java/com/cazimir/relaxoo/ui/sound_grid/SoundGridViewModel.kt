@@ -30,7 +30,7 @@ class SoundGridViewModel : ViewModel() {
     private var allSounds = ArrayList<Sound>()
     private val _soundsLiveData = MutableLiveData(ArrayList<Sound>())
     private val playingSounds: MutableList<Sound> = ArrayList()
-    private val _playingSoundsLiveData = MutableLiveData<List<Sound>?>()
+    private val _playingSoundsLiveData = MutableLiveData<List<Sound>>(emptyList())
     /**
      * used to show notification in MainActivity to let user know that a sound is playing
      */
@@ -165,10 +165,7 @@ class SoundGridViewModel : ViewModel() {
         return _soundsLiveData
     }
 
-    fun playingSounds(): MutableLiveData<List<Sound>?> {
-        if (_playingSoundsLiveData.value == null) {
-            _playingSoundsLiveData.value = emptyList()
-        }
+    fun playingSounds(): MutableLiveData<List<Sound>> {
         return _playingSoundsLiveData
     }
 
@@ -216,9 +213,10 @@ class SoundGridViewModel : ViewModel() {
         if (!atLeastOneIsPlaying) {
             playingSounds.clear()
         }
+        refreshPlayingSoundLiveData()
         isAtLeastOneSoundPlaying.value = atLeastOneIsPlaying
         refreshSoundLiveData()
-        refreshPlayingSoundLiveData()
+
         Log.d(TAG, "updateSoundList: atLeastOneIsPlaying: $atLeastOneIsPlaying")
     }
 

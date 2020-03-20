@@ -7,5 +7,7 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         ModelPreferencesManager.with(this)
+
+        //val eventBus = EventBus.builder().addIndex(EventBusIndex()).build()
     }
 }

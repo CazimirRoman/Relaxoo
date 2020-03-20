@@ -8,6 +8,7 @@ import android.animation.ObjectAnimator
 import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -47,6 +48,7 @@ import com.cazimir.relaxoo.dialog.pro.ProBottomDialogFragment
 import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
+import com.cazimir.relaxoo.model.ExampleEvent
 import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.model.SavedCombo
@@ -77,6 +79,9 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.main_activity.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.HashMap
@@ -363,7 +368,11 @@ class MainActivity : FragmentActivity(),
         if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                         && notificationManager.getNotificationChannel(CHANNEL_WHATEVER) == null)) {
             val notificationChannel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationChannel(CHANNEL_WHATEVER, "Whatever", NotificationManager.IMPORTANCE_LOW)
+                NotificationChannel(
+                    CHANNEL_WHATEVER,
+                    "Whatever",
+                    NotificationManager.IMPORTANCE_LOW
+                )
             } else {
                 TODO("VERSION.SDK_INT < O")
             }
@@ -373,12 +382,38 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun showNotification() {
-        val b = NotificationCompat.Builder(this, CHANNEL_WHATEVER)
-        b.setAutoCancel(true)
-        b.setContentTitle("Relaxoo")
-                .setContentText("1 sound selected")
-                .setSmallIcon(android.R.drawable.stat_sys_download_done)
-        notificationManager.notify(NOTIFY_ID, b.build())
+
+        Log.d(TAG, "showNotification: called")
+
+        val numberOfPlayingSounds = getSoundGridFragment()?.playingSounds?.size
+
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+
+        val builder = NotificationCompat.Builder(this, CHANNEL_WHATEVER)
+
+        builder
+            .setContentTitle("Relaxoo")
+            .setContentText(getNotificationText(numberOfPlayingSounds))
+            .setSmallIcon(android.R.drawable.stat_sys_download_done)
+            .setContentIntent(pendingIntent)
+        notificationManager.notify(NOTIFY_ID, builder.build())
+    }
+
+    private fun getNotificationText(numberOfPlayingSounds: Int?): String {
+        val label = numberOfPlayingSounds?.let { "sound".pluralize(it) }
+        return "$numberOfPlayingSounds $label playing..."
+    }
+
+    private fun String.pluralize(count: Int): String? {
+        return if (count > 1) {
+            this + 's'
+        } else {
+            this
+        }
     }
 
     override fun hideNotification() {
@@ -609,6 +644,16 @@ class MainActivity : FragmentActivity(),
         loadRewardedVideoAd()
     }
 
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
     private fun loadRewardedVideoAd() {
         rewardedVideoAd.loadAd(adUnitId, AdRequest.Builder().build())
     }
@@ -623,5 +668,10 @@ class MainActivity : FragmentActivity(),
 
     override fun onRewardedVideoAdFailedToLoad(p0: Int) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun doSomething(data: ExampleEvent) {
+        Log.d(TAG, "doSomething: called")
     }
 }
