@@ -1,0 +1,90 @@
+package com.cazimir.relaxoo.ui.favorites
+
+import android.content.Context
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.cazimir.relaxoo.R
+import com.cazimir.relaxoo.adapter.SavedComboAdapter
+import com.cazimir.relaxoo.dialog.OnDeleted
+import com.cazimir.relaxoo.dialog.favorite.FavoriteDeleted
+import com.cazimir.relaxoo.model.ListOfSavedCombos
+import com.cazimir.relaxoo.model.SavedCombo
+import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
+import kotlinx.android.synthetic.main.favorites_fragment.view.*
+
+class FavoritesFragment : Fragment() {
+    private lateinit var favoritesFragmentView: View
+    private lateinit var viewModel: FavoritesViewModel
+    private lateinit var adapter: SavedComboAdapter
+    private lateinit var activityCallback: OnActivityCallback
+
+    override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+    ): View? {
+        favoritesFragmentView = inflater.inflate(R.layout.favorites_fragment, container, false)
+        return favoritesFragmentView
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        viewModel = ViewModelProvider(this).get(FavoritesViewModel::class.java)
+        viewModel.repository = FavoritesRepository()
+        viewModel.fetchFavorites()
+        viewModel
+                .savedCombosLive()
+                .observe(
+                        viewLifecycleOwner,
+                        Observer { savedCombos: ListOfSavedCombos ->
+//                Log.d(TAG, "onChanged: called: savedCombos size is: " + savedCombos.size());
+                            // update recyclerview
+                            favoritesFragmentView.favoritesList.layoutManager = LinearLayoutManager(context)
+                            adapter = SavedComboAdapter(context, savedCombos, object : SavedComboAdapter.OnItemClickListener {
+                                private var positionToBeDeleted = 0
+                                override fun onItemClick(savedCombo: SavedCombo) {
+                                    activityCallback.triggerCombo(savedCombo)
+                                    // adapter.updateComboWithPlayingStatus(savedCombo);
+                                }
+
+                                override fun onItemDeleted(position: Int) {
+                                    positionToBeDeleted = position
+                                    val deleted: OnDeleted = object : FavoriteDeleted {
+                                        override fun deleted() {
+                                            deleteFavorite(positionToBeDeleted)
+                                        }
+                                    }
+                                    activityCallback.showDeleteConfirmationDialog(deleted)
+                                }
+                            })
+                            favoritesFragmentView.favoritesList.adapter = adapter
+                            favoritesFragmentView.no_favorites_text.visibility = if (savedCombos.savedComboList!!.size != 0) View.GONE else View.VISIBLE
+                        })
+    }
+
+    fun updateList(savedCombo: SavedCombo?) {
+        viewModel.addFavorite(savedCombo!!)
+    }
+
+    fun deleteFavorite(position: Int) {
+        viewModel.deleteCombo(position)
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        activityCallback = context as OnActivityCallback
+    }
+
+    companion object {
+        private const val TAG = "FavoritesFragment"
+        fun newInstance(): FavoritesFragment {
+            return FavoritesFragment()
+        }
+    }
+}

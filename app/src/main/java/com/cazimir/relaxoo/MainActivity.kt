@@ -31,14 +31,7 @@ import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder
 import cafe.adriel.androidaudiorecorder.model.AudioChannel
 import cafe.adriel.androidaudiorecorder.model.AudioSampleRate
 import cafe.adriel.androidaudiorecorder.model.AudioSource
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.BillingFlowParams
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchasesUpdatedListener
-import com.android.billingclient.api.SkuDetails
-import com.android.billingclient.api.SkuDetailsParams
+import com.android.billingclient.api.*
 import com.cazimir.relaxoo.adapter.PagerAdapter
 import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog
 import com.cazimir.relaxoo.dialog.OnDeleted
@@ -48,11 +41,7 @@ import com.cazimir.relaxoo.dialog.pro.ProBottomDialogFragment
 import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
-import com.cazimir.relaxoo.model.ExampleEvent
-import com.cazimir.relaxoo.model.ListOfSavedCustom
-import com.cazimir.relaxoo.model.Recording
-import com.cazimir.relaxoo.model.SavedCombo
-import com.cazimir.relaxoo.model.Sound
+import com.cazimir.relaxoo.model.*
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.cazimir.relaxoo.repository.ModelPreferencesManager.save
 import com.cazimir.relaxoo.shared.SharedViewModel
@@ -83,10 +72,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.HashMap
-import java.util.Random
-import java.util.TimerTask
+import java.util.*
 
 class MainActivity : FragmentActivity(),
     OnActivityCallback,
@@ -138,7 +124,7 @@ class MainActivity : FragmentActivity(),
         setupNotifications()
         startColorChangeAnimation()
         checkPermissions()
-        //should also be done in onResume()
+        // should also be done in onResume()
         setupBillingClient()
         setupRewardVideoAd()
 
@@ -167,8 +153,8 @@ class MainActivity : FragmentActivity(),
                 Observer { mergePermissionFragmentStarted: MergePermissionFragmentStarted? ->
                     Log.d(
                             TAG, (
-                            "onChanged() called with: mergePermissionFragmentStarted: "
-                                    + mergePermissionFragmentStarted.toString()))
+                            "onChanged() called with: mergePermissionFragmentStarted: " +
+                                    mergePermissionFragmentStarted.toString()))
                     if (mergePermissionFragmentStarted!!.isFragmentStarted() && mergePermissionFragmentStarted.isPermissionsGranted()) {
                         if (!getSoundGridFragment()!!.soundsAlreadyFetched()) {
                             Log.d(
@@ -178,7 +164,7 @@ class MainActivity : FragmentActivity(),
                     }
                 })
 
-        //remove ads logic - listen to observer in viewmodel
+        // remove ads logic - listen to observer in viewmodel
         sharedViewModel.adsBought.observe(this, Observer { adsBought: Boolean ->
             if (adsBought) {
                 removeAdsView()
@@ -260,8 +246,8 @@ class MainActivity : FragmentActivity(),
             billingClient.querySkuDetailsAsync(
                     skuDetailsParams
             ) { billingResult: BillingResult, skuDetailsList: List<SkuDetails> ->
-                if ((billingResult.responseCode == BillingClient.BillingResponseCode.OK
-                                && !skuDetailsList.isEmpty())) {
+                if ((billingResult.responseCode == BillingClient.BillingResponseCode.OK &&
+                                !skuDetailsList.isEmpty())) {
                     for (skuDetail: SkuDetails in skuDetailsList) {
                         val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
                         billingClient.launchBillingFlow(this, flowParams)
@@ -308,7 +294,9 @@ class MainActivity : FragmentActivity(),
                             }
 
                             override fun onPermissionRationaleShouldBeShown(
-                                    permissions: List<PermissionRequest>, token: PermissionToken) {
+                                    permissions: List<PermissionRequest>,
+                                    token: PermissionToken
+                            ) {
                                 Log.d(TAG, "onPermissionRationaleShouldBeShown: called")
                                 /* ... */
                             }
@@ -365,13 +353,13 @@ class MainActivity : FragmentActivity(),
 
     private fun setupNotifications() {
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-                        && notificationManager.getNotificationChannel(CHANNEL_WHATEVER) == null)) {
+        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                        notificationManager.getNotificationChannel(CHANNEL_WHATEVER) == null)) {
             val notificationChannel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 NotificationChannel(
-                    CHANNEL_WHATEVER,
-                    "Whatever",
-                    NotificationManager.IMPORTANCE_LOW
+                        CHANNEL_WHATEVER,
+                        "Whatever",
+                        NotificationManager.IMPORTANCE_LOW
                 )
             } else {
                 TODO("VERSION.SDK_INT < O")
@@ -438,8 +426,8 @@ class MainActivity : FragmentActivity(),
     override fun triggerCombo(savedCombo: SavedCombo) {
         Log.d(
                 TAG, (
-                "triggerCombo in MainActivity: called with: "
-                        + savedCombo.soundPoolParameters.toString()))
+                "triggerCombo in MainActivity: called with: " +
+                        savedCombo.soundPoolParameters.toString()))
         getSoundGridFragment()!!.triggerCombo(savedCombo)
     }
 
@@ -521,7 +509,6 @@ class MainActivity : FragmentActivity(),
             save(ListOfSavedCustom(mutableListOf(sound)), PINNED_RECORDINGS)
         }
 
-
         scrollViewPager()
     }
 
@@ -570,7 +557,9 @@ class MainActivity : FragmentActivity(),
                             }
 
                             override fun onPermissionRationaleShouldBeShown(
-                                    permission: PermissionRequest, token: PermissionToken) { /* ... */
+                                    permission: PermissionRequest,
+                                    token: PermissionToken
+                            ) { /* ... */
                             }
                         })
                 .check()
@@ -627,15 +616,15 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun onRewardedVideoAdLeftApplication() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun onRewardedVideoAdLoaded() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun onRewardedVideoAdOpened() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun onRewardedVideoCompleted() {
@@ -659,15 +648,15 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun onRewarded(p0: RewardItem?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun onRewardedVideoStarted() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun onRewardedVideoAdFailedToLoad(p0: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

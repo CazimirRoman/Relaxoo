@@ -21,7 +21,7 @@ class PrivacyPolicyActivity : AppCompatActivity() {
 
         initializeAdView()
 
-        val adsBought = intent?.getBooleanExtra("ads_bought", false);
+        val adsBought = intent?.getBooleanExtra("ads_bought", false)
 
         adsBought?.let {
             if (it) {

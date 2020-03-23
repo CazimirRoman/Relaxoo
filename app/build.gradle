@@ -18,6 +18,12 @@ android {
         }
 
         multiDexEnabled true
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [ eventBusIndex : 'com.cazimir.relaxoo.MyEventBusIndex' ]
+            }
+        }
     }
 
     compileOptions {
@@ -40,6 +46,8 @@ android {
 }
 
 dependencies {
+    def eventbus_version = '3.2.0'
+
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0'
@@ -48,22 +56,21 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.firebase:firebase-storage:19.1.1'
-    implementation 'com.google.firebase:firebase-auth:19.2.0'
+    implementation 'com.google.firebase:firebase-auth:19.3.0'
     implementation 'com.karumi:dexter:6.0.1'
     implementation 'com.google.firebase:firebase-database:19.2.1'
-    implementation 'com.jakewharton:butterknife:10.2.1'
     implementation 'com.github.CazimirRoman:AndroidAudioRecorder:0.3.2'
     implementation 'commons-io:commons-io:2.6'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
-    implementation 'com.google.firebase:firebase-ads:18.3.0'
+    implementation 'com.google.firebase:firebase-ads:19.0.1'
     implementation 'com.android.billingclient:billing:2.1.0'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.android.billingclient:billing:2.1.0'
-    implementation 'com.google.firebase:firebase-config:19.1.2'
+    implementation 'com.google.firebase:firebase-config:19.1.3'
     implementation 'org.greenrobot:eventbus:3.2.0'
-    annotationProcessor "org.greenrobot:eventbus-annotation-processor:3.2.0"
-    androidTestImplementation 'androidx.test:rules:1.3.0-alpha03'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
+    implementation "org.greenrobot:eventbus:$eventbus_version"
+    annotationProcessor "org.greenrobot:eventbus-annotation-processor:$eventbus_version"
+    androidTestImplementation 'androidx.test:rules:1.3.0-alpha05'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation "android.arch.core:core-testing:1.1.1"
     androidTestImplementation "com.nhaarman:mockito-kotlin:1.5.0"

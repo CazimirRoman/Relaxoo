@@ -17,7 +17,7 @@ class SoundRepository : ISoundRepository {
         val file2 = File(ownSoundsFolder, recording.file.name)
         val deleted = recording.file.delete()
         Log.d(TAG, "deleteRecording() called with: $deleted")
-        return deleted;
+        return deleted
     }
 
     override fun editRecording(recording: Recording, newName: String): Boolean {

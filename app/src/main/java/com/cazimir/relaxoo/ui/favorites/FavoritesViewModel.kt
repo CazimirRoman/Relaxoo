@@ -41,7 +41,7 @@ class FavoritesViewModel : ViewModel() {
     }
 
     fun addFavorite(comboToBeAdded: SavedCombo) {
-        //get current object with list and return another one with savedCombo added
+        // get current object with list and return another one with savedCombo added
         val currentSavedCombos = _savedCombos.value
         val currentList = currentSavedCombos?.savedComboList?.toMutableList()
         currentList?.add(comboToBeAdded)

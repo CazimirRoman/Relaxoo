@@ -17,7 +17,7 @@ import java.io.File
 class CreateSoundViewModelTest {
 
     @Rule
-    @JvmField    // A JUnit Test Rule that swaps the background executor used by the Architecture Components with a different one which executes each task synchronously.
+    @JvmField // A JUnit Test Rule that swaps the background executor used by the Architecture Components with a different one which executes each task synchronously.
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val recordingsObserver: Observer<ArrayList<Recording>> = mock()
@@ -28,7 +28,6 @@ class CreateSoundViewModelTest {
     var mockEditedRecording: Recording = Recording.Builder().withFile(File("TestEdited")).withFileName("testEdited.ogg").withPlaying(true).build()
     val editedName = "TestEdited"
     val captor = ArgumentCaptor.forClass(ArrayList::class.java)
-
 
     @Before
     fun setUp() {
@@ -80,7 +79,6 @@ class CreateSoundViewModelTest {
         }
     }
 
-
     private fun stubSoundRepositoryDeleteRecording(recording: Recording) {
         whenever(mockSoundRepository.deleteRecording(recording)).thenReturn(true)
     }
@@ -92,5 +90,4 @@ class CreateSoundViewModelTest {
     private fun stubSoundRepositoryEditRecording(recording: Recording) {
         whenever(mockSoundRepository.editRecording(recording, editedName)).thenReturn(true)
     }
-
 }

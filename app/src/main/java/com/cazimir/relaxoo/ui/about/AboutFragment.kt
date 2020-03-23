@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.AboutListAdapter
 import com.cazimir.relaxoo.adapter.AboutListAdapter.Interactor
@@ -21,11 +22,11 @@ import com.cazimir.relaxoo.ui.more_apps.MoreAppsActivity
 import com.cazimir.relaxoo.ui.privacy_policy.PrivacyPolicyActivity
 import com.cazimir.relaxoo.ui.settings.SettingsActivity
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
-import kotlinx.android.synthetic.main.about_fragment.*
-import java.util.ArrayList
+import kotlinx.android.synthetic.main.about_fragment.view.*
 
 class AboutFragment : Fragment() {
 
+    lateinit var aboutRecyclerView: RecyclerView
     private var activityCallback: OnActivityCallback? = null
     private var sharedViewModel: SharedViewModel? = null
     private var aboutItems: List<AboutItem>? = null
@@ -35,26 +36,27 @@ class AboutFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.about_fragment, container, false)
-        about_recycler_view.layoutManager = LinearLayoutManager(context)
+        this.aboutRecyclerView = view.about_recycler_view
         return view
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         sharedViewModel =
-            ViewModelProvider(activity!!).get(SharedViewModel::class.java)
+                ViewModelProvider(activity!!).get(SharedViewModel::class.java)
         aboutItems = populateAboutItems(sharedViewModel!!.adsBought.value)
-        about_recycler_view.adapter = AboutListAdapter(
-            context,
-            aboutItems,
-            Interactor { item: AboutItem ->
-                when (item.name) {
-                    MenuItemType.REMOVE_ADS -> startRemoveAdsAction()
-                    MenuItemType.SHARE -> startShareAction()
-                    MenuItemType.PRIVACY_POLICY -> startPrivacyPolicyActivity()
-                    MenuItemType.RATE_APP -> startRateAppAction()
-                    MenuItemType.MORE_APPS -> startMoreAppsActivity()
-                }
+        aboutRecyclerView.layoutManager = LinearLayoutManager(context)
+        aboutRecyclerView.adapter = AboutListAdapter(
+                context,
+                aboutItems,
+                Interactor { item: AboutItem ->
+                    when (item.name) {
+                        MenuItemType.REMOVE_ADS -> startRemoveAdsAction()
+                        MenuItemType.SHARE -> startShareAction()
+                        MenuItemType.PRIVACY_POLICY -> startPrivacyPolicyActivity()
+                        MenuItemType.RATE_APP -> startRateAppAction()
+                        MenuItemType.MORE_APPS -> startMoreAppsActivity()
+                    }
             }
         )
     }
@@ -87,7 +89,7 @@ class AboutFragment : Fragment() {
             Uri.parse("market://details?id=" + context!!.packageName)
         val goToMarket = Intent(Intent.ACTION_VIEW, uri)
         // To count with Play market backstack, After pressing back button,
-// to taken back to our application, we need to add following flags to intent.
+        // to taken back to our application, we need to add following flags to intent.
         goToMarket.addFlags(
             Intent.FLAG_ACTIVITY_NO_HISTORY or
                 Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
@@ -132,7 +134,6 @@ class AboutFragment : Fragment() {
     companion object {
         private const val TAG = "AboutFragment"
 
-        @JvmStatic
         fun newInstance(): AboutFragment {
             return AboutFragment()
         }

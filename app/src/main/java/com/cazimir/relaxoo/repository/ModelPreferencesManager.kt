@@ -7,11 +7,10 @@ import com.google.gson.GsonBuilder
 
 object ModelPreferencesManager {
 
-
-    //Shared Preference field used to save and retrieve JSON string
+    // Shared Preference field used to save and retrieve JSON string
     lateinit var preferences: SharedPreferences
 
-    //Name of Shared Preference file
+    // Name of Shared Preference file
     private const val PREFERENCES_FILE_NAME = "PREFERENCES_FILE_NAME"
 
     /**
@@ -31,7 +30,7 @@ object ModelPreferencesManager {
      **/
 
     fun <T> save(`object`: T, key: String) {
-        //Convert object to JSON String.
+        // Convert object to JSON String.
         val jsonString = GsonBuilder().create().toJson(`object`)
         // save that string in shared preferences
         preferences.edit().putString(key, jsonString).apply()

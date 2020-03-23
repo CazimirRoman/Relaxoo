@@ -17,5 +17,4 @@ class MoreAppsViewModel : ViewModel() {
     }
 
     val remoteConfig: FirebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
-
 }

@@ -18,8 +18,14 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FileDownloadTask
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
-import java.util.Arrays
+import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
+import kotlin.collections.List
+import kotlin.collections.MutableList
+import kotlin.collections.emptyList
+import kotlin.collections.indexOf
+import kotlin.collections.indices
 
 class SoundGridViewModel : ViewModel() {
     @JvmField
@@ -125,7 +131,7 @@ class SoundGridViewModel : ViewModel() {
                                                 .withFilePath(soundFile.path)
                                                 .build()
                                         allSounds.addAll(Arrays.asList(fetchedSound))
-                                        //addCustomSoundsAsWell();
+                                        // addCustomSoundsAsWell();
 
                                         val customSounds = ModelPreferencesManager.get<ListOfSavedCustom>("PINNED_RECORDINGS")
 
@@ -248,8 +254,8 @@ class SoundGridViewModel : ViewModel() {
     fun setCountDownTimer(minutes: Int) {
         countDownTimer = object : CountDownTimer(TimeUnit.MINUTES.toMillis(minutes.toLong()), 1000) {
             override fun onTick(millisUntilFinished: Long) { // updateLiveDataHere() observe from Fragment
-                timerText().value = String.format("Sound%s will stop in "
-                        + TimerDialog.getCountTimeByLong(millisUntilFinished),
+                timerText().value = String.format("Sound%s will stop in " +
+                        TimerDialog.getCountTimeByLong(millisUntilFinished),
                         if (playingSounds().value!!.size > 1) "s" else "")
             }
 

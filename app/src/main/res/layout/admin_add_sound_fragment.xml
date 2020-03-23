@@ -9,7 +9,7 @@
     tools:context=".ui.admin_add_sound.AdminAddSoundFragment">
 
     <EditText
-        android:id="@+id/soundName"
+        android:id="@+id/sound_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -17,7 +17,7 @@
         android:inputType="textPersonName" />
 
     <EditText
-        android:id="@+id/soundLogoUrl"
+        android:id="@+id/sound_logo_url"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -25,7 +25,7 @@
         android:inputType="textPersonName" />
 
     <EditText
-        android:id="@+id/soundNameStorage"
+        android:id="@+id/sound_name_storage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -33,13 +33,13 @@
         android:inputType="textPersonName" />
 
     <CheckBox
-        android:id="@+id/checkBoxPro"
+        android:id="@+id/checkbox_pro"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Pro?" />
 
     <Button
-        android:id="@+id/saveButton"
+        android:id="@+id/save_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Save" />

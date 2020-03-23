@@ -48,7 +48,6 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
                             dialog?.cancel()
                         }
                     })
-
         }
 
         // create alert dialog

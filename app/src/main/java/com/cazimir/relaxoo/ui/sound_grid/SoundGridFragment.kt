@@ -13,7 +13,6 @@ import android.widget.TimePicker
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import butterknife.ButterKnife
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.GridAdapter
 import com.cazimir.relaxoo.dialog.custom.BottomCustomDeleteFragment
@@ -21,9 +20,7 @@ import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
 import kotlinx.android.synthetic.main.sound_list_fragment.*
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.Random
+import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 
 class SoundGridFragment() : Fragment() {
@@ -43,7 +40,6 @@ class SoundGridFragment() : Fragment() {
     ): View? {
         val view =
             inflater.inflate(R.layout.sound_list_fragment, container, false)
-        ButterKnife.bind(this, view)
         return view
     }
 
@@ -89,15 +85,15 @@ class SoundGridFragment() : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this).get(SoundGridViewModel::class.java)
-        //perhaps use a kotlin object - looks like a singleton?
-//use a service to create the soundpool?
+        // perhaps use a kotlin object - looks like a singleton?
+// use a service to create the soundpool?
         soundPool = viewModel!!.createOrGetSoundPool()
         setListenersForButtons()
         soundPool!!.setOnLoadCompleteListener(
-            { soundPool: SoundPool?, sampleId: Int, status: Int ->
-                Log.d(TAG, "onLoadComplete: " + sampleId)
-                viewModel!!.addedSound()
-            }
+                { soundPool: SoundPool?, sampleId: Int, status: Int ->
+                    Log.d(TAG, "onLoadComplete: " + sampleId)
+                    viewModel!!.addedSound()
+                }
         )
         // region Observers
 // change icon to unmute
@@ -319,8 +315,8 @@ class SoundGridFragment() : Fragment() {
         play_button.setOnClickListener(
             object : View.OnClickListener {
                 override fun onClick(v: View) {
-                    if ((playingSounds != null
-                            && playingSounds!!.size != 0)
+                    if ((playingSounds != null &&
+                                    playingSounds!!.size != 0)
                     ) { // stop all sounds and show play button again
                         stopAllSounds()
                     }
@@ -411,8 +407,8 @@ class SoundGridFragment() : Fragment() {
 
     private fun toggleCountdownTimer(minutes: Int) {
         if (((viewModel!!.timerEnabled().value != null
-                ) && viewModel!!.timerEnabled().value!!
-                && (viewModel!!.countDownTimer() != null))
+                        ) && viewModel!!.timerEnabled().value!! &&
+                        (viewModel!!.countDownTimer() != null))
         ) {
             viewModel!!.timerEnabled().setValue(false)
         } else {

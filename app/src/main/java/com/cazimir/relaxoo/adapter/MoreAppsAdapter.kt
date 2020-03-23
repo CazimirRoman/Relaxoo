@@ -1,4 +1,4 @@
-package com.cazimir.relaxoo.adapter;
+package com.cazimir.relaxoo.adapter
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -40,7 +40,7 @@ class MoreAppsAdapter(val context: Context, private val list: List<MoreApp>) : R
             description = rowView.findViewById(R.id.appDescription)
 
             rowView.setOnClickListener {
-                //println(item)
+                // println(item)
             }
         }
     }

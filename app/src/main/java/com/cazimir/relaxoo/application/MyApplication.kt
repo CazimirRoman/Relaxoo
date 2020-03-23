@@ -8,6 +8,6 @@ class MyApplication : Application() {
         super.onCreate()
         ModelPreferencesManager.with(this)
 
-        //val eventBus = EventBus.builder().addIndex(EventBusIndex()).build()
+        // val eventBus = EventBus.builder().addIndex(EventBusIndex()).build()
     }
 }

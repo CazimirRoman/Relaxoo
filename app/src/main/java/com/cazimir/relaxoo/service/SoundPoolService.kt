@@ -23,7 +23,7 @@ class SoundPoolService : Service(), ISoundPoolService {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun onCreate() {
@@ -32,24 +32,25 @@ class SoundPoolService : Service(), ISoundPoolService {
 
         soundPool.setOnLoadCompleteListener { soundPool: SoundPool?, sampleId: Int, status: Int ->
             Log.d(TAG, "onLoadComplete: $sampleId")
+            // perhaps use a broadcastreceiver to update the viewmodel
             // EventBus.getDefault().post()
             // viewModel.addedSound()
         }
     }
 
     override fun addRecordingToSoundPool(sound: Sound) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun removeRecordingFromSoundPool(sound: Sound) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun playStopSound(soundPoolId: Int, playing: Boolean, streamId: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun stopAllSounds() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 }

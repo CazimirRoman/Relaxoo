@@ -18,7 +18,6 @@ import com.google.android.gms.ads.AdView
 import kotlinx.android.synthetic.main.activity_more_apps.*
 import org.json.JSONObject
 
-
 class MoreAppsActivity : AppCompatActivity() {
 
     private lateinit var adView: AdView
@@ -102,7 +101,6 @@ class MoreAppsActivity : AppCompatActivity() {
         val json = JSONObject(newStr3)
         val appsJsonArray = json.getJSONArray("apps")
         more_apps_list.layoutManager = LinearLayoutManager(this)
-
 
         val moreAppsList = mutableListOf<MoreApp>()
 
