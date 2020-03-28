@@ -1,13 +1,11 @@
 package com.cazimir.relaxoo.ui.sound_grid
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
 import android.media.SoundPool
 import android.os.CountDownTimer
 import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
 import com.cazimir.relaxoo.model.ListOfSavedCustom
@@ -20,29 +18,50 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FileDownloadTask
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
-import java.util.Arrays
+import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
-class SoundGridViewModel : ViewModel() {
-    @JvmField
-    var currentlyClickedProSound: Sound? = null
+class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
+
+    companion object {
+        private const val TAG = "SoundGridViewModel"
+        private const val CURRENTLY_CLICKED_PRO_SOUND = "CurrentlyClickedProSound"
+        private const val TEST_VALUE = "TestValue"
+    }
+
+    var currentlyClickedProSound: Sound? = savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND)
     var soundsLoadedToSoundPool = MutableLiveData(0)
+
     var _timerText = MutableLiveData<String>()
     var _timerFinished = MutableLiveData<Boolean>()
     private var allSounds = ArrayList<Sound>()
     private val _soundsLiveData = MutableLiveData(ArrayList<Sound>())
     private val playingSounds: MutableList<Sound> = ArrayList()
     private val _playingSoundsLiveData = MutableLiveData<List<Sound>>(emptyList())
+
     /**
      * used to show notification in MainActivity to let user know that a sound is playing
      */
-    val isAtLeastOneSoundPlaying = MutableLiveData<Boolean>()
     private val _mutedLiveData = MutableLiveData<Boolean>()
     var soundsAlreadyFetched = false
         private set
     private var soundPool: SoundPool? = null
     private val _timerEnabled = MutableLiveData<Boolean>()
     private var countDownTimer: CountDownTimer? = null
+
+    init {
+//        Log.d(TAG, "init: savedStateHandle.getCurrentlyClickedProSound:  " + savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND))
+////        Log.d(TAG, "init: savedStateHandle.getTestValue:  " + savedStateHandle.get(TEST_VALUE))
+////        savedStateHandle.getLiveData<Sound>(CURRENTLY_CLICKED_PRO_SOUND).observeForever {
+////            currentlyClickedProSound = it }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        //savedStateHandle.getLiveData<Sound>(CURRENTLY_CLICKED_PRO_SOUND).removeObserver()
+    }
+
     fun timerFinished(): MutableLiveData<Boolean> {
         return _timerFinished
     }
@@ -216,7 +235,6 @@ class SoundGridViewModel : ViewModel() {
             playingSounds.clear()
         }
         refreshPlayingSoundLiveData()
-        isAtLeastOneSoundPlaying.value = atLeastOneIsPlaying
         refreshSoundLiveData()
 
         Log.d(TAG, "updateSoundList: atLeastOneIsPlaying: $atLeastOneIsPlaying")
@@ -254,13 +272,12 @@ class SoundGridViewModel : ViewModel() {
         timerFinished().value = false
     }
 
-    companion object {
-        private const val TAG = "SoundGridViewModel"
-    }
+    fun setClickedProSound(sound: Sound) {
+        Log.d(TAG, "setClickedProSound:  " + savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND))
+        Log.d(TAG, "init: savedStateHandle.getTestValue:  " + savedStateHandle.get(TEST_VALUE))
+        savedStateHandle.set(CURRENTLY_CLICKED_PRO_SOUND, sound)
+        savedStateHandle.set(TEST_VALUE, 5)
 
-    class AddedSoundReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d(TAG, "onReceive: ${intent?.action}")
-        }
+        currentlyClickedProSound = sound
     }
 }

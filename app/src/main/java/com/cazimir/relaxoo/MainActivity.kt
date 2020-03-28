@@ -17,6 +17,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -31,14 +32,7 @@ import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder
 import cafe.adriel.androidaudiorecorder.model.AudioChannel
 import cafe.adriel.androidaudiorecorder.model.AudioSampleRate
 import cafe.adriel.androidaudiorecorder.model.AudioSource
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.BillingFlowParams
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchasesUpdatedListener
-import com.android.billingclient.api.SkuDetails
-import com.android.billingclient.api.SkuDetailsParams
+import com.android.billingclient.api.*
 import com.cazimir.relaxoo.adapter.PagerAdapter
 import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog
 import com.cazimir.relaxoo.dialog.OnDeleted
@@ -48,13 +42,11 @@ import com.cazimir.relaxoo.dialog.pro.ProBottomDialogFragment
 import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
-import com.cazimir.relaxoo.model.ExampleEvent
-import com.cazimir.relaxoo.model.ListOfSavedCustom
-import com.cazimir.relaxoo.model.Recording
-import com.cazimir.relaxoo.model.SavedCombo
-import com.cazimir.relaxoo.model.Sound
+import com.cazimir.relaxoo.model.*
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.cazimir.relaxoo.repository.ModelPreferencesManager.save
+import com.cazimir.relaxoo.service.SoundPoolService
+import com.cazimir.relaxoo.service.events.StopServiceCommand
 import com.cazimir.relaxoo.shared.SharedViewModel
 import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment
 import com.cazimir.relaxoo.ui.create_sound.OnRecordingStarted
@@ -69,6 +61,7 @@ import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.reward.RewardItem
 import com.google.android.gms.ads.reward.RewardedVideoAd
 import com.google.android.gms.ads.reward.RewardedVideoAdListener
+import com.google.android.material.snackbar.Snackbar
 import com.google.gson.JsonSyntaxException
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
@@ -82,10 +75,7 @@ import kotlinx.android.synthetic.main.main_activity.*
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.HashMap
-import java.util.Random
-import java.util.TimerTask
+import java.util.*
 
 class MainActivity : FragmentActivity(),
     OnActivityCallback,
@@ -98,6 +88,7 @@ class MainActivity : FragmentActivity(),
 
     companion object {
         private val TAG = "MainActivity"
+        private val LIFECYCLE = "Lifecycle"
         private val FAVORITE_FRAGMENT = ":1"
         private val SOUND_GRID_FRAGMENT = ":0"
         private val CREATE_SOUND_FRAGMENT = ":2"
@@ -107,6 +98,7 @@ class MainActivity : FragmentActivity(),
         private val NOTIFY_ID = 1337
     }
 
+    private var doubleBackToExitPressedOnce: Boolean = false
     private lateinit var adView: AdView
     private lateinit var adUnitId: String
     private lateinit var notificationManager: NotificationManager
@@ -207,18 +199,38 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun onPause() {
+        Log.d(LIFECYCLE, "onPause: called")
         super.onPause()
         rewardedVideoAd.pause(this)
     }
 
     override fun onResume() {
+        Log.d(LIFECYCLE, "onResume: called")
         super.onResume()
         rewardedVideoAd.resume(this)
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        Log.d(LIFECYCLE, "onDestroy: called")
+
+        //find a way to determine if onDestroy is called because user swiped app away or because rotation happened
+        if (!isChangingConfigurations) {
+            startService(SoundPoolService.getCommand(this, StopServiceCommand()))
+        }
         rewardedVideoAd.destroy(this)
+        super.onDestroy()
+    }
+
+    override fun onBackPressed() {
+
+        if (doubleBackToExitPressedOnce) {
+            super.onBackPressed()
+            return
+        }
+        doubleBackToExitPressedOnce = true
+        Snackbar.make(this.window.decorView.findViewById(android.R.id.content), "Please click BACK again to exit", Snackbar.LENGTH_SHORT).show()
+
+        Handler().postDelayed(Runnable { doubleBackToExitPressedOnce = false }, 2000)
     }
 
     private fun shouldShowSplash() {

@@ -17,12 +17,7 @@ import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
 import com.cazimir.relaxoo.eventbus.EventBusPlay
 import com.cazimir.relaxoo.eventbus.EventBusStop
 import com.cazimir.relaxoo.model.Sound
-import com.cazimir.relaxoo.service.events.ISoundPoolCommand
-import com.cazimir.relaxoo.service.events.LoadSoundsCommand
-import com.cazimir.relaxoo.service.events.PlayCommand
-import com.cazimir.relaxoo.service.events.ShowNotificationCommand
-import com.cazimir.relaxoo.service.events.StopCommand
-import com.cazimir.relaxoo.service.events.VolumeCommand
+import com.cazimir.relaxoo.service.events.*
 import org.greenrobot.eventbus.EventBus
 
 class SoundPoolService : Service(), ISoundPoolService {
@@ -30,14 +25,9 @@ class SoundPoolService : Service(), ISoundPoolService {
     companion object {
         private const val TAG = "SoundPoolService"
         private const val MAX_SOUNDS = 99
-        const val STOP = "stop"
-        const val PLAY = "play"
-        const val ADD_TO_SOUNDPOOL = "add_to_soundpool"
-        const val REMOVE_FROM_SOUNDPOOL = "remove_from_soundpool"
-        const val ADDED_SOUND = "added_sound"
         const val SOUND_POOL_ACTION = "sound_pool_action"
 
-        fun newIntent(context: Context?, command: ISoundPoolCommand): Intent {
+        fun getCommand(context: Context?, command: ISoundPoolCommand): Intent {
             val intent = Intent(context, SoundPoolService::class.java)
             intent.putExtra(SOUND_POOL_ACTION, command)
             return intent
@@ -72,6 +62,9 @@ class SoundPoolService : Service(), ISoundPoolService {
         val event = intent?.getSerializableExtra(SOUND_POOL_ACTION) as? ISoundPoolCommand
 
         when (event) {
+            is StopServiceCommand -> {
+                stopAllSounds().also { stopSelf() }
+            }
             is LoadSoundsCommand -> load(event.sounds)
             is VolumeCommand -> setVolume(event.streamId, event.leftVolume, event.rightVolume)
             is PlayCommand -> play(event)
@@ -141,10 +134,10 @@ class SoundPoolService : Service(), ISoundPoolService {
     }
 
     override fun stopAllSounds() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        soundPool.release()
     }
 
     override fun setVolume(streamId: Int, leftVolume: Float, rightVolume: Float) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        soundPool.setVolume(streamId, leftVolume, rightVolume)
     }
 }

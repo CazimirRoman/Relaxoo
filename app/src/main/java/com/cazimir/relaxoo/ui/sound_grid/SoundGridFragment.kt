@@ -11,7 +11,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TimePicker
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProvider
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.GridAdapter
@@ -24,19 +26,13 @@ import com.cazimir.relaxoo.eventbus.EventBusStop
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.SoundPoolService
-import com.cazimir.relaxoo.service.events.LoadSoundsCommand
-import com.cazimir.relaxoo.service.events.PlayCommand
-import com.cazimir.relaxoo.service.events.ShowNotificationCommand
-import com.cazimir.relaxoo.service.events.StopCommand
-import com.cazimir.relaxoo.service.events.UnloadSoundCommand
-import com.cazimir.relaxoo.service.events.VolumeCommand
+import com.cazimir.relaxoo.service.SoundPoolService.Companion.SOUND_POOL_ACTION
+import com.cazimir.relaxoo.service.events.*
 import kotlinx.android.synthetic.main.sound_list_fragment.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.Random
+import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 
 class SoundGridFragment() : Fragment() {
@@ -66,18 +62,18 @@ class SoundGridFragment() : Fragment() {
         if (playing) {
             Log.d(TAG, "stopping sound")
             sendCommandToService(
-                SoundPoolService.newIntent(
-                    context,
-                    StopCommand(streamId, soundPoolId)
-                )
+                    SoundPoolService.getCommand(
+                            context,
+                            StopCommand(streamId, soundPoolId)
+                    )
             )
         } else {
             Log.d(TAG, "playing sound")
             sendCommandToService(
-                SoundPoolService.newIntent(
-                    context,
-                    PlayCommand(soundPoolId, 0.5f, 0.5f, 0, -1, 1f)
-                )
+                    SoundPoolService.getCommand(
+                            context,
+                            PlayCommand(soundPoolId, 0.5f, 0.5f, 0, -1, 1f)
+                    )
             )
         }
     }
@@ -100,12 +96,11 @@ class SoundGridFragment() : Fragment() {
         // TODO: 22.12.2019 try to remove some of the for loops, use guava or something
         for (sound: Sound in list) {
             sendCommandToService(
-                SoundPoolService.newIntent(
-                    context,
-                    StopCommand(sound.streamId(), sound.soundPoolId())
-                )
+                    SoundPoolService.getCommand(
+                            context,
+                            StopCommand(sound.streamId(), sound.soundPoolId())
+                    )
             )
-            viewModel.updateSoundList(sound.soundPoolId(), 0)
         }
         return false
     }
@@ -119,38 +114,23 @@ class SoundGridFragment() : Fragment() {
             EventBus.getDefault().register(this)
         }
 
-        viewModel = ViewModelProvider(this).get(SoundGridViewModel::class.java)
+        //used to pass the savedstate to ViewModel when application is beeing destroyed by the Android OS
+        val factory = SavedStateViewModelFactory(activity!!.application, activity as FragmentActivity)
+
+        viewModel = ViewModelProvider(this, factory).get(SoundGridViewModel::class.java)
 
         setListenersForButtons()
         // region Observers
-// change icon to unmute
+        // change icon to unmute
         viewModel
-            .mutedLiveData()
-            .observe(
-                viewLifecycleOwner,
-                Observer { muted ->
-                    if (muted) {
+                .mutedLiveData()
+                .observe(
+                        viewLifecycleOwner,
+                        Observer { muted ->
+                            if (muted) {
                         mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off))
                     } else {
                         mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_on))
-                    }
-                })
-        // listen if at least one sound is playing to show notification in actionbar to user
-        viewModel
-            .isAtLeastOneSoundPlaying
-            .observe(
-                viewLifecycleOwner,
-                object : Observer<Boolean> {
-                    override fun onChanged(playing: Boolean) {
-                        if (playing) {
-
-
-                            // call show notification on service
-
-                            //activityCallback.showNotification()
-                        } else {
-                            //activityCallback.hideNotification()
-                        }
                     }
                 })
         // listen for changes to the sound lists live data object to set the adapter for the gridview
@@ -170,7 +150,7 @@ class SoundGridFragment() : Fragment() {
                         object : OnSoundClickListener {
                             override fun clicked(sound: Sound) {
                                 if (sound.isPro() && !sound.isPlaying()) {
-                                    viewModel.currentlyClickedProSound = sound
+                                    viewModel.setClickedProSound(sound)
                                     activityCallback.showBottomDialogForPro()
                                 } else {
                                     playStopSound(
@@ -192,12 +172,12 @@ class SoundGridFragment() : Fragment() {
                                     "volumeChange: called with volume: " + volumeToSet
                                 )
 
-                                val volumeCommand = SoundPoolService.newIntent(
-                                    context, VolumeCommand(
+                                val volumeCommand = SoundPoolService.getCommand(
+                                        context, VolumeCommand(
                                         sound.streamId(),
                                         volumeToSet,
                                         volumeToSet
-                                    )
+                                )
                                 )
 
                                 sendCommandToService(volumeCommand)
@@ -237,24 +217,21 @@ class SoundGridFragment() : Fragment() {
                             play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_play))
                             set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_on))
                             if (viewModel.countDownTimer() != null) {
-                                viewModel.timerEnabled().setValue(false)
+                                viewModel.timerEnabled().value = false
                             }
-                            sendCommandToService(
-                                SoundPoolService.newIntent(
-                                    context,
-                                    ShowNotificationCommand(playingList.size)
-                                )
-                            )
                         } else {
                             play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop))
-                            // show notification
-                            sendCommandToService(
-                                SoundPoolService.newIntent(
-                                    context,
-                                    ShowNotificationCommand(playingList.size)
-                                )
-                            )
+
                         }
+
+                        // show notification
+                        sendCommandToService(
+                                SoundPoolService.getCommand(
+                                        context,
+                                        ShowNotificationCommand(playingList.size)
+                                )
+                        )
+
                     }
                 })
 
@@ -339,20 +316,20 @@ class SoundGridFragment() : Fragment() {
                         for (sound: Sound in playingSounds!!) {
 
                             sendCommandToService(
-                                SoundPoolService.newIntent(
-                                    context,
-                                    VolumeCommand(sound.streamId(), 0f, 0f)
-                                )
+                                    SoundPoolService.getCommand(
+                                            context,
+                                            VolumeCommand(sound.streamId(), 0f, 0f)
+                                    )
                             )
                         }
                     } else {
                         for (sound: Sound in playingSounds!!) {
 
                             sendCommandToService(
-                                SoundPoolService.newIntent(
-                                    context,
-                                    VolumeCommand(sound.streamId(), sound.volume(), sound.volume())
-                                )
+                                    SoundPoolService.getCommand(
+                                            context,
+                                            VolumeCommand(sound.streamId(), sound.volume(), sound.volume())
+                                    )
                             )
                         }
                     }
@@ -378,45 +355,38 @@ class SoundGridFragment() : Fragment() {
                 }
             })
         play_button.setOnClickListener(
-            object : View.OnClickListener {
-                override fun onClick(v: View) {
-                    if ((playingSounds != null &&
-                                    playingSounds!!.size != 0)
-                    ) { // stop all sounds and show play button again
-                        stopAllSounds()
-                    }
-                }
-            })
-        save_fav_button.setOnClickListener(
-            object : View.OnClickListener {
-                override fun onClick(v: View) {
-                    val atLeastOneIsPlaying =
-                        viewModel.isAtLeastOneSoundPlaying.value
-                    if (atLeastOneIsPlaying != null && atLeastOneIsPlaying) {
-                        activityCallback.showAddToFavoritesDialog(
-                            getSoundParameters(playingSounds)
-                        )
-                    } else {
-                        activityCallback.showToast("You must play at least one sound")
-                    }
-                }
-            })
-        set_timer_button.setOnClickListener(
-            object : View.OnClickListener {
-                override fun onClick(v: View) {
-                    val atLeastOneIsPlaying =
-                        viewModel.isAtLeastOneSoundPlaying.value
-                    if (atLeastOneIsPlaying != null && atLeastOneIsPlaying) {
-                        val timerIsRunning = viewModel.timerEnabled().value
-                        if (timerIsRunning != null && timerIsRunning) {
-                            viewModel.timerEnabled().setValue(false)
-                        } else { // show TimerDialog fragment created with getFilePath template
-                            activityCallback.showTimerDialog()
+                object : View.OnClickListener {
+                    override fun onClick(v: View) {
+                        if ((playingSounds != null &&
+                                        playingSounds!!.size != 0)
+                        ) { // stop all sounds and show play button again
+                            stopAllSounds()
                         }
-                    } else {
-                        activityCallback.showToast("You must play at least one sound")
                     }
-                }
+                })
+        save_fav_button.setOnClickListener {
+            val atLeastOneIsPlaying = viewModel.playingSounds().value?.find { sound -> sound.isPlaying }
+            if (atLeastOneIsPlaying != null) {
+                activityCallback.showAddToFavoritesDialog(getSoundParameters(playingSounds))
+            } else {
+                activityCallback.showToast("You must play at least one sound")
+            }
+        }
+        set_timer_button.setOnClickListener(
+                object : View.OnClickListener {
+                    override fun onClick(v: View) {
+                        val atLeastOneIsPlaying = viewModel.playingSounds().value?.find { it -> it.isPlaying }
+                        if (atLeastOneIsPlaying != null) {
+                            val timerIsRunning = viewModel.timerEnabled().value
+                            if (timerIsRunning != null && timerIsRunning) {
+                                viewModel.timerEnabled().setValue(false)
+                            } else { // show TimerDialog fragment created with getFilePath template
+                                activityCallback.showTimerDialog()
+                            }
+                        } else {
+                            activityCallback.showToast("You must play at least one sound")
+                        }
+                    }
             })
     }
 
@@ -433,10 +403,10 @@ class SoundGridFragment() : Fragment() {
         Log.d(TAG, "loadToSoundPool: called")
 
         sendCommandToService(
-            SoundPoolService.newIntent(
-                context,
-                LoadSoundsCommand(sounds)
-            )
+                SoundPoolService.getCommand(
+                        context,
+                        LoadSoundsCommand(sounds)
+                )
         )
     }
 
@@ -515,10 +485,10 @@ class SoundGridFragment() : Fragment() {
     private fun removeRecordingFromSoundPool(sound: Sound) {
 
         sendCommandToService(
-            SoundPoolService.newIntent(
-                context,
-                UnloadSoundCommand(sound.soundPoolId())
-            )
+                SoundPoolService.getCommand(
+                        context,
+                        UnloadSoundCommand(sound.soundPoolId())
+                )
         )
 
         // soundPool!!.unload(sound.soundPoolId())
@@ -555,6 +525,7 @@ class SoundGridFragment() : Fragment() {
     }
 
     fun sendCommandToService(intent: Intent) {
+        Log.d(TAG, "sendCommandToService: called with command: ${intent.getSerializableExtra(SOUND_POOL_ACTION)}")
         context?.startService(intent)
     }
 
