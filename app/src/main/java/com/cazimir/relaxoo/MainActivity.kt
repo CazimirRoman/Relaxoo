@@ -31,7 +31,14 @@ import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder
 import cafe.adriel.androidaudiorecorder.model.AudioChannel
 import cafe.adriel.androidaudiorecorder.model.AudioSampleRate
 import cafe.adriel.androidaudiorecorder.model.AudioSource
-import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.SkuDetails
+import com.android.billingclient.api.SkuDetailsParams
 import com.cazimir.relaxoo.adapter.PagerAdapter
 import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog
 import com.cazimir.relaxoo.dialog.OnDeleted
@@ -41,7 +48,11 @@ import com.cazimir.relaxoo.dialog.pro.ProBottomDialogFragment
 import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
-import com.cazimir.relaxoo.model.*
+import com.cazimir.relaxoo.model.ExampleEvent
+import com.cazimir.relaxoo.model.ListOfSavedCustom
+import com.cazimir.relaxoo.model.Recording
+import com.cazimir.relaxoo.model.SavedCombo
+import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.cazimir.relaxoo.repository.ModelPreferencesManager.save
 import com.cazimir.relaxoo.shared.SharedViewModel
@@ -68,11 +79,13 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.main_activity.*
-import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.HashMap
+import java.util.Random
+import java.util.TimerTask
 
 class MainActivity : FragmentActivity(),
     OnActivityCallback,
@@ -631,16 +644,6 @@ class MainActivity : FragmentActivity(),
         Log.d(TAG, "onRewardedVideoCompleted: called")
         getSoundGridFragment()?.rewardUserByPlayingProSound()
         loadRewardedVideoAd()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        EventBus.getDefault().register(this)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        EventBus.getDefault().unregister(this)
     }
 
     private fun loadRewardedVideoAd() {

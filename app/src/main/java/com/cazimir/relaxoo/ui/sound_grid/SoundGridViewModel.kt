@@ -1,6 +1,8 @@
 package com.cazimir.relaxoo.ui.sound_grid
 
-import android.media.AudioManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.media.SoundPool
 import android.os.CountDownTimer
 import android.os.Environment
@@ -18,14 +20,8 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FileDownloadTask
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
-import java.util.*
+import java.util.Arrays
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
-import kotlin.collections.List
-import kotlin.collections.MutableList
-import kotlin.collections.emptyList
-import kotlin.collections.indexOf
-import kotlin.collections.indices
 
 class SoundGridViewModel : ViewModel() {
     @JvmField
@@ -70,7 +66,7 @@ class SoundGridViewModel : ViewModel() {
         val database = FirebaseDatabase.getInstance()
         val soundsRef = database.getReference("sounds")
         // check database for sounds
-// Read from the database
+        // Read from the database
         soundsRef.addListenerForSingleValueEvent(
                 object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -230,15 +226,7 @@ class SoundGridViewModel : ViewModel() {
         _mutedLiveData.value = muted
     }
 
-    fun createOrGetSoundPool(): SoundPool {
-        Log.d(TAG, "createOrGetSoundPool: called")
-        if (soundPool == null) {
-            soundPool = SoundPool(MAX_SOUNDS, AudioManager.STREAM_MUSIC, 0)
-        }
-        return soundPool as SoundPool
-    }
-
-    fun addedSound() {
+    fun loadedToSoundPool() {
         soundsLoadedToSoundPool.value = soundsLoadedToSoundPool.value!! + 1
     }
 
@@ -268,6 +256,11 @@ class SoundGridViewModel : ViewModel() {
 
     companion object {
         private const val TAG = "SoundGridViewModel"
-        private const val MAX_SOUNDS = 5
+    }
+
+    class AddedSoundReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d(TAG, "onReceive: ${intent?.action}")
+        }
     }
 }

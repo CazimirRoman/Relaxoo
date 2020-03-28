@@ -4,19 +4,20 @@ import androidx.annotation.NonNull;
 
 import com.google.firebase.database.Exclude;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Sound {
+public class Sound implements Serializable {
 
-    private String id;
-    private int soundPoolId;
-    private int streamId;
-    private String name;
-    private String logoPath;
-    private String filePath;
-    private boolean playing;
-    private float volume = 0.5f;
-    private boolean pro;
+  private String id;
+  private int soundPoolId;
+  private int streamId;
+  private String name;
+  private String logoPath;
+  private String filePath;
+  private boolean playing;
+  private float volume = 0.5f;
+  private boolean pro;
 
     public boolean isCustom() {
         return custom;
