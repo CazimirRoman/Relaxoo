@@ -20,12 +20,12 @@ public class AdminAddSoundViewModel extends ViewModel {
 
         final String uid = myRef.push().getKey();
 
-        Sound sound1 = Sound.withId(sound, uid);
+        //Sound sound1 = Sound.withId(sound, uid);
 
         myRef
                 .child(uid)
                 .setValue(
-                        sound1,
+                        sound,
                         (databaseError, databaseReference) -> {
                             if (databaseError != null) {
                                 Log.d(TAG, "onComplete() called with: databaseError" + databaseError.getMessage());

@@ -1,6 +1,6 @@
 package com.cazimir.relaxoo.ui.create_sound
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+//import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.repository.ISoundRepository
@@ -17,8 +17,8 @@ import java.io.File
 class CreateSoundViewModelTest {
 
     @Rule
-    @JvmField // A JUnit Test Rule that swaps the background executor used by the Architecture Components with a different one which executes each task synchronously.
-    var instantTaskExecutorRule = InstantTaskExecutorRule()
+//    @JvmField // A JUnit Test Rule that swaps the background executor used by the Architecture Components with a different one which executes each task synchronously.
+//    var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val recordingsObserver: Observer<ArrayList<Recording>> = mock()
     private val mockSoundRepository: ISoundRepository = mock()

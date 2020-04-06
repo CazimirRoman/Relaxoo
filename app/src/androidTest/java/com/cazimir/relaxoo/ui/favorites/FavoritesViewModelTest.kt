@@ -1,6 +1,5 @@
 package com.cazimir.relaxoo.ui.favorites
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.model.ListOfSavedCombos
 import com.nhaarman.mockito_kotlin.mock
@@ -12,8 +11,8 @@ import org.junit.Test
 class FavoritesViewModelTest {
 
     @Rule
-    @JvmField
-    var instantTaskExecutorRule = InstantTaskExecutorRule()
+//    @JvmField
+//    var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val favoritesObserver: Observer<ListOfSavedCombos> = mock()
     private val mockFavoritesRepository: IFavoritesRepository = mock()

@@ -8,7 +8,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
+import com.cazimir.relaxoo.eventbus.EventBusPlayingSounds
 import com.cazimir.relaxoo.model.ListOfSavedCustom
+import com.cazimir.relaxoo.model.PlayingSound
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.google.firebase.database.DataSnapshot
@@ -17,10 +19,17 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FileDownloadTask
 import com.google.firebase.storage.FirebaseStorage
+import com.shopify.livedataktx.LiveDataKtx
+import com.shopify.livedataktx.MutableLiveDataKtx
+import com.shopify.livedataktx.map
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
+
 
 class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
@@ -30,15 +39,25 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         private const val TEST_VALUE = "TestValue"
     }
 
+    init {
+        if (!EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().register(this)
+        }
+    }
+
+
     var currentlyClickedProSound: Sound? = savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND)
     var soundsLoadedToSoundPool = MutableLiveData(0)
 
     var _timerText = MutableLiveData<String>()
     var _timerFinished = MutableLiveData<Boolean>()
     private var allSounds = ArrayList<Sound>()
-    private val _soundsLiveData = MutableLiveData(ArrayList<Sound>())
+    private var _soundsLiveData: MutableLiveDataKtx<ArrayList<Sound>> = MutableLiveDataKtx()
     private val playingSounds: MutableList<Sound> = ArrayList()
     private val _playingSoundsLiveData = MutableLiveData<List<Sound>>(emptyList())
+
+    val __fetchFinished: MutableLiveData<Boolean> = MutableLiveData(false)
+
 
     /**
      * used to show notification in MainActivity to let user know that a sound is playing
@@ -60,6 +79,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     override fun onCleared() {
         super.onCleared()
         //savedStateHandle.getLiveData<Sound>(CURRENTLY_CLICKED_PRO_SOUND).removeObserver()
+        EventBus.getDefault().unregister(this)
     }
 
     fun timerFinished(): MutableLiveData<Boolean> {
@@ -140,6 +160,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                                     .addOnSuccessListener { imageSnapshot: FileDownloadTask.TaskSnapshot? ->
                                         Log.d(TAG, "onSuccess: called")
                                         val fetchedSound = Sound.SoundBuilder.aSound()
+                                                .withId(sound.id)
                                                 .withName(sound.name)
                                                 .withLogo(logoFile.path)
                                                 .withPro(sound.isPro)
@@ -167,6 +188,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             val logosDirectory = File(logosFolder.absolutePath)
             for (i in sounds.indices) {
                 val localSound = Sound.SoundBuilder.aSound()
+                        .withId(sounds[i].id)
                         .withName(sounds[i].name)
                         .withLogo(logosDirectory.toString() + "/" + sounds[i].logoPath)
                         .withPro(sounds[i].isPro)
@@ -180,14 +202,22 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             refreshSoundLiveData()
             soundsAlreadyFetched = true
         }
+
+
+        // send a request to service to get playing sounds
+        __fetchFinished.postValue(true)
     }
 
-    fun sounds(): MutableLiveData<ArrayList<Sound>> {
+    private fun updatePlayingFromServiceIfRunning() {
+
+    }
+
+    fun sounds(): LiveDataKtx<ArrayList<Sound>> {
         return _soundsLiveData
     }
 
-    fun playingSounds(): MutableLiveData<List<Sound>> {
-        return _playingSoundsLiveData
+    fun playingSounds(): LiveDataKtx<ArrayList<Sound>> {
+        return _soundsLiveData.map { soundsList -> soundsList.filter { sound -> sound.isPlaying } as ArrayList<Sound> }
     }
 
     private fun refreshSoundLiveData() {
@@ -210,6 +240,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         for (sound in allSounds) {
             if (sound.soundPoolId() == soundPoolId) {
                 allSounds[allSounds.indexOf(sound)] = Sound.SoundBuilder.aSound()
+                        .withId(sound.id)
                         .withSoundPoolId(soundPoolId)
                         .withStreamId(streamId)
                         .withName(sound.name)
@@ -280,4 +311,51 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
         currentlyClickedProSound = sound
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun updatePlayingSoundsInViewModel(eventBusPlayingSounds: EventBusPlayingSounds) {
+
+        Log.d(TAG, "updatePlayingSoundsInViewModel: called")
+
+        eventBusPlayingSounds.playingSounds.observeForever { playingSounds ->
+            if (playingSounds.isNotEmpty()) {
+                val filteredList = allSounds.filterBasedOnId(playingSounds)
+
+                //update allSounds with playing status and streamId so you can control
+
+                for (sound: Sound in filteredList) {
+
+                    val index = playingSounds.indexOfFirst { it.id == sound.id }
+
+                    val fetchedSound = Sound.SoundBuilder.aSound()
+                            .withId(sound.id)
+                            .withSoundPoolId(sound.soundPoolId())
+                            .withName(sound.name)
+                            .withLogo(sound.logoPath)
+                            .withPro(sound.isPro)
+                            .withCustom(sound.isCustom)
+                            .withVolume(playingSounds[index].volume!!)
+                            .withFilePath(sound.filePath)
+                            .withPlaying(true)
+                            .withStreamId(playingSounds[index].streamId)
+                            .build()
+
+
+                    allSounds = allSounds.replace(sound, fetchedSound) as ArrayList<Sound>
+                }
+
+                // this hack is needed to update playing list as well in order to to show the stop button when sounds are playing
+                //allSounds.filter { sound -> sound.isPlaying }.forEach { sound: Sound? -> sound?.let { playingSounds.add(sound) } }
+
+                //refreshPlayingSoundLiveData()
+                refreshSoundLiveData()
+            }
+
+        }
+    }
+
+    private fun List<Sound>.filterBasedOnId(soundPoolListFromService: List<PlayingSound>) = filter { m -> soundPoolListFromService.any { it.id == m.id } }
+
+    // replace element in an array (any iterable for that matter)
+    fun <E> Iterable<E>.replace(old: E, new: E) = map { if (it == old) new else it }
 }

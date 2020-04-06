@@ -9,13 +9,13 @@ import android.media.SoundPool
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.application.MyApplication
-import com.cazimir.relaxoo.eventbus.EventBusLoad
-import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
-import com.cazimir.relaxoo.eventbus.EventBusPlay
-import com.cazimir.relaxoo.eventbus.EventBusStop
+import com.cazimir.relaxoo.eventbus.*
+import com.cazimir.relaxoo.model.PlayingSound
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.events.*
 import org.greenrobot.eventbus.EventBus
@@ -37,6 +37,9 @@ class SoundPoolService : Service(), ISoundPoolService {
     private lateinit var pendingIntent: PendingIntent
     private lateinit var soundPool: SoundPool
 
+    private var playingSoundsList: ArrayList<PlayingSound> = ArrayList()
+    private val playingSoundsListLive: MutableLiveData<ArrayList<PlayingSound>> = MutableLiveData()
+
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -44,6 +47,8 @@ class SoundPoolService : Service(), ISoundPoolService {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "createOrGetSoundPool: called")
+
+        setupNotifications()
 
         val notificationIntent = Intent(this, MainActivity::class.java)
         this.pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
@@ -66,32 +71,47 @@ class SoundPoolService : Service(), ISoundPoolService {
                 stopAllSounds().also { stopSelf() }
             }
             is LoadSoundsCommand -> load(event.sounds)
-            is VolumeCommand -> setVolume(event.streamId, event.leftVolume, event.rightVolume)
+            is VolumeCommand -> setVolume(event.id, event.streamId, event.leftVolume, event.rightVolume)
             is PlayCommand -> play(event)
             is StopCommand -> stop(event)
-            is ShowNotificationCommand -> toggleNotification(event.selected)
+            is StopAllSoundsCommand -> stopAllSounds()
+            is ShowNotificationCommand -> setupNotifications()
+            is PlayingSoundsCommand -> sendPlayingSounds()
             else -> { // Note the block
                 print("x is neither 1 nor 2")
             }
         }
 
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
-    private fun toggleNotification(numberOfPlaying: Int) {
+    private fun sendPlayingSounds() {
+        EventBus.getDefault().post(EventBusPlayingSounds(playingSoundsListLive))
+    }
 
-        if (numberOfPlaying == 0) {
-            stopForeground(true)
-        } else {
-            val notification = NotificationCompat.Builder(this, MyApplication.CHANNEL_ID)
-                .setContentTitle("SoundPoolService")
-                .setContentText("Playing $numberOfPlaying sounds")
-                .setSmallIcon(R.drawable.ic_delete)
-                .setContentIntent(pendingIntent)
-                .build()
+    private fun setupNotifications() {
 
-            startForeground(1, notification)
-        }
+        Log.d(TAG, "toggleNotification: called")
+
+        playingSoundsListLive.observeForever(Observer { playingSounds ->
+            if (playingSounds.size == 0) {
+                stopForeground(true)
+            } else {
+                val notification = NotificationCompat.Builder(this, MyApplication.CHANNEL_ID)
+                        .setContentTitle("SoundPoolService")
+                        .setAutoCancel(false)
+                        .setContentText("Playing ${playingSounds.size} sounds")
+                        .setSmallIcon(R.drawable.ic_delete)
+                        .setContentIntent(pendingIntent)
+                        .build()
+
+                startForeground(1, notification)
+            }
+        })
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 
     override fun load(sounds: ArrayList<Sound>) {
@@ -114,30 +134,48 @@ class SoundPoolService : Service(), ISoundPoolService {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    // TODO: 28-Mar-20 take whole sound object for play command
     override fun play(playCommand: PlayCommand) {
         Log.d(TAG, "play: called with: ${playCommand.soundPoolID}")
         val streamId = soundPool.play(
-            playCommand.soundPoolID,
-            playCommand.leftVolume,
-            playCommand.rightVolume,
-            playCommand.priority,
-            playCommand.loop,
-            playCommand.rate
+                playCommand.soundPoolID,
+                playCommand.leftVolume,
+                playCommand.rightVolume,
+                playCommand.priority,
+                playCommand.loop,
+                playCommand.rate
         )
+
+        playingSoundsList.add(PlayingSound(playCommand.id, streamId, playCommand.leftVolume)).also { playingSoundsListLive.value = playingSoundsList }
+
         EventBus.getDefault().post(EventBusPlay(playCommand.soundPoolID, streamId))
     }
 
     override fun stop(stopCommand: StopCommand) {
         Log.d(TAG, "stop: called with: ${stopCommand.soundPoolId}")
         soundPool.stop(stopCommand.streamId)
+
+        playingSoundsList.remove(PlayingSound(stopCommand.id, stopCommand.streamId, null)).also { playingSoundsListLive.value = playingSoundsList }
+
         EventBus.getDefault().post(EventBusStop(stopCommand.soundPoolId))
     }
 
     override fun stopAllSounds() {
-        soundPool.release()
+        Log.d(TAG, "stopAllSounds: called")
+        for (playingSound: PlayingSound in playingSoundsList) {
+            soundPool.stop(playingSound.streamId)
+            playingSoundsList.remove(playingSound)
+        }
+
+        playingSoundsListLive.value = playingSoundsList
     }
 
-    override fun setVolume(streamId: Int, leftVolume: Float, rightVolume: Float) {
+    override fun setVolume(id: String, streamId: Int, leftVolume: Float, rightVolume: Float) {
         soundPool.setVolume(streamId, leftVolume, rightVolume)
+        val toBeReplaced = playingSoundsList.first { playingSound -> playingSound.id == id }
+        val indexOf = playingSoundsList.indexOf(toBeReplaced)
+        val replaceWith = toBeReplaced.copy(volume = leftVolume)
+
+        playingSoundsList = playingSoundsList.toMutableList().apply { this[indexOf] = replaceWith } as ArrayList<PlayingSound>
     }
 }

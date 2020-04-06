@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.SavedComboAdapter
 import com.cazimir.relaxoo.dialog.OnDeleted
@@ -22,7 +23,7 @@ class FavoritesFragment : Fragment() {
     private lateinit var favoritesFragmentView: View
     private lateinit var viewModel: FavoritesViewModel
     private lateinit var adapter: SavedComboAdapter
-    private lateinit var activityCallback: OnActivityCallback
+    private var activityCallback: OnActivityCallback? = null
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -49,7 +50,7 @@ class FavoritesFragment : Fragment() {
                             adapter = SavedComboAdapter(context, savedCombos, object : SavedComboAdapter.OnItemClickListener {
                                 private var positionToBeDeleted = 0
                                 override fun onItemClick(savedCombo: SavedCombo) {
-                                    activityCallback.triggerCombo(savedCombo)
+                                    activityCallback?.triggerCombo(savedCombo)
                                     // adapter.updateComboWithPlayingStatus(savedCombo);
                                 }
 
@@ -60,7 +61,7 @@ class FavoritesFragment : Fragment() {
                                             deleteFavorite(positionToBeDeleted)
                                         }
                                     }
-                                    activityCallback.showDeleteConfirmationDialog(deleted)
+                                    activityCallback?.showDeleteConfirmationDialog(deleted)
                                 }
                             })
                             favoritesFragmentView.favoritesList.adapter = adapter
@@ -78,7 +79,7 @@ class FavoritesFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        activityCallback = context as OnActivityCallback
+        if (activityCallback is MainActivity) activityCallback = context as OnActivityCallback
     }
 
     companion object {

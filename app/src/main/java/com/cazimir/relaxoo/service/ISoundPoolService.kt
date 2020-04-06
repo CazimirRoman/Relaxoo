@@ -10,5 +10,5 @@ interface ISoundPoolService {
     fun play(playCommand: PlayCommand)
     fun stop(stopCommand: StopCommand)
     fun stopAllSounds()
-    fun setVolume(streamId: Int, leftVolume: Float, rightVolume: Float)
+    fun setVolume(id: String, streamId: Int, leftVolume: Float, rightVolume: Float)
 }

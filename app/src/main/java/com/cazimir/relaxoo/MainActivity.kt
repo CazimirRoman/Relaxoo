@@ -42,11 +42,12 @@ import com.cazimir.relaxoo.dialog.pro.ProBottomDialogFragment
 import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
-import com.cazimir.relaxoo.model.*
+import com.cazimir.relaxoo.model.ListOfSavedCustom
+import com.cazimir.relaxoo.model.Recording
+import com.cazimir.relaxoo.model.SavedCombo
+import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.cazimir.relaxoo.repository.ModelPreferencesManager.save
-import com.cazimir.relaxoo.service.SoundPoolService
-import com.cazimir.relaxoo.service.events.StopServiceCommand
 import com.cazimir.relaxoo.shared.SharedViewModel
 import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment
 import com.cazimir.relaxoo.ui.create_sound.OnRecordingStarted
@@ -72,8 +73,6 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.main_activity.*
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -165,6 +164,8 @@ class MainActivity : FragmentActivity(),
                             Log.d(
                                     TAG, "sounds already fetched: " + getSoundGridFragment()!!.soundsAlreadyFetched())
                             getSoundGridFragment()!!.fetchSounds()
+                            EspressoIdlingResource.increment()
+
                         }
                     }
                 })
@@ -213,10 +214,10 @@ class MainActivity : FragmentActivity(),
     override fun onDestroy() {
         Log.d(LIFECYCLE, "onDestroy: called")
 
-        //find a way to determine if onDestroy is called because user swiped app away or because rotation happened
-        if (!isChangingConfigurations) {
-            startService(SoundPoolService.getCommand(this, StopServiceCommand()))
-        }
+//        //find a way to determine if onDestroy is called because user swiped app away or because rotation happened
+//        if (!isChangingConfigurations) {
+//            startService(SoundPoolService.getCommand(this, StopServiceCommand()))
+//        }
         rewardedVideoAd.destroy(this)
         super.onDestroy()
     }
@@ -499,6 +500,7 @@ class MainActivity : FragmentActivity(),
         splash.visibility = View.GONE
         main_layout.visibility = View.VISIBLE
         sharedViewModel.splashShown()
+        EspressoIdlingResource.decrement()
     }
 
     override fun removeAds() {
@@ -672,10 +674,5 @@ class MainActivity : FragmentActivity(),
 
     override fun onRewardedVideoAdFailedToLoad(p0: Int) {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun doSomething(data: ExampleEvent) {
-        Log.d(TAG, "doSomething: called")
     }
 }

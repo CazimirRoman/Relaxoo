@@ -193,7 +193,8 @@ public class Sound implements Serializable {
   public String toString() {
     final StringBuilder sb = new StringBuilder(System.lineSeparator());
     sb.append("Sound ");
-    sb.append("soundPoolId=").append(soundPoolId);
+    sb.append("id=").append(id);
+    sb.append(", soundPoolId=").append(soundPoolId);
     sb.append(", streamId=").append(streamId);
     sb.append(", name='").append(name).append('\'');
     sb.append(", logoPath=").append(logoPath);
