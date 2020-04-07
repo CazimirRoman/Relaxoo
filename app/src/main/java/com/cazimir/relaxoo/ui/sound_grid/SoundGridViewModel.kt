@@ -52,11 +52,9 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     var _timerText = MutableLiveData<String>()
     var _timerFinished = MutableLiveData<Boolean>()
     private var allSounds = ArrayList<Sound>()
-    private var _soundsLiveData: MutableLiveDataKtx<ArrayList<Sound>> = MutableLiveDataKtx()
-    private val playingSounds: MutableList<Sound> = ArrayList()
-    private val _playingSoundsLiveData = MutableLiveData<List<Sound>>(emptyList())
+    private var _allSounds: MutableLiveDataKtx<ArrayList<Sound>> = MutableLiveDataKtx()
 
-    val __fetchFinished: MutableLiveData<Boolean> = MutableLiveData(false)
+    val _fetchFinished: MutableLiveData<Boolean> = MutableLiveData(false)
 
 
     /**
@@ -175,7 +173,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
                                         // TODO: 14-Mar-20 Add custom sounds here
                                         if (allSounds.size == sounds.size) {
-                                            refreshSoundLiveData()
+                                            nextSoundLiveData()
                                             soundsAlreadyFetched = true
                                         }
                                     }
@@ -199,44 +197,40 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
             val customSounds = ModelPreferencesManager.get<ListOfSavedCustom>("PINNED_RECORDINGS")
             customSounds?.savedCustomList?.let { this.allSounds.addAll(it) }
-            refreshSoundLiveData()
+            nextSoundLiveData()
             soundsAlreadyFetched = true
         }
 
 
         // send a request to service to get playing sounds
-        __fetchFinished.postValue(true)
+        _fetchFinished.postValue(true)
     }
 
     private fun updatePlayingFromServiceIfRunning() {
 
     }
 
-    fun sounds(): LiveDataKtx<ArrayList<Sound>> {
-        return _soundsLiveData
+    fun allSounds(): LiveDataKtx<ArrayList<Sound>> {
+        return _allSounds
     }
 
     fun playingSounds(): LiveDataKtx<ArrayList<Sound>> {
-        return _soundsLiveData.map { soundsList -> soundsList.filter { sound -> sound.isPlaying } as ArrayList<Sound> }
+        return _allSounds.map { soundsList -> soundsList.filter { sound -> sound.isPlaying } as ArrayList<Sound> }
     }
 
-    private fun refreshSoundLiveData() {
+    private fun nextSoundLiveData() {
         Log.d(TAG, "refreshSoundLiveData: called: $allSounds")
-        _soundsLiveData.value = allSounds
-    }
-
-    private fun refreshPlayingSoundLiveData() {
-        Log.d(TAG, "refreshPlayingSoundLiveData: called: size: " + playingSounds.size)
-        _playingSoundsLiveData.value = playingSounds
+        _allSounds.value = allSounds
     }
 
     fun addToSounds(sounds: ArrayList<Sound>) {
         allSounds = sounds
-        refreshSoundLiveData()
+        nextSoundLiveData()
     }
 
     fun updateSoundList(soundPoolId: Int, streamId: Int) {
-        var atLeastOneIsPlaying = false
+
+
         for (sound in allSounds) {
             if (sound.soundPoolId() == soundPoolId) {
                 allSounds[allSounds.indexOf(sound)] = Sound.SoundBuilder.aSound()
@@ -254,21 +248,8 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                 break
             }
         }
-        // TODO: 08-Jan-20 update playing sounds reactively as a result of sounds beeing updated
-        playingSounds.clear()
-        for (sound2 in allSounds) {
-            if (sound2.isPlaying) {
-                atLeastOneIsPlaying = true
-                playingSounds.add(sound2)
-            }
-        }
-        if (!atLeastOneIsPlaying) {
-            playingSounds.clear()
-        }
-        refreshPlayingSoundLiveData()
-        refreshSoundLiveData()
 
-        Log.d(TAG, "updateSoundList: atLeastOneIsPlaying: $atLeastOneIsPlaying")
+        nextSoundLiveData()
     }
 
     fun updateMuteLiveData(muted: Boolean) {
@@ -281,7 +262,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
     fun updateVolume(sound: Sound?, volume: Float?) {
         allSounds[allSounds.indexOf(sound)] = Sound.withVolume(sound, volume!!)
-        _soundsLiveData.value = allSounds
+        _allSounds.value = allSounds
     }
 
     fun countDownTimer(): CountDownTimer? {
@@ -344,11 +325,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                     allSounds = allSounds.replace(sound, fetchedSound) as ArrayList<Sound>
                 }
 
-                // this hack is needed to update playing list as well in order to to show the stop button when sounds are playing
-                //allSounds.filter { sound -> sound.isPlaying }.forEach { sound: Sound? -> sound?.let { playingSounds.add(sound) } }
-
-                //refreshPlayingSoundLiveData()
-                refreshSoundLiveData()
+                nextSoundLiveData()
             }
 
         }

@@ -14,7 +14,10 @@ import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.application.MyApplication
-import com.cazimir.relaxoo.eventbus.*
+import com.cazimir.relaxoo.eventbus.EventBusLoad
+import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
+import com.cazimir.relaxoo.eventbus.EventBusPlayingSounds
+import com.cazimir.relaxoo.eventbus.EventBusStop
 import com.cazimir.relaxoo.model.PlayingSound
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.events.*
@@ -100,7 +103,7 @@ class SoundPoolService : Service(), ISoundPoolService {
                 val notification = NotificationCompat.Builder(this, MyApplication.CHANNEL_ID)
                         .setContentTitle("SoundPoolService")
                         .setAutoCancel(false)
-                        .setContentText("Playing ${playingSounds.size} sounds")
+                        .setContentText(getNotificationText(playingSounds.size))
                         .setSmallIcon(R.drawable.ic_delete)
                         .setContentIntent(pendingIntent)
                         .build()
@@ -110,8 +113,17 @@ class SoundPoolService : Service(), ISoundPoolService {
         })
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    private fun getNotificationText(numberOfPlayingSounds: Int?): String {
+        val label = numberOfPlayingSounds?.let { "sound".pluralize(it) }
+        return "$numberOfPlayingSounds $label playing..."
+    }
+
+    private fun String.pluralize(count: Int): String? {
+        return if (count > 1) {
+            this + 's'
+        } else {
+            this
+        }
     }
 
     override fun load(sounds: ArrayList<Sound>) {
@@ -146,9 +158,8 @@ class SoundPoolService : Service(), ISoundPoolService {
                 playCommand.rate
         )
 
+        //the playing sounds list sends back an observable that is updated each time playing sounds is beeing updated.
         playingSoundsList.add(PlayingSound(playCommand.id, streamId, playCommand.leftVolume)).also { playingSoundsListLive.value = playingSoundsList }
-
-        EventBus.getDefault().post(EventBusPlay(playCommand.soundPoolID, streamId))
     }
 
     override fun stop(stopCommand: StopCommand) {

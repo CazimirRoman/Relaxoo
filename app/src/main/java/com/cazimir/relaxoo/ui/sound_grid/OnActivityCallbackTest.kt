@@ -8,13 +8,6 @@ import java.util.*
 
 // used for initialiting lateinit var in SoundGridFragment in the onAttach callback method
 class OnActivityCallbackTest : OnActivityCallback {
-    override fun showNotification() {
-        TODO("Not yet implemented")
-    }
-
-    override fun hideNotification() {
-        TODO("Not yet implemented")
-    }
 
     override fun showAddToFavoritesDialog(playingSounds: HashMap<Int, Int>?) {
         TODO("Not yet implemented")

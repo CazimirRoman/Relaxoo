@@ -10,9 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 
 public interface OnActivityCallback {
-  void showNotification();
-
-  void hideNotification();
 
   void showAddToFavoritesDialog(HashMap<Integer, Integer> playingSounds);
 

@@ -8,7 +8,6 @@ import android.animation.ObjectAnimator
 import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -22,7 +21,6 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
@@ -393,45 +391,6 @@ class MainActivity : FragmentActivity(),
             notificationChannel.setSound(null, null)
             notificationManager.createNotificationChannel(notificationChannel)
         }
-    }
-
-    override fun showNotification() {
-
-        Log.d(TAG, "showNotification: called")
-
-        val numberOfPlayingSounds = getSoundGridFragment()?.playingSounds?.size
-
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
-
-        val builder = NotificationCompat.Builder(this, CHANNEL_WHATEVER)
-
-        builder
-            .setContentTitle("Relaxoo")
-            .setContentText(getNotificationText(numberOfPlayingSounds))
-            .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentIntent(pendingIntent)
-        notificationManager.notify(NOTIFY_ID, builder.build())
-    }
-
-    private fun getNotificationText(numberOfPlayingSounds: Int?): String {
-        val label = numberOfPlayingSounds?.let { "sound".pluralize(it) }
-        return "$numberOfPlayingSounds $label playing..."
-    }
-
-    private fun String.pluralize(count: Int): String? {
-        return if (count > 1) {
-            this + 's'
-        } else {
-            this
-        }
-    }
-
-    override fun hideNotification() {
-        notificationManager.cancel(NOTIFY_ID)
     }
 
     override fun showAddToFavoritesDialog(playingSounds: HashMap<Int, Int>) {
