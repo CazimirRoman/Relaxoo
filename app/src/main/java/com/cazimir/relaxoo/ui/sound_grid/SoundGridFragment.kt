@@ -22,6 +22,7 @@ import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
 import com.cazimir.relaxoo.eventbus.EventBusLoad
 import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
 import com.cazimir.relaxoo.eventbus.EventBusStop
+import com.cazimir.relaxoo.eventbus.EventBusStopAll
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.SoundPoolService
@@ -92,18 +93,14 @@ class SoundGridFragment() : Fragment() {
 
     }
 
-    private fun stopAllSounds(): Boolean {
+    private fun stopAllSounds() {
         Log.d(TAG, "stopAllSounds: called")
-        // TODO: 22.12.2019 try to remove some of the for loops, use guava or something
-        for (sound: Sound in playingSounds) {
-            sendCommandToService(
-                    SoundPoolService.getCommand(
-                            context,
-                            StopCommand(sound.id, sound.streamId(), sound.soundPoolId())
-                    )
-            )
-        }
-        return false
+        sendCommandToService(
+                SoundPoolService.getCommand(
+                        context,
+                        StopAllSoundsCommand()
+                )
+        )
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -214,6 +211,8 @@ class SoundGridFragment() : Fragment() {
             .observe(
                     viewLifecycleOwner, Observer<List<Sound?>> { playingList ->
 
+                Log.d(TAG, "observer for playingSounds called with: $playingList")
+
                 playingSounds = playingList as ArrayList<Sound>
 
                 if (playingList.isEmpty()) {
@@ -284,6 +283,7 @@ class SoundGridFragment() : Fragment() {
                     )
                 }
             )
+
         // endregion
     }
 
@@ -304,7 +304,7 @@ class SoundGridFragment() : Fragment() {
                 override fun onClick(v: View) {
                     muted = !muted
                     if (muted) {
-                        for (sound: Sound in playingSounds!!) {
+                        for (sound: Sound in playingSounds) {
 
                             sendCommandToService(
                                     SoundPoolService.getCommand(
@@ -314,7 +314,7 @@ class SoundGridFragment() : Fragment() {
                             )
                         }
                     } else {
-                        for (sound: Sound in playingSounds!!) {
+                        for (sound: Sound in playingSounds) {
 
                             sendCommandToService(
                                     SoundPoolService.getCommand(
@@ -397,11 +397,6 @@ class SoundGridFragment() : Fragment() {
                         LoadSoundsCommand(sounds)
                 )
         )
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
-    fun updateViewModelWithLoad(eventBusLoad: EventBusLoad) {
-        viewModel.addToSounds(eventBusLoad.sounds)
     }
 
     private fun showTimerText() {
@@ -518,16 +513,28 @@ class SoundGridFragment() : Fragment() {
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun serviceCallbackStop(eventBusStop: EventBusStop) {
         Log.d(TAG, "updateViewModelWithStop: called with: soundPoolId: ${eventBusStop.soundPoolId}")
-        viewModel.updateSoundList(eventBusStop.soundPoolId, 0)
+        viewModel.updateSingleSoundInViewModel(eventBusStop.soundPoolId, 0)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun serviceCallbackStopAll(eventBusStopAll: EventBusStopAll) {
+        Log.d(TAG, "serviceCallbackStopAll: called")
+        viewModel.updateViewModelWithPlayingSoundsFalse()
+
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun serviceCallbackSoundPoolLoad(eventBusLoadedToSoundPool: EventBusLoadedToSoundPool) {
         Log.d(
-            TAG,
-            "updateViewModelSoundsLoadedToSoundPool: called with ${eventBusLoadedToSoundPool.soundPoolId}"
+                TAG,
+                "updateViewModelSoundsLoadedToSoundPool: called with ${eventBusLoadedToSoundPool.soundPoolId}"
         )
         viewModel.loadedToSoundPool()
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun updateViewModelWithLoad(eventBusLoad: EventBusLoad) {
+        viewModel.addToSounds(eventBusLoad.sounds)
     }
 
     companion object {

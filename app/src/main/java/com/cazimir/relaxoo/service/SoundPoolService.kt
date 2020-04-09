@@ -14,10 +14,7 @@ import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.application.MyApplication
-import com.cazimir.relaxoo.eventbus.EventBusLoad
-import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
-import com.cazimir.relaxoo.eventbus.EventBusPlayingSounds
-import com.cazimir.relaxoo.eventbus.EventBusStop
+import com.cazimir.relaxoo.eventbus.*
 import com.cazimir.relaxoo.model.PlayingSound
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.events.*
@@ -173,12 +170,14 @@ class SoundPoolService : Service(), ISoundPoolService {
 
     override fun stopAllSounds() {
         Log.d(TAG, "stopAllSounds: called")
+
         for (playingSound: PlayingSound in playingSoundsList) {
             soundPool.stop(playingSound.streamId)
-            playingSoundsList.remove(playingSound)
         }
 
-        playingSoundsListLive.value = playingSoundsList
+        playingSoundsList.clear().also { playingSoundsListLive.value = playingSoundsList }
+
+        EventBus.getDefault().post(EventBusStopAll())
     }
 
     override fun setVolume(id: String, streamId: Int, leftVolume: Float, rightVolume: Float) {

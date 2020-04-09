@@ -121,6 +121,32 @@ class MainActivityTest {
 
     }
 
+    @Test
+    fun mute_all_sounds() {
+        // cannot actually test this UI behaviour as there is no other UI indication that the sound is playing
+        ActivityScenario.launch(MainActivity::class.java)
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+
+        onView(withId(R.id.mute_button)).perform(click())
+        // TODO: 08-Apr-20 Unit test for this behaviour
+        checkVisibilityOfView(R.id.sound_list_fragment, Visibility.VISIBLE)
+    }
+
+    @Test
+    fun random_sounds() {
+        // cannot actually test this UI behaviour as there is no sound playing
+        ActivityScenario.launch(MainActivity::class.java)
+        onView(withId(R.id.random_button)).perform(click())
+
+        // just check it din not crash the application - need a unit test for this
+        // TODO: 08-Apr-20 Unit Test for this behaviour
+        checkVisibilityOfView(R.id.sound_list_fragment, Visibility.VISIBLE)
+    }
+
+
     private fun checkVisibilityOfView(view: Int, visibility: Visibility) {
         onView(withId(view)).check(matches(withEffectiveVisibility(visibility)))
     }

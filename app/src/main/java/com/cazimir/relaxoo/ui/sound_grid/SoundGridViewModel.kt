@@ -228,8 +228,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         nextSoundLiveData()
     }
 
-    fun updateSoundList(soundPoolId: Int, streamId: Int) {
-
+    fun updateSingleSoundInViewModel(soundPoolId: Int, streamId: Int) {
 
         for (sound in allSounds) {
             if (sound.soundPoolId() == soundPoolId) {
@@ -248,6 +247,23 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                 break
             }
         }
+
+        nextSoundLiveData()
+    }
+
+    fun updateViewModelWithPlayingSoundsFalse() {
+        val newList = mutableListOf<Sound>()
+        allSounds.forEach { sound ->
+            run {
+                if (sound.isPlaying) {
+                    newList.add(Sound.withPlaying(sound))
+                } else {
+                    newList.add(sound)
+                }
+            }
+        }
+
+        allSounds = newList as ArrayList<Sound>
 
         nextSoundLiveData()
     }
