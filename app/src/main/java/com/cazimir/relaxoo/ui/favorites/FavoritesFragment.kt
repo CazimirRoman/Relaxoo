@@ -47,7 +47,7 @@ class FavoritesFragment : Fragment() {
 //                Log.d(TAG, "onChanged: called: savedCombos size is: " + savedCombos.size());
                             // update recyclerview
                             favoritesFragmentView.favoritesList.layoutManager = LinearLayoutManager(context)
-                            adapter = SavedComboAdapter(context, savedCombos, object : SavedComboAdapter.OnItemClickListener {
+                            adapter = SavedComboAdapter(context!!, savedCombos, object : SavedComboAdapter.OnItemClickListener {
                                 private var positionToBeDeleted = 0
                                 override fun onItemClick(savedCombo: SavedCombo) {
                                     activityCallback?.triggerCombo(savedCombo)
@@ -79,7 +79,7 @@ class FavoritesFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (activityCallback is MainActivity) activityCallback = context as OnActivityCallback
+        if (context is MainActivity) activityCallback = context as OnActivityCallback
     }
 
     companion object {

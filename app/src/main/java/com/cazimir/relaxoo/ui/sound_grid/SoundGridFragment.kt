@@ -86,11 +86,7 @@ class SoundGridFragment() : Fragment() {
 
         if (context is OnActivityCallback) {
             activityCallback = context
-        } else {
-            activityCallback = OnActivityCallbackTest()
         }
-
-
     }
 
     private fun stopAllSounds() {
@@ -356,7 +352,7 @@ class SoundGridFragment() : Fragment() {
         save_fav_button.setOnClickListener {
             val atLeastOneIsPlaying = viewModel.allSounds().value?.find { sound -> sound.isPlaying }
             if (atLeastOneIsPlaying != null) {
-                activityCallback.showAddToFavoritesDialog(getSoundParameters(playingSounds))
+                activityCallback.showAddToFavoritesDialog(playingSounds)
             } else {
                 activityCallback.showToast("You must play at least one sound")
             }
@@ -376,15 +372,14 @@ class SoundGridFragment() : Fragment() {
                             activityCallback.showToast("You must play at least one sound")
                         }
                     }
-            })
+                })
     }
 
-    private fun getSoundParameters(sounds: List<Sound>?): HashMap<Int, Int> {
-        val hashMap = HashMap<Int, Int>()
-        for (sound: Sound in sounds!!) {
-            hashMap[sound.soundPoolId()] = sound.streamId()
-        }
-        return hashMap
+    private fun getSoundParameters(sounds: List<Sound>): MutableList<String> {
+
+        val listWithSoundId = mutableListOf<String>()
+        sounds.forEach { sound -> listWithSoundId.add(sound.id) }
+        return listWithSoundId
     }
 
     // endregion
@@ -438,13 +433,7 @@ class SoundGridFragment() : Fragment() {
     }
 
     fun triggerCombo(savedCombo: SavedCombo) {
-
-        // use a triple here to send ID as well
-//        sendCommandToService(SoundPoolService.getCommand(context, StopAllSoundsCommand()))
-//        for (entry: Map.Entry<Int, Int> in savedCombo.soundPoolParameters.entries) {
-//            entry.key xxxx entry.value
-//            playStopSound(Sound.SoundBuilder.aSound().wi)
-//        }
+        sendCommandToService(SoundPoolService.getCommand(context, TriggerComboCommand(savedCombo.sounds)))
     }
 
     fun fetchSounds() {
@@ -516,7 +505,7 @@ class SoundGridFragment() : Fragment() {
         viewModel.updateSingleSoundInViewModel(eventBusStop.soundPoolId, 0)
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    @Subscribe(threadMode = ThreadMode.MAIN)
     fun serviceCallbackStopAll(eventBusStopAll: EventBusStopAll) {
         Log.d(TAG, "serviceCallbackStopAll: called")
         viewModel.updateViewModelWithPlayingSoundsFalse()

@@ -1,6 +1,5 @@
 package com.cazimir.relaxoo.ui.sound_grid
 
-import android.media.SoundPool
 import android.os.CountDownTimer
 import android.os.Environment
 import android.util.Log
@@ -63,20 +62,11 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     private val _mutedLiveData = MutableLiveData<Boolean>()
     var soundsAlreadyFetched = false
         private set
-    private var soundPool: SoundPool? = null
     private val _timerEnabled = MutableLiveData<Boolean>()
     private var countDownTimer: CountDownTimer? = null
 
-    init {
-//        Log.d(TAG, "init: savedStateHandle.getCurrentlyClickedProSound:  " + savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND))
-////        Log.d(TAG, "init: savedStateHandle.getTestValue:  " + savedStateHandle.get(TEST_VALUE))
-////        savedStateHandle.getLiveData<Sound>(CURRENTLY_CLICKED_PRO_SOUND).observeForever {
-////            currentlyClickedProSound = it }
-    }
-
     override fun onCleared() {
         super.onCleared()
-        //savedStateHandle.getLiveData<Sound>(CURRENTLY_CLICKED_PRO_SOUND).removeObserver()
         EventBus.getDefault().unregister(this)
     }
 
@@ -290,7 +280,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             override fun onTick(millisUntilFinished: Long) { // updateLiveDataHere() observe from Fragment
                 timerText().value = String.format("Sound%s will stop in " +
                         TimerDialog.getCountTimeByLong(millisUntilFinished),
-                        if (playingSounds().value!!.size > 1) "s" else "")
+                        if (playingSounds().value.size > 1) "s" else "")
             }
 
             override fun onFinish() { // live data observe timer finished

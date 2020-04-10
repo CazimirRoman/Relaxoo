@@ -1,19 +1,32 @@
 package com.cazimir.relaxoo
 
+import android.content.Context
+import android.content.res.Resources
 import android.util.Log
+import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollToPosition
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
+import com.cazimir.relaxoo.adapter.SavedComboAdapter
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.not
+import org.hamcrest.Description
+import org.hamcrest.Matcher
+import org.hamcrest.TypeSafeMatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -26,15 +39,24 @@ class MainActivityTest {
     val device = UiDevice.getInstance(getInstrumentation())
 
     @Before
-    fun registerIdlingResource() {
-        Log.d(TAG, "registerIdlingResource: called")
+    fun setup() {
+        Log.d(TAG, "setup: called")
         IdlingRegistry.getInstance().register(EspressoIdlingResource.countingIdlingResource)
         device.setOrientationNatural()
+        clearSharedPreferences()
+    }
+
+    private fun clearSharedPreferences() {
+        Log.d(TAG, "clearSharedPreferences: called")
+        val sharedPreferences = getInstrumentation().targetContext.getSharedPreferences("PREFERENCES_FILE_NAME", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()
+        editor.commit()
     }
 
     @After
-    fun unregisterIdlingResource() {
-        Log.d(TAG, "unregisterIdlingResource: called")
+    fun teardown() {
+        Log.d(TAG, "teardown: called")
         IdlingRegistry.getInstance().unregister(EspressoIdlingResource.countingIdlingResource)
     }
 
@@ -74,11 +96,12 @@ class MainActivityTest {
     @Test
     fun rotating_sound_grid_fragment_maintains_state() {
         ActivityScenario.launch(MainActivity::class.java)
+        clickOnPlayStopButton()
         checkVisibilityOfView(R.id.sound_list_fragment, Visibility.VISIBLE)
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
         device.setOrientationLeft()
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
-        onView(withId(R.id.play_button)).perform(click())
+        clickOnPlayStopButton()
     }
 
     @Test
@@ -102,23 +125,29 @@ class MainActivityTest {
     @Test
     fun show_volume_slider_when_clicking_on_sound() {
         ActivityScenario.launch(MainActivity::class.java)
+        clickOnPlayStopButton()
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
-        onView(withId(R.id.play_button)).perform(click())
+        clickOnPlayStopButton()
     }
 
     @Test
     fun stop_all_sounds() {
         ActivityScenario.launch(MainActivity::class.java)
+        clickOnPlayStopButton()
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
 
-        onView(withId(R.id.play_button)).perform(click())
+        clickOnPlayStopButton()
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
 
+    }
+
+    private fun clickOnPlayStopButton() {
+        onView(withId(R.id.play_button)).perform(click())
     }
 
     @Test
@@ -139,11 +168,92 @@ class MainActivityTest {
     fun random_sounds() {
         // cannot actually test this UI behaviour as there is no sound playing
         ActivityScenario.launch(MainActivity::class.java)
-        onView(withId(R.id.random_button)).perform(click())
-
+        clickOnRandomButton()
         // just check it din not crash the application - need a unit test for this
         // TODO: 08-Apr-20 Unit Test for this behaviour
         checkVisibilityOfView(R.id.sound_list_fragment, Visibility.VISIBLE)
+    }
+
+    private fun clickOnRandomButton() {
+        onView(withId(R.id.random_button)).perform(click())
+    }
+
+    private fun clickOnSaveComboButton() {
+        onView(withId(R.id.save_fav_button)).perform(click())
+    }
+
+    @Test
+    fun add_combo() {
+        ActivityScenario.launch(MainActivity::class.java)
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        clickOnSaveComboButton()
+        checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)
+        onView(withId(R.id.comboName)).perform(typeText("Saved combo"))
+        onView(withText("OK")).perform(click())
+        swipeViewPagerLeft(1)
+        onView(withRecyclerView(R.id.favoritesList)!!.atPosition(0))
+                .check(matches(hasDescendant(withText("Saved combo"))))
+        onView(withId(R.id.favoritesList)).perform(
+                RecyclerViewActions.actionOnItemAtPosition<SavedComboAdapter.ViewHolder>(0, MyViewAction.clickChildViewWithId(R.id.deleteCombo)))
+
+        onView(withText("OK")).perform(click())
+    }
+
+    @Test
+    fun delete_combo() {
+
+        ActivityScenario.launch(MainActivity::class.java)
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        clickOnSaveComboButton()
+        checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)
+        onView(withId(R.id.comboName)).perform(typeText("Saved combo"))
+        onView(withText("OK")).perform(click())
+        swipeViewPagerLeft(1)
+        onView(withRecyclerView(R.id.favoritesList)!!.atPosition(0))
+                .check(matches(hasDescendant(withText("Saved combo"))))
+
+        onView(withId(R.id.favoritesList)).perform(scrollToPosition<SavedComboAdapter.ViewHolder>(0))
+
+        onView(withId(R.id.favoritesList)).perform(
+                RecyclerViewActions.actionOnItemAtPosition<SavedComboAdapter.ViewHolder>(0, MyViewAction.clickChildViewWithId(R.id.deleteCombo)))
+
+        onView(withText("OK")).perform(click())
+        onView(withId(R.id.no_favorites_text)).check(matches(isDisplayed()))
+    }
+
+    @Test
+    fun trigger_combo() {
+        ActivityScenario.launch(MainActivity::class.java)
+
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        clickOnSaveComboButton()
+        checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)
+        onView(withId(R.id.comboName)).perform(typeText("Saved combo"))
+        onView(withText("OK")).perform(click())
+
+        clickOnPlayStopButton()
+
+        swipeViewPagerLeft(1)
+
+        onView(withId(R.id.favoritesList))
+                .perform(RecyclerViewActions.actionOnItemAtPosition<SavedComboAdapter.ViewHolder>(0, click()));
+
+        swipeViewPagerRight(1)
+
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+
+        swipeViewPagerLeft(1)
+
+        onView(withId(R.id.favoritesList)).perform(
+                RecyclerViewActions.actionOnItemAtPosition<SavedComboAdapter.ViewHolder>(0, MyViewAction.clickChildViewWithId(R.id.deleteCombo)))
+
+        onView(withText("OK")).perform(click())
+
+        swipeViewPagerRight(1)
     }
 
 
@@ -157,7 +267,84 @@ class MainActivityTest {
         }
     }
 
+
+    private fun swipeViewPagerRight(numberOfSwipes: Int) {
+        for (i in 0 until numberOfSwipes) {
+            onView(withId(R.id.pager)).perform(ViewActions.swipeRight())
+        }
+    }
+
     companion object {
         private const val TAG = "MainActivityTest"
+
+        // used to click on a specific view child in recyclerview list
+        object MyViewAction {
+            fun clickChildViewWithId(id: Int): ViewAction {
+                return object : ViewAction {
+                    override fun getConstraints(): Matcher<View>? {
+                        return null
+                    }
+
+                    override fun getDescription(): String {
+                        return "Click on a child view with specified id."
+                    }
+
+                    override fun perform(uiController: UiController, view: View) {
+                        val v = view.findViewById<View>(id)
+                        v.performClick()
+                    }
+                }
+            }
+        }
+
+
+        fun withRecyclerView(recyclerViewId: Int): RecyclerViewMatcher? {
+            return RecyclerViewMatcher(recyclerViewId)
+        }
+
+        class RecyclerViewMatcher(private val recyclerViewId: Int) {
+            fun atPosition(position: Int): Matcher<View> {
+                return atPositionOnView(position, -1)
+            }
+
+            fun atPositionOnView(position: Int, targetViewId: Int): Matcher<View> {
+                return object : TypeSafeMatcher<View>() {
+                    var resources: Resources? = null
+                    var childView: View? = null
+                    override fun describeTo(description: Description) {
+                        var idDescription = Integer.toString(recyclerViewId)
+                        if (resources != null) {
+                            idDescription = try {
+                                resources!!.getResourceName(recyclerViewId)
+                            } catch (var4: Resources.NotFoundException) {
+                                String.format("%s (resource name not found)",
+                                        *arrayOf<Any>(Integer.valueOf(recyclerViewId)))
+                            }
+                        }
+                        description.appendText("with id: $idDescription")
+                    }
+
+                    override fun matchesSafely(view: View): Boolean {
+                        resources = view.resources
+                        if (childView == null) {
+                            val recyclerView = view.rootView.findViewById<View>(recyclerViewId) as RecyclerView
+                            childView = if (recyclerView.id == recyclerViewId) {
+                                recyclerView.findViewHolderForAdapterPosition(position)!!.itemView
+                            } else {
+                                return false
+                            }
+                        }
+                        return if (targetViewId == -1) {
+                            view === childView
+                        } else {
+                            val targetView = childView!!.findViewById<View>(targetViewId)
+                            view === targetView
+                        }
+                    }
+                }
+            }
+        }
+
+
     }
 }

@@ -24,4 +24,5 @@
     <string name="reward_ad_test">ca-app-pub-3940256099942544/5224354917</string>
     <string name="reward_ad_prod">ca-app-pub-7748272108558557/3205446097</string>
     <string name="hello_blank_fragment">Hello F1</string>
+    <string name="saved_combo">Saved combo</string>
 </resources>

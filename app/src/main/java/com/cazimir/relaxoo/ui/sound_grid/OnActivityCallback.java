@@ -7,11 +7,11 @@ import com.cazimir.relaxoo.model.Sound;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
+import java.util.List;
 
 public interface OnActivityCallback {
 
-  void showAddToFavoritesDialog(HashMap<Integer, Integer> playingSounds);
+  void showAddToFavoritesDialog(List<Sound> sounds);
 
   void showToast(String message);
 

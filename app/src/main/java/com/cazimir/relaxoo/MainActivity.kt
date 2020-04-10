@@ -393,7 +393,7 @@ class MainActivity : FragmentActivity(),
         }
     }
 
-    override fun showAddToFavoritesDialog(playingSounds: HashMap<Int, Int>) {
+    override fun showAddToFavoritesDialog(playingSounds: List<Sound>) {
         SaveToFavoritesDialog(playingSounds).show(supportFragmentManager, "save")
     }
 
@@ -412,7 +412,7 @@ class MainActivity : FragmentActivity(),
         Log.d(
                 TAG, (
                 "triggerCombo in MainActivity: called with: " +
-                        savedCombo.soundPoolParameters.toString()))
+                        savedCombo.sounds.toString()))
         getSoundGridFragment()!!.triggerCombo(savedCombo)
     }
 

@@ -14,20 +14,21 @@ import androidx.appcompat.app.AlertDialog;
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.dialog.RetainableDialogFragment;
 import com.cazimir.relaxoo.model.SavedCombo;
+import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved;
 
-import java.util.HashMap;
+import java.util.List;
 
 public class SaveToFavoritesDialog extends RetainableDialogFragment
         implements DialogInterface.OnClickListener {
 
   private static final String TAG = "SaveToFavoritesDialog";
-  private final HashMap<Integer, Integer> playingSoundsParameters;
+  private final List<Sound> playingSoundIds;
   private OnFavoriteSaved addToListInFragmentCallback;
   private View form = null;
 
-  public SaveToFavoritesDialog(HashMap<Integer, Integer> playingSounds) {
-    this.playingSoundsParameters = playingSounds;
+  public SaveToFavoritesDialog(List<Sound> sounds) {
+    this.playingSoundIds = sounds;
   }
 
   @NonNull
@@ -55,11 +56,11 @@ public class SaveToFavoritesDialog extends RetainableDialogFragment
     SavedCombo savedCombo =
             new SavedCombo.Builder()
                     .withName(comboName.getText().toString())
-                    .withSoundPoolParameters(playingSoundsParameters)
+                    .withSoundPoolParameters(playingSoundIds)
                     .withPlaying(true)
                     .build();
     addToListInFragmentCallback.saved(savedCombo);
-    Toast.makeText(getActivity(), "Saved combo!", Toast.LENGTH_LONG).show();
+    Toast.makeText(getActivity(), getString(R.string.saved_combo), Toast.LENGTH_LONG).show();
   }
 
   @Override

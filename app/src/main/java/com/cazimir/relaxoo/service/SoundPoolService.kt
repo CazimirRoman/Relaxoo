@@ -77,12 +77,18 @@ class SoundPoolService : Service(), ISoundPoolService {
             is StopAllSoundsCommand -> stopAllSounds()
             is ShowNotificationCommand -> setupNotifications()
             is PlayingSoundsCommand -> sendPlayingSounds()
+            is TriggerComboCommand -> triggerCombo(event.soundList)
             else -> { // Note the block
                 print("x is neither 1 nor 2")
             }
         }
 
         return START_STICKY
+    }
+
+    private fun triggerCombo(soundList: List<Sound>) {
+        stopAllSounds()
+        soundList.forEach { sound -> play(PlayCommand(sound.id, sound.soundPoolId(), sound.streamId(), sound.volume(), sound.volume(), 0, -1, 1f)) }
     }
 
     private fun sendPlayingSounds() {
@@ -178,6 +184,8 @@ class SoundPoolService : Service(), ISoundPoolService {
         playingSoundsList.clear().also { playingSoundsListLive.value = playingSoundsList }
 
         EventBus.getDefault().post(EventBusStopAll())
+
+        // subscribe with a method here that receives the stopall event and does not allow the play to be run if observable not in certain state
     }
 
     override fun setVolume(id: String, streamId: Int, leftVolume: Float, rightVolume: Float) {
