@@ -32,6 +32,8 @@ import kotlin.collections.ArrayList
 
 class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
+    private var timerTextEnding = ""
+
     companion object {
         private const val TAG = "SoundGridViewModel"
         private const val CURRENTLY_CLICKED_PRO_SOUND = "CurrentlyClickedProSound"
@@ -43,7 +45,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             EventBus.getDefault().register(this)
         }
     }
-
 
     var currentlyClickedProSound: Sound? = savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND)
     var soundsLoadedToSoundPool = MutableLiveData(0)
@@ -270,7 +271,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             override fun onTick(millisUntilFinished: Long) { // updateLiveDataHere() observe from Fragment
                 timerText().value = String.format("Sound%s will stop in " +
                         TimerDialog.getCountTimeByLong(millisUntilFinished),
-                        if (playingSounds().value.size > 1) "s" else "")
+                        timerTextEnding)
             }
 
             override fun onFinish() { // live data observe timer finished
@@ -296,6 +297,13 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
         eventBusPlayingSounds.playingSounds.observeForever { playingSounds ->
             if (playingSounds.isNotEmpty()) {
+
+                timerTextEnding = if (playingSounds.size > 1) {
+                    "s"
+                } else {
+                    ""
+                }
+
                 val filteredList = allSounds.filterBasedOnId(playingSounds)
 
                 //update allSounds with playing status and streamId so you can control
