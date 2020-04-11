@@ -11,6 +11,7 @@ import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.model.Sound
 import kotlinx.android.synthetic.main.admin_add_sound_fragment.*
 import kotlinx.android.synthetic.main.admin_add_sound_fragment.view.*
+import java.util.*
 
 class AdminAddSoundFragment : Fragment() {
     private lateinit var viewModel: AdminAddSoundViewModel
@@ -38,15 +39,14 @@ class AdminAddSoundFragment : Fragment() {
     }
 
     fun onSaveButtonClicked() {
-        if (!sound_name.getText().toString().isEmpty() &&
-                !sound_logo_url.getText().toString().isEmpty() &&
-                !sound_name_storage.getText().toString().isEmpty()) {
-            val sound = Sound.SoundBuilder.aSound()
-                    .withName(sound_name.getText().toString())
-                    .withLogo(sound_logo_url.getText().toString())
-                    .withFilePath(sound_name_storage.getText().toString())
-                    .withPro(checkbox_pro.isChecked())
-                    .build()
+        if (sound_name.getText().toString().isNotEmpty() &&
+                sound_logo_url.getText().toString().isNotEmpty() &&
+                sound_name_storage.getText().toString().isNotEmpty()) {
+            val sound = Sound(name = sound_name.getText().toString(),
+                    logoPath = sound_logo_url.getText().toString(),
+                    filePath = sound_name_storage.getText().toString(),
+                    pro = checkbox_pro.isChecked(), id = UUID.randomUUID().toString())
+
             viewModel.saveToFirebase(sound)
             Log.d(TAG, "onSaveButtonClicked() called with: Saving to Firebase database")
         } else {

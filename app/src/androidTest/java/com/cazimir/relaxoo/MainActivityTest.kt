@@ -132,6 +132,11 @@ class MainActivityTest {
     }
 
     @Test
+    fun stop_single_sound() {
+        TODO("Not yet implemented")
+    }
+
+    @Test
     fun stop_all_sounds() {
         ActivityScenario.launch(MainActivity::class.java)
         clickOnPlayStopButton()
@@ -204,20 +209,30 @@ class MainActivityTest {
     fun delete_combo() {
 
         ActivityScenario.launch(MainActivity::class.java)
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0)
+                .perform(click())
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2)
+                .perform(click())
+
         clickOnSaveComboButton()
+
         checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)
-        onView(withId(R.id.comboName)).perform(typeText("Saved combo"))
-        onView(withText("OK")).perform(click())
+        onView(withId(R.id.comboName))
+                .perform(typeText("Saved combo"))
+        onView(withText("OK"))
+                .perform(click())
+
         swipeViewPagerLeft(1)
+
         onView(withRecyclerView(R.id.favoritesList)!!.atPosition(0))
                 .check(matches(hasDescendant(withText("Saved combo"))))
 
-        onView(withId(R.id.favoritesList)).perform(scrollToPosition<SavedComboAdapter.ViewHolder>(0))
+        onView(withId(R.id.favoritesList))
+                .perform(scrollToPosition<SavedComboAdapter.ViewHolder>(0))
 
-        onView(withId(R.id.favoritesList)).perform(
-                RecyclerViewActions.actionOnItemAtPosition<SavedComboAdapter.ViewHolder>(0, MyViewAction.clickChildViewWithId(R.id.deleteCombo)))
+        onView(withId(R.id.favoritesList))
+                .perform(
+                        RecyclerViewActions.actionOnItemAtPosition<SavedComboAdapter.ViewHolder>(0, MyViewAction.clickChildViewWithId(R.id.deleteCombo)))
 
         onView(withText("OK")).perform(click())
         onView(withId(R.id.no_favorites_text)).check(matches(isDisplayed()))
@@ -257,8 +272,8 @@ class MainActivityTest {
     }
 
 
-    private fun checkVisibilityOfView(view: Int, visibility: Visibility) {
-        onView(withId(view)).check(matches(withEffectiveVisibility(visibility)))
+    private fun checkVisibilityOfView(viewId: Int, visibility: Visibility) {
+        onView(withId(viewId)).check(matches(withEffectiveVisibility(visibility)))
     }
 
     private fun swipeViewPagerLeft(numberOfSwipes: Int) {

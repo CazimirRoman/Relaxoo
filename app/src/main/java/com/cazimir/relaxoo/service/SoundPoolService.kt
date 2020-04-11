@@ -88,7 +88,7 @@ class SoundPoolService : Service(), ISoundPoolService {
 
     private fun triggerCombo(soundList: List<Sound>) {
         stopAllSounds()
-        soundList.forEach { sound -> play(PlayCommand(sound.id, sound.soundPoolId(), sound.streamId(), sound.volume(), sound.volume(), 0, -1, 1f)) }
+        soundList.forEach { sound -> play(PlayCommand(sound.id, sound.soundPoolId, sound.streamId, sound.volume, sound.volume, 0, -1, 1f)) }
     }
 
     private fun sendPlayingSounds() {
@@ -131,18 +131,20 @@ class SoundPoolService : Service(), ISoundPoolService {
 
     override fun load(sounds: ArrayList<Sound>) {
 
-        val processedSounds = ArrayList<Sound>()
+        var processedSounds = mutableListOf<Sound>()
 
-        for (sound: Sound in sounds) {
-            if (sound.soundPoolId() == 0) { // add to arraylist with soundId from soundpool
-                val soundId = soundPool.load(sound.filePath, 1)
-                processedSounds.add(Sound.withSoundPoolId(sound, soundId))
+        sounds.mapTo(processedSounds, { sound ->
+            if (sound.soundPoolId == -1) {
+                Log.d(TAG, "soundPoolId is -1: true")
+                val newSoundPoolId = soundPool.load(sound.filePath, 1)
+                sound.copy(soundPoolId = newSoundPoolId)
             } else {
-                processedSounds.add(sound)
+                Log.d(TAG, "soundPoolId is -1: false")
+                sound
             }
-        }
+        })
 
-        EventBus.getDefault().post(EventBusLoad(processedSounds))
+        EventBus.getDefault().post(EventBusLoad(processedSounds as ArrayList<Sound>))
     }
 
     override fun unload(sound: Sound) {
@@ -169,7 +171,7 @@ class SoundPoolService : Service(), ISoundPoolService {
         Log.d(TAG, "stop: called with: ${stopCommand.soundPoolId}")
         soundPool.stop(stopCommand.streamId)
 
-        playingSoundsList.remove(PlayingSound(stopCommand.id, stopCommand.streamId, null)).also { playingSoundsListLive.value = playingSoundsList }
+        playingSoundsList.remove(PlayingSound(stopCommand.id, stopCommand.streamId)).also { playingSoundsListLive.value = playingSoundsList }
 
         EventBus.getDefault().post(EventBusStop(stopCommand.soundPoolId))
     }

@@ -147,13 +147,9 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                                     .getFile(logoFile)
                                     .addOnSuccessListener { imageSnapshot: FileDownloadTask.TaskSnapshot? ->
                                         Log.d(TAG, "onSuccess: called")
-                                        val fetchedSound = Sound.SoundBuilder.aSound()
-                                                .withId(sound.id)
-                                                .withName(sound.name)
-                                                .withLogo(logoFile.path)
-                                                .withPro(sound.isPro)
-                                                .withFilePath(soundFile.path)
-                                                .build()
+
+                                        val fetchedSound = sound.copy(logoPath = logoFile.path, filePath = soundFile.path)
+
                                         allSounds.addAll(Arrays.asList(fetchedSound))
                                         // addCustomSoundsAsWell();
 
@@ -174,14 +170,8 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         } else {
             Log.d(TAG, "getAssetsFromFirebaseStorage: loading assets from local storage")
             val logosDirectory = File(logosFolder.absolutePath)
-            for (i in sounds.indices) {
-                val localSound = Sound.SoundBuilder.aSound()
-                        .withId(sounds[i].id)
-                        .withName(sounds[i].name)
-                        .withLogo(logosDirectory.toString() + "/" + sounds[i].logoPath)
-                        .withPro(sounds[i].isPro)
-                        .withFilePath(soundsDirectory.toString() + "/" + sounds[i].filePath)
-                        .build()
+            for (sound in sounds) {
+                val localSound = sound.copy(logoPath = logosDirectory.toString() + "/" + sound.logoPath, filePath = soundsDirectory.toString() + "/" + sound.filePath)
                 allSounds.add(localSound)
             }
 
@@ -205,7 +195,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     }
 
     fun playingSounds(): LiveDataKtx<ArrayList<Sound>> {
-        return _allSounds.map { soundsList -> soundsList.filter { sound -> sound.isPlaying } as ArrayList<Sound> }
+        return _allSounds.map { soundsList -> soundsList.filter { sound -> sound.playing } as ArrayList<Sound> }
     }
 
     private fun nextSoundLiveData() {
@@ -213,45 +203,34 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         _allSounds.value = allSounds
     }
 
-    fun addToSounds(sounds: ArrayList<Sound>) {
-        allSounds = sounds
+    fun addToSounds(sounds: List<Sound>) {
+        allSounds = sounds as ArrayList<Sound>
         nextSoundLiveData()
     }
 
     fun updateSingleSoundInViewModel(soundPoolId: Int, streamId: Int) {
 
-        for (sound in allSounds) {
-            if (sound.soundPoolId() == soundPoolId) {
-                allSounds[allSounds.indexOf(sound)] = Sound.SoundBuilder.aSound()
-                        .withId(sound.id)
-                        .withSoundPoolId(soundPoolId)
-                        .withStreamId(streamId)
-                        .withName(sound.name)
-                        .withLogo(sound.logoPath)
-                        .withFilePath(sound.filePath)
-                        .withPlaying(!sound.isPlaying)
-                        .withVolume(sound.volume())
-                        .withPro(sound.isPro)
-                        .withCustom(sound.isCustom)
-                        .build()
-                break
+        var newList = mutableListOf<Sound>()
+
+        allSounds.mapTo(newList, {
+            if (it.soundPoolId == soundPoolId) {
+                it.copy(soundPoolId = soundPoolId, streamId = streamId, playing = !it.playing)
+            } else {
+                it
             }
-        }
+        })
+        allSounds = newList as ArrayList<Sound>
 
         nextSoundLiveData()
     }
 
     fun updateViewModelWithPlayingSoundsFalse() {
-        val newList = mutableListOf<Sound>()
-        allSounds.forEach { sound ->
-            run {
-                if (sound.isPlaying) {
-                    newList.add(Sound.withPlaying(sound))
-                } else {
-                    newList.add(sound)
-                }
-            }
-        }
+
+        var newList = mutableListOf<Sound>()
+
+        allSounds.mapTo(newList, {
+            it.copy(playing = false)
+        })
 
         allSounds = newList as ArrayList<Sound>
 
@@ -266,9 +245,20 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         soundsLoadedToSoundPool.value = soundsLoadedToSoundPool.value!! + 1
     }
 
-    fun updateVolume(sound: Sound?, volume: Float?) {
-        allSounds[allSounds.indexOf(sound)] = Sound.withVolume(sound, volume!!)
-        _allSounds.value = allSounds
+    fun updateVolume(sound: Sound, volume: Float) {
+
+        val newList = allSounds.map {
+            if (it.soundPoolId == sound?.soundPoolId) {
+                it.copy(volume = volume)
+
+            } else {
+                it
+            }
+        }
+
+        allSounds = newList as ArrayList<Sound>
+
+        nextSoundLiveData()
     }
 
     fun countDownTimer(): CountDownTimer? {
@@ -309,24 +299,12 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                 val filteredList = allSounds.filterBasedOnId(playingSounds)
 
                 //update allSounds with playing status and streamId so you can control
-
+                // TODO: 10-Apr-20 fix this
                 for (sound: Sound in filteredList) {
 
                     val index = playingSounds.indexOfFirst { it.id == sound.id }
 
-                    val fetchedSound = Sound.SoundBuilder.aSound()
-                            .withId(sound.id)
-                            .withSoundPoolId(sound.soundPoolId())
-                            .withName(sound.name)
-                            .withLogo(sound.logoPath)
-                            .withPro(sound.isPro)
-                            .withCustom(sound.isCustom)
-                            .withVolume(playingSounds[index].volume!!)
-                            .withFilePath(sound.filePath)
-                            .withPlaying(true)
-                            .withStreamId(playingSounds[index].streamId)
-                            .build()
-
+                    val fetchedSound = sound.copy(volume = playingSounds[index].volume, streamId = playingSounds[index].streamId, playing = true)
 
                     allSounds = allSounds.replace(sound, fetchedSound) as ArrayList<Sound>
                 }

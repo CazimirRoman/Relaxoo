@@ -66,19 +66,19 @@ public class GridAdapter extends ArrayAdapter<Sound> {
       // object item based on the position
       final Sound sound = getItem(position);
 
-      viewHolderItem.soundVolume.setProgress(Math.round(sound.volume() * 100));
-      viewHolderItem.soundVolume.setVisibility(sound.isPlaying() ? View.VISIBLE : View.INVISIBLE);
-      viewHolderItem.moreOptions.setVisibility(sound.isCustom() ? View.VISIBLE : View.INVISIBLE);
+      viewHolderItem.soundVolume.setProgress(Math.round(sound.getVolume() * 100));
+      viewHolderItem.soundVolume.setVisibility(sound.getPlaying() ? View.VISIBLE : View.INVISIBLE);
+      viewHolderItem.moreOptions.setVisibility(sound.getCustom() ? View.VISIBLE : View.INVISIBLE);
       viewHolderItem.soundImage.setImageBitmap(BitmapFactory.decodeFile(sound.getLogoPath()));
 
       // because playing the sound refreshes the grid change color based on playing status
-      if (sound.isPlaying()) {
+      if (sound.getPlaying()) {
           viewHolderItem.soundImage.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
       } else {
           viewHolderItem.soundImage.setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);
       }
 
-      viewHolderItem.proIcon.setVisibility(sound.isPro() ? View.VISIBLE : View.INVISIBLE);
+      viewHolderItem.proIcon.setVisibility(sound.getPro() ? View.VISIBLE : View.INVISIBLE);
 
       viewHolderItem.soundImage.setOnClickListener(
               new View.OnClickListener() {
