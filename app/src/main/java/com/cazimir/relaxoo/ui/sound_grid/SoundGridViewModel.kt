@@ -1,13 +1,13 @@
 package com.cazimir.relaxoo.ui.sound_grid
 
-import android.os.CountDownTimer
 import android.os.Environment
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.cazimir.relaxoo.dialog.timer.TimerDialog
 import com.cazimir.relaxoo.eventbus.EventBusPlayingSounds
+import com.cazimir.relaxoo.eventbus.EventBusTimer
 import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.PlayingSound
 import com.cazimir.relaxoo.model.Sound
@@ -26,13 +26,10 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.io.File
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 
 class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
-
-    private var timerTextEnding = ""
 
     companion object {
         private const val TAG = "SoundGridViewModel"
@@ -46,11 +43,12 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         }
     }
 
+    private val _timerRunningFetched = MutableLiveData<Boolean>()
+    private val _timerTextFetched = MutableLiveData<Boolean>()
     var currentlyClickedProSound: Sound? = savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND)
     var soundsLoadedToSoundPool = MutableLiveData(0)
 
-    var _timerText = MutableLiveData<String>()
-    var _timerFinished = MutableLiveData<Boolean>()
+    private var _timerText = MutableLiveData<String>()
     private var allSounds = ArrayList<Sound>()
     private var _allSounds: MutableLiveDataKtx<ArrayList<Sound>> = MutableLiveDataKtx()
 
@@ -61,26 +59,24 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
      * used to show notification in MainActivity to let user know that a sound is playing
      */
     private val _mutedLiveData = MutableLiveData<Boolean>()
-    var soundsAlreadyFetched = false
-        private set
-    private val _timerEnabled = MutableLiveData<Boolean>()
-    private var countDownTimer: CountDownTimer? = null
+    private var soundsAlreadyFetched = false
+    private var _timerRunning = MutableLiveData<Boolean>()
 
     override fun onCleared() {
         super.onCleared()
         EventBus.getDefault().unregister(this)
     }
 
-    fun timerFinished(): MutableLiveData<Boolean> {
-        return _timerFinished
+    fun soundsAlreadyFetched(): Boolean {
+        return soundsAlreadyFetched
     }
 
     fun timerText(): MutableLiveData<String> {
         return _timerText
     }
 
-    fun timerEnabled(): MutableLiveData<Boolean> {
-        return _timerEnabled
+    fun timerRunning(): MutableLiveData<Boolean> {
+        return _timerRunning
     }
 
     fun mutedLiveData(): MutableLiveData<Boolean> {
@@ -209,6 +205,23 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         nextSoundLiveData()
     }
 
+    fun addSingleSoundToSounds(sound: Sound) {
+        allSounds.add(sound)
+        nextSoundLiveData()
+    }
+
+    fun removeSingleSoundFromSounds(soundPoolId: Int) {
+
+        val newList = mutableListOf<Sound>()
+
+        allSounds.filterTo(newList, { sound ->
+            sound.soundPoolId != soundPoolId
+        })
+        allSounds = newList as ArrayList<Sound>
+
+        nextSoundLiveData()
+    }
+
     fun updateSingleSoundInViewModel(soundPoolId: Int, streamId: Int) {
 
         var newList = mutableListOf<Sound>()
@@ -262,25 +275,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         nextSoundLiveData()
     }
 
-    fun countDownTimer(): CountDownTimer? {
-        return countDownTimer
-    }
-
-    fun setCountDownTimer(minutes: Int) {
-        countDownTimer = object : CountDownTimer(TimeUnit.MINUTES.toMillis(minutes.toLong()), 1000) {
-            override fun onTick(millisUntilFinished: Long) { // updateLiveDataHere() observe from Fragment
-                timerText().value = String.format("Sound%s will stop in " +
-                        TimerDialog.getCountTimeByLong(millisUntilFinished),
-                        timerTextEnding)
-            }
-
-            override fun onFinish() { // live data observe timer finished
-                timerFinished().value = true
-            }
-        }.start()
-        timerFinished().value = false
-    }
-
     fun setClickedProSound(sound: Sound) {
         Log.d(TAG, "setClickedProSound:  " + savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND))
         Log.d(TAG, "init: savedStateHandle.getTestValue:  " + savedStateHandle.get(TEST_VALUE))
@@ -290,20 +284,21 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         currentlyClickedProSound = sound
     }
 
+    fun timerTextLiveFetched(): LiveData<Boolean> {
+        return _timerTextFetched
+    }
+
+    fun timerRunningFetched(): LiveData<Boolean> {
+        return _timerRunningFetched
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun updatePlayingSoundsInViewModel(eventBusPlayingSounds: EventBusPlayingSounds) {
 
         Log.d(TAG, "updatePlayingSoundsInViewModel: called")
 
-        eventBusPlayingSounds.playingSounds.observeForever { playingSounds ->
+        eventBusPlayingSounds.playingSounds.observeForever { playingSounds: ArrayList<PlayingSound> ->
             if (playingSounds.isNotEmpty()) {
-
-                timerTextEnding = if (playingSounds.size > 1) {
-                    "s"
-                } else {
-                    ""
-                }
-
                 val filteredList = allSounds.filterBasedOnId(playingSounds)
 
                 //update allSounds with playing status and streamId so you can control
@@ -319,9 +314,24 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
                 nextSoundLiveData()
             }
-
         }
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun updateTimerLiveDataInViewModel(eventBusTimerStarted: EventBusTimer) {
+        Log.d(TAG, "updateTimerLiveDataInViewModel: called")
+        // start observing from fragment as soon as the live data 'fetched' has been triggered
+        // hopefully when i am changin something on the service now it should trigger the observable and the need to send the eventbus 'EventBusTimer' event is no longer needed
+        _timerRunning = eventBusTimerStarted._timerRunning
+        _timerText = eventBusTimerStarted._timerText
+        _timerTextFetched.value = true
+        _timerRunningFetched.value = true
+    }
+
+//    fun getNumberOfUnreadMessages(): LiveData<Integer> {
+//        return Transformations.map(model.getUnreadMessages(), { it.size })
+//    }
+
 
     private fun List<Sound>.filterBasedOnId(soundPoolListFromService: List<PlayingSound>) = filter { m -> soundPoolListFromService.any { it.id == m.id } }
 

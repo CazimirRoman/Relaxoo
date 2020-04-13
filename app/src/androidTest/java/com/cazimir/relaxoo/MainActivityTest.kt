@@ -70,13 +70,13 @@ class MainActivityTest {
 
     @Test
     fun shouldShowViewPagerAfterLoadingSoundsToSoundPoolComplete() {
-        ActivityScenario.launch(MainActivity::class.java)
+        startActivity()
         checkVisibilityOfView(R.id.pager, Visibility.VISIBLE)
     }
 
     @Test
     fun rotating_favorites_fragment() {
-        ActivityScenario.launch(MainActivity::class.java)
+        startActivity()
         swipeViewPagerLeft(1)
         checkVisibilityOfView(R.id.favorites_fragment, Visibility.VISIBLE)
         device.setOrientationLeft()
@@ -85,7 +85,7 @@ class MainActivityTest {
 
     @Test
     fun shouldInstantiateAllFragments() {
-        ActivityScenario.launch(MainActivity::class.java)
+        startActivity()
         checkVisibilityOfView(R.id.sound_list_fragment, Visibility.VISIBLE)
         checkVisibilityOfView(R.id.favorites_fragment, Visibility.VISIBLE)
         swipeViewPagerLeft(3)
@@ -95,7 +95,7 @@ class MainActivityTest {
 
     @Test
     fun rotating_sound_grid_fragment_maintains_state() {
-        ActivityScenario.launch(MainActivity::class.java)
+        startActivity()
         clickOnPlayStopButton()
         checkVisibilityOfView(R.id.sound_list_fragment, Visibility.VISIBLE)
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
@@ -106,7 +106,7 @@ class MainActivityTest {
 
     @Test
     fun rotating_create_sound_fragment() {
-        ActivityScenario.launch(MainActivity::class.java)
+        startActivity()
         swipeViewPagerLeft(2)
         checkVisibilityOfView(R.id.create_sound_fragment, Visibility.VISIBLE)
         device.setOrientationLeft()
@@ -115,7 +115,7 @@ class MainActivityTest {
 
     @Test
     fun rotating_about_fragment() {
-        ActivityScenario.launch(MainActivity::class.java)
+        startActivity()
         swipeViewPagerLeft(3)
         checkVisibilityOfView(R.id.about_fragment, Visibility.VISIBLE)
         device.setOrientationLeft()
@@ -124,7 +124,7 @@ class MainActivityTest {
 
     @Test
     fun show_volume_slider_when_clicking_on_sound() {
-        ActivityScenario.launch(MainActivity::class.java)
+        startActivity()
         clickOnPlayStopButton()
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
@@ -137,11 +137,15 @@ class MainActivityTest {
     }
 
     @Test
+    fun volume_change_on_single_sound() {
+        TODO("Not yet implemented")
+    }
+
+    @Test
     fun stop_all_sounds() {
-        ActivityScenario.launch(MainActivity::class.java)
+        startActivity()
         clickOnPlayStopButton()
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        clickOnSounds(2)
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
 
@@ -158,9 +162,8 @@ class MainActivityTest {
     @Test
     fun mute_all_sounds() {
         // cannot actually test this UI behaviour as there is no other UI indication that the sound is playing
-        ActivityScenario.launch(MainActivity::class.java)
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        startActivity()
+        clickOnSounds(2)
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
         onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
 
@@ -172,7 +175,7 @@ class MainActivityTest {
     @Test
     fun random_sounds() {
         // cannot actually test this UI behaviour as there is no sound playing
-        ActivityScenario.launch(MainActivity::class.java)
+        startActivity()
         clickOnRandomButton()
         // just check it din not crash the application - need a unit test for this
         // TODO: 08-Apr-20 Unit Test for this behaviour
@@ -189,9 +192,8 @@ class MainActivityTest {
 
     @Test
     fun add_combo() {
-        ActivityScenario.launch(MainActivity::class.java)
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        startActivity()
+        clickOnSounds(2)
         clickOnSaveComboButton()
         checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)
         onView(withId(R.id.comboName)).perform(typeText("Saved combo"))
@@ -208,12 +210,8 @@ class MainActivityTest {
     @Test
     fun delete_combo() {
 
-        ActivityScenario.launch(MainActivity::class.java)
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0)
-                .perform(click())
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2)
-                .perform(click())
-
+        startActivity()
+        clickOnSounds(2)
         clickOnSaveComboButton()
 
         checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)
@@ -240,10 +238,8 @@ class MainActivityTest {
 
     @Test
     fun trigger_combo() {
-        ActivityScenario.launch(MainActivity::class.java)
-
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        startActivity()
+        clickOnSounds(2)
         clickOnSaveComboButton()
         checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)
         onView(withId(R.id.comboName)).perform(typeText("Saved combo"))
@@ -271,6 +267,65 @@ class MainActivityTest {
         swipeViewPagerRight(1)
     }
 
+    private fun startActivity() {
+        ActivityScenario.launch(MainActivity::class.java)
+    }
+
+    @Test
+    fun start_and_stop_timer() {
+        startActivity()
+        clickOnSounds(1)
+        clickOnTimerButton()
+        onView(withId(R.id.timer_dialog)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.timer_list)).atPosition(0).perform(click())
+        onView(withId(R.id.timerText)).check(matches(allOf(isDisplayed(), not(withText("Sounds will stop in 00:00:00")))))
+        clickOnPlayStopButton()
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
+    }
+
+    @Test
+    fun stop_timer_with_timer_button() {
+        startActivity()
+        clickOnSounds(1)
+        clickOnTimerButton()
+        onView(withId(R.id.timer_dialog)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.timer_list)).atPosition(0).perform(click())
+        onView(withId(R.id.timerText)).check(matches(allOf(isDisplayed(), not(withText("Sounds will stop in 00:00:00")))))
+        clickOnTimerButton()
+        onView(withId(R.id.timerText)).check(matches(not(isDisplayed())))
+        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
+    }
+
+    @Test
+    fun rotate_timer() {
+        startActivity()
+        clickOnSounds(1)
+        clickOnTimerButton()
+        onView(withId(R.id.timer_dialog)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.timer_list)).atPosition(0).perform(click())
+        onView(withId(R.id.timerText)).check(matches(allOf(isDisplayed(), not(withText("Sounds will stop in 00:00:00")))))
+        device.setOrientationLeft()
+        onView(withId(R.id.timerText)).check(matches(allOf(isDisplayed(), not(withText("Sounds will stop in 00:00:00")))))
+    }
+
+
+    //region helper methods
+
+    private fun clickOnSounds(howMany: Int) {
+        when (howMany) {
+            1 -> onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
+            2 -> {
+                onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
+                onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+            }
+        }
+
+
+    }
+
+    private fun clickOnTimerButton() {
+        onView(withId(R.id.set_timer_button)).perform(click())
+    }
 
     private fun checkVisibilityOfView(viewId: Int, visibility: Visibility) {
         onView(withId(viewId)).check(matches(withEffectiveVisibility(visibility)))
@@ -288,6 +343,8 @@ class MainActivityTest {
             onView(withId(R.id.pager)).perform(ViewActions.swipeRight())
         }
     }
+
+    // endregion
 
     companion object {
         private const val TAG = "MainActivityTest"

@@ -69,7 +69,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:text="Sounds will stop in 00:04:30"
+            android:text="Sounds will stop in 00:00:00"
             android:textColor="@android:color/white"
             android:visibility="invisible" />
 

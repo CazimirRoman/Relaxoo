@@ -1,4 +1,4 @@
-package com.cazimir.relaxoo.service.events
+package com.cazimir.relaxoo.service.commands
 
 class PlayCommand(
         val id: String,
@@ -9,4 +9,4 @@ class PlayCommand(
         val priority: Int,
         val loop: Int,
         val rate: Float
-) : ISoundPoolCommand
+) : ISoundServiceCommand

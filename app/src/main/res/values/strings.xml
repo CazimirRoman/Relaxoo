@@ -13,7 +13,7 @@
     <string name="invite_fb_friends">Invite friends with Facebook</string>
     <string name="invite_friends">Invite friends</string>
     <string name="about_fragment">About</string>
-    <string name="convert_to_white_noise">Convert to white noise</string>
+    <string name="pin_to_dashboard">Pin to dashboard</string>
     <string name="edit_recording_name">Edit name</string>
     <string name="delete_recording">Delete recording</string>
     <string name="loading_sounds">Loading sounds...</string>
@@ -25,4 +25,5 @@
     <string name="reward_ad_prod">ca-app-pub-7748272108558557/3205446097</string>
     <string name="hello_blank_fragment">Hello F1</string>
     <string name="saved_combo">Saved combo</string>
+    <string name="empty_field">Please enter a value</string>
 </resources>

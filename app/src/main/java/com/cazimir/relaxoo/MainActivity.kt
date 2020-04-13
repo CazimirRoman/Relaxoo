@@ -91,7 +91,7 @@ class MainActivity : FragmentActivity(),
         private val CREATE_SOUND_FRAGMENT = ":2"
         private val CHANNEL_WHATEVER = "" + ""
         private val RECORDING_REQ_CODE = 0
-        private val PINNED_RECORDINGS = "PINNED_RECORDINGS"
+        val PINNED_RECORDINGS = "PINNED_RECORDINGS"
         private val NOTIFY_ID = 1337
     }
 
@@ -134,22 +134,22 @@ class MainActivity : FragmentActivity(),
 
         Log.d(TAG, "onCreate: called before result add source")
         result.addSource(
-                areWritePermissionsGranted,
-                { permissionsGranted: Boolean ->
-                    Log.d(TAG, "permissions granted: " + permissionsGranted)
-                    mergePermissionFragmentStarted = MergePermissionFragmentStarted.withPermissionGranted(
-                            mergePermissionFragmentStarted, permissionsGranted)
-                    result.setValue(mergePermissionFragmentStarted)
-                })
+                areWritePermissionsGranted
+        ) { permissionsGranted: Boolean ->
+            Log.d(TAG, "permissions granted: " + permissionsGranted)
+            mergePermissionFragmentStarted = MergePermissionFragmentStarted.withPermissionGranted(mergePermissionFragmentStarted, permissionsGranted)
+            result.setValue(mergePermissionFragmentStarted)
+        }
+
         result.addSource(
-                isSoundGridFragmentStarted,
-                { fragmentStarted: Boolean ->
-                    Log.d(TAG, "soundGridFragmentStarted: " + fragmentStarted)
-                    mergePermissionFragmentStarted = MergePermissionFragmentStarted.withFragmentInstantiated(
-                            mergePermissionFragmentStarted, fragmentStarted)
-                    result.setValue(mergePermissionFragmentStarted)
-                })
-        // TODO: 14-Mar-20 This observer is called 2 times - fixit
+                isSoundGridFragmentStarted
+        ) { fragmentStarted: Boolean ->
+            Log.d(TAG, "soundGridFragmentStarted: " + fragmentStarted)
+            mergePermissionFragmentStarted = MergePermissionFragmentStarted.withFragmentInstantiated(mergePermissionFragmentStarted, fragmentStarted)
+            result.setValue(mergePermissionFragmentStarted)
+        }
+
+        // TODO: 14-Mar-20 This observer is called 2 times - fix it
         result.observe(
                 this,
                 Observer { mergePermissionFragmentStarted: MergePermissionFragmentStarted? ->

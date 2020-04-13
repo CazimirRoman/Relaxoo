@@ -1,12 +1,12 @@
 package com.cazimir.relaxoo.service
 
 import com.cazimir.relaxoo.model.Sound
-import com.cazimir.relaxoo.service.events.PlayCommand
-import com.cazimir.relaxoo.service.events.StopCommand
+import com.cazimir.relaxoo.service.commands.PlayCommand
+import com.cazimir.relaxoo.service.commands.StopCommand
 
-interface ISoundPoolService {
+interface ISoundService {
     fun load(sounds: ArrayList<Sound>)
-    fun unload(sound: Sound)
+    fun unload(soundPoolId1: String, sound: Int)
     fun play(playCommand: PlayCommand)
     fun stop(stopCommand: StopCommand)
     fun stopAllSounds()

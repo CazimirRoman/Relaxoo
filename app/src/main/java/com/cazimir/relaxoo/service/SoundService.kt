@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.media.SoundPool
+import android.os.CountDownTimer
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -14,21 +15,29 @@ import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.application.MyApplication
+import com.cazimir.relaxoo.dialog.timer.TimerDialog
 import com.cazimir.relaxoo.eventbus.*
 import com.cazimir.relaxoo.model.PlayingSound
 import com.cazimir.relaxoo.model.Sound
-import com.cazimir.relaxoo.service.events.*
+import com.cazimir.relaxoo.service.commands.*
 import org.greenrobot.eventbus.EventBus
+import java.util.concurrent.TimeUnit
 
-class SoundPoolService : Service(), ISoundPoolService {
+class SoundService : Service(), ISoundService {
+
+    private var timerRunning = false
+    private var _timerRunning: MutableLiveData<Boolean> = MutableLiveData()
+    private val _timerText: MutableLiveData<String> = MutableLiveData("")
+    private var countDownTimer: CountDownTimer? = null
+    private var timerTextEnding = ""
 
     companion object {
         private const val TAG = "SoundPoolService"
         private const val MAX_SOUNDS = 99
         const val SOUND_POOL_ACTION = "sound_pool_action"
 
-        fun getCommand(context: Context?, command: ISoundPoolCommand): Intent {
-            val intent = Intent(context, SoundPoolService::class.java)
+        fun getCommand(context: Context?, command: ISoundServiceCommand): Intent {
+            val intent = Intent(context, SoundService::class.java)
             intent.putExtra(SOUND_POOL_ACTION, command)
             return intent
         }
@@ -42,6 +51,34 @@ class SoundPoolService : Service(), ISoundPoolService {
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        val event = intent?.getSerializableExtra(SOUND_POOL_ACTION) as? ISoundServiceCommand
+
+        when (event) {
+            is StopServiceCommand -> {
+                stopAllSounds().also { stopSelf() }
+            }
+            is LoadSoundsCommand -> load(event.sounds)
+            is UnloadSoundCommand -> unload(event.id, event.soundPoolId)
+            is VolumeCommand -> setVolume(event.id, event.streamId, event.leftVolume, event.rightVolume)
+            is PlayCommand -> play(event)
+            is StopCommand -> stop(event)
+            is StopAllSoundsCommand -> stopAllSounds()
+            is ShowNotificationCommand -> setupNotifications()
+            is PlayingSoundsCommand -> sendPlayingSounds()
+            is TriggerComboCommand -> triggerCombo(event.soundList)
+            is ToggleCountDownTimerCommand -> toggleCountDownTimer(event.minutes)
+            is TimerTextCommand -> sendTimerText()
+            is LoadCustomSoundCommand -> loadCustomSound(event.sound)
+            else -> { // Note the block
+                print("x is neither 1 nor 2")
+            }
+        }
+
+        return START_STICKY
     }
 
     override fun onCreate() {
@@ -60,30 +97,45 @@ class SoundPoolService : Service(), ISoundPoolService {
             //broadcast to viewModel
             EventBus.getDefault().post(EventBusLoadedToSoundPool(soundPoolId))
         }
+
+        playingSoundsListLive.observeForever(Observer {
+            timerTextEnding = if (it.size > 1) {
+                "s"
+            } else {
+                ""
+            }
+        })
+
+        _timerRunning.observeForever(Observer {
+            timerRunning = it
+        })
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    private fun toggleCountDownTimer(minutes: Int) {
+        if (timerRunning) {
+            countDownTimer?.cancel()
+            _timerRunning.value = false
+        } else {
+            countDownTimer = object : CountDownTimer(TimeUnit.MINUTES.toMillis(minutes.toLong()), 1000) {
+                override fun onTick(millisUntilFinished: Long) { // updateLiveDataHere() observe from Fragment
+                    // timerText is the observable that is being observed from the fragment
+                    Log.d(TAG, "onTick: called with: ${_timerText.value}")
+                    _timerText.value = String.format("Sound%s will stop in " +
+                            TimerDialog.getCountTimeByLong(millisUntilFinished),
+                            timerTextEnding)
+                }
 
-        val event = intent?.getSerializableExtra(SOUND_POOL_ACTION) as? ISoundPoolCommand
+                override fun onFinish() { // live data observe timer finished
+                    Log.d(TAG, "CountDownTimer finished")
+                    _timerRunning.value = false
+                    stopAllSounds()
+                }
+            }.start()
 
-        when (event) {
-            is StopServiceCommand -> {
-                stopAllSounds().also { stopSelf() }
-            }
-            is LoadSoundsCommand -> load(event.sounds)
-            is VolumeCommand -> setVolume(event.id, event.streamId, event.leftVolume, event.rightVolume)
-            is PlayCommand -> play(event)
-            is StopCommand -> stop(event)
-            is StopAllSoundsCommand -> stopAllSounds()
-            is ShowNotificationCommand -> setupNotifications()
-            is PlayingSoundsCommand -> sendPlayingSounds()
-            is TriggerComboCommand -> triggerCombo(event.soundList)
-            else -> { // Note the block
-                print("x is neither 1 nor 2")
-            }
+            _timerRunning.value = true
         }
 
-        return START_STICKY
+        EventBus.getDefault().post(EventBusTimer(_timerRunning, _timerText))
     }
 
     private fun triggerCombo(soundList: List<Sound>) {
@@ -91,8 +143,15 @@ class SoundPoolService : Service(), ISoundPoolService {
         soundList.forEach { sound -> play(PlayCommand(sound.id, sound.soundPoolId, sound.streamId, sound.volume, sound.volume, 0, -1, 1f)) }
     }
 
+    // TODO: 11-Apr-20 I should bundle these in a single EventBus update
     private fun sendPlayingSounds() {
         EventBus.getDefault().post(EventBusPlayingSounds(playingSoundsListLive))
+    }
+
+    private fun sendTimerText() {
+        if (timerRunning) {
+            EventBus.getDefault().post(EventBusTimer(_timerRunning, _timerText))
+        }
     }
 
     private fun setupNotifications() {
@@ -135,11 +194,9 @@ class SoundPoolService : Service(), ISoundPoolService {
 
         sounds.mapTo(processedSounds, { sound ->
             if (sound.soundPoolId == -1) {
-                Log.d(TAG, "soundPoolId is -1: true")
-                val newSoundPoolId = soundPool.load(sound.filePath, 1)
-                sound.copy(soundPoolId = newSoundPoolId)
+                val soundPoolId = soundPool.load(sound.filePath, 1)
+                sound.copy(soundPoolId = soundPoolId)
             } else {
-                Log.d(TAG, "soundPoolId is -1: false")
                 sound
             }
         })
@@ -147,8 +204,14 @@ class SoundPoolService : Service(), ISoundPoolService {
         EventBus.getDefault().post(EventBusLoad(processedSounds as ArrayList<Sound>))
     }
 
-    override fun unload(sound: Sound) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    private fun loadCustomSound(sound: Sound) {
+        val soundWithSoundPoolId = sound.copy(soundPoolId = soundPool.load(sound.filePath, 1))
+        EventBus.getDefault().post(EventBusLoadSingle(soundWithSoundPoolId))
+    }
+
+    override fun unload(soundId: String, soundPoolId: Int) {
+        soundPool.unload(soundPoolId)
+        EventBus.getDefault().post(EventBusUnload(soundId, soundPoolId))
     }
 
     // TODO: 28-Mar-20 take whole sound object for play command
@@ -177,7 +240,7 @@ class SoundPoolService : Service(), ISoundPoolService {
     }
 
     override fun stopAllSounds() {
-        Log.d(TAG, "stopAllSounds: called")
+        Log.d(TAG, "stopAllSounds in service: called")
 
         for (playingSound: PlayingSound in playingSoundsList) {
             soundPool.stop(playingSound.streamId)
@@ -185,8 +248,9 @@ class SoundPoolService : Service(), ISoundPoolService {
 
         playingSoundsList.clear().also { playingSoundsListLive.value = playingSoundsList }
 
-        EventBus.getDefault().post(EventBusStopAll())
+        countDownTimer?.cancel().also { _timerRunning.value = false }
 
+        EventBus.getDefault().post(EventBusStopAll())
         // subscribe with a method here that receives the stopall event and does not allow the play to be run if observable not in certain state
     }
 

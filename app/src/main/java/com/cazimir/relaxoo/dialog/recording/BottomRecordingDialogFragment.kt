@@ -40,14 +40,16 @@ class BottomRecordingDialogFragment(val recording: Recording, val callback: OnAc
         view.edit_recording_name.setOnClickListener {
             dismiss()
 
-            EditRecordingDialog(recording, object : RecordingBottomCallback {
+            val editRecordingDialogFragment = EditRecordingDialog(recording, object : RecordingBottomCallback {
                 override fun edited(recording: Recording, newName: String) {
                     callback.renameRecording(
                             recording,
                             newName
                     )
                 }
-            }).show(parentFragmentManager, "editRecording")
+            })
+
+            editRecordingDialogFragment.show(parentFragmentManager, "editRecording")
         }
 
         view.pin_to_dashboard.setOnClickListener {

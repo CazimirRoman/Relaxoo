@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -102,14 +101,11 @@ public class TimerDialog extends RetainableDialogFragment {
     listView.setAdapter(adapter);
 
     listView.setOnItemClickListener(
-        new AdapterView.OnItemClickListener() {
-          @Override
-          public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            callback.startCountDownTimer(timers.get(position));
-            Log.d(TAG, "onItemClick: " + timers.get(position));
-            dismiss();
-          }
-        });
+            (parent, view, position, id) -> {
+              callback.startCountDownTimer(timers.get(position));
+              Log.d(TAG, "onItemClick: " + timers.get(position));
+              dismiss();
+            });
 
     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
