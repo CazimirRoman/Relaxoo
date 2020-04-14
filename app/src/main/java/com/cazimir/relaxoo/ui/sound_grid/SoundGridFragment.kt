@@ -127,10 +127,10 @@ class SoundGridFragment() : Fragment() {
                         viewLifecycleOwner,
                         Observer { muted ->
                             if (muted) {
-                                mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off))
-                            } else {
                                 mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_on))
-                    }
+                            } else {
+                                mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off))
+                            }
                 })
         // listen for changes to the sound lists live data object to set the adapter for the gridview
 // along with the callback methods (clicked & volume changed)
@@ -216,7 +216,7 @@ class SoundGridFragment() : Fragment() {
 
                     if (playingList.isEmpty()) {
                         play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_play))
-                        set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_on))
+                        set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
                     } else {
                         play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop))
                     }
@@ -263,11 +263,11 @@ class SoundGridFragment() : Fragment() {
                                 if (running) {
                                     timerRunning = true
                                     showTimerText()
-                                    set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
+                                    set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_on))
                                 } else {
                                     timerRunning = false
                                     hideTimerText()
-                                    set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_on))
+                                    set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
                                 }
                             })
                         })
@@ -296,7 +296,7 @@ class SoundGridFragment() : Fragment() {
                             sendCommandToService(
                                     SoundService.getCommand(
                                             context,
-                                            VolumeCommand(sound.id, sound.streamId, 0f, 0f)
+                                            MuteAllSoundsCommand()
                                     )
                             )
                         }
@@ -306,7 +306,7 @@ class SoundGridFragment() : Fragment() {
                             sendCommandToService(
                                     SoundService.getCommand(
                                             context,
-                                            VolumeCommand(sound.id, sound.streamId, sound.volume, sound.volume)
+                                            MuteAllSoundsCommand()
                                     )
                             )
                         }
@@ -475,6 +475,8 @@ class SoundGridFragment() : Fragment() {
         Log.d(TAG, "serviceCallbackStopAll: called")
         viewModel.updateViewModelWithPlayingSoundsFalse()
         hideTimerText()
+        viewModel.updateMuteLiveData(false)
+        muted = false
 
     }
 

@@ -28,7 +28,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                app:srcCompat="@drawable/ic_mute_on" />
+                app:srcCompat="@drawable/ic_mute_off" />
 
             <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/random_button"
