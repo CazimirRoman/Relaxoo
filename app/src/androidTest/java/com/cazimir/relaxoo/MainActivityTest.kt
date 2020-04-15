@@ -17,7 +17,12 @@ import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.contrib.RecyclerViewActions.scrollToPosition
-import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
@@ -250,7 +255,12 @@ class MainActivityTest {
         swipeViewPagerLeft(1)
 
         onView(withId(R.id.favoritesList))
-                .perform(RecyclerViewActions.actionOnItemAtPosition<SavedComboAdapter.ViewHolder>(0, click()));
+            .perform(
+                RecyclerViewActions.actionOnItemAtPosition<SavedComboAdapter.ViewHolder>(
+                    0,
+                    click()
+                )
+            )
 
         swipeViewPagerRight(1)
 

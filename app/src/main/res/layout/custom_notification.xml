@@ -31,11 +31,11 @@
         android:layout_weight="0.5">
 
         <ImageView
-            android:id="@+id/remote_view_stop"
+            android:id="@+id/remote_view_play_stop"
             style="@style/UpperButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_play_black" />
+            android:src="@drawable/ic_stop_black" />
 
         <ImageView
             android:id="@+id/remote_view_mute"

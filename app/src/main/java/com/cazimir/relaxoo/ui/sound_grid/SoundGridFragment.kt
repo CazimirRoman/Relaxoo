@@ -20,19 +20,36 @@ import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.GridAdapter
 import com.cazimir.relaxoo.dialog.custom.BottomCustomDeleteFragment
 import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
-import com.cazimir.relaxoo.eventbus.*
+import com.cazimir.relaxoo.eventbus.EventBusLoad
+import com.cazimir.relaxoo.eventbus.EventBusLoadSingle
+import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
+import com.cazimir.relaxoo.eventbus.EventBusStop
+import com.cazimir.relaxoo.eventbus.EventBusStopAll
+import com.cazimir.relaxoo.eventbus.EventBusUnload
 import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.SoundService.Companion.SOUND_POOL_ACTION
-import com.cazimir.relaxoo.service.commands.*
+import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
+import com.cazimir.relaxoo.service.commands.LoadSoundsCommand
+import com.cazimir.relaxoo.service.commands.MuteAllSoundsCommand
+import com.cazimir.relaxoo.service.commands.PlayCommand
+import com.cazimir.relaxoo.service.commands.PlayingSoundsCommand
+import com.cazimir.relaxoo.service.commands.StopAllSoundsCommand
+import com.cazimir.relaxoo.service.commands.StopCommand
+import com.cazimir.relaxoo.service.commands.TimerTextCommand
+import com.cazimir.relaxoo.service.commands.ToggleCountDownTimerCommand
+import com.cazimir.relaxoo.service.commands.TriggerComboCommand
+import com.cazimir.relaxoo.service.commands.UnloadSoundCommand
+import com.cazimir.relaxoo.service.commands.VolumeCommand
 import kotlinx.android.synthetic.main.sound_list_fragment.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import java.util.*
+import java.util.ArrayList
+import java.util.Random
 
 class SoundGridFragment() : Fragment() {
 
@@ -198,6 +215,8 @@ class SoundGridFragment() : Fragment() {
                             gridView.adapter = gridArrayAdapter
                             // if sound not loaded yet and sounds list not yet populated
                             if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
+                                //saveListToSharedPreferences(sounds)
+                                //hopefully the service is started by the 'play command'
                                 loadListToSoundPool(sounds)
                             }
 
@@ -512,6 +531,11 @@ class SoundGridFragment() : Fragment() {
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun updateViewModelWithLoad(eventBusLoad: EventBusLoadSingle) {
+        viewModel.addSingleSoundToSounds(eventBusLoad.sound)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun saveAllSoundsToSharedPreferences(eventBusLoad: EventBusLoadSingle) {
         viewModel.addSingleSoundToSounds(eventBusLoad.sound)
     }
 

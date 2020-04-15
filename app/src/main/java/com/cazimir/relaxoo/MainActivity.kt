@@ -30,7 +30,14 @@ import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder
 import cafe.adriel.androidaudiorecorder.model.AudioChannel
 import cafe.adriel.androidaudiorecorder.model.AudioSampleRate
 import cafe.adriel.androidaudiorecorder.model.AudioSource
-import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.SkuDetails
+import com.android.billingclient.api.SkuDetailsParams
 import com.cazimir.relaxoo.adapter.PagerAdapter
 import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog
 import com.cazimir.relaxoo.dialog.OnDeleted
@@ -40,6 +47,7 @@ import com.cazimir.relaxoo.dialog.pro.ProBottomDialogFragment
 import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
+import com.cazimir.relaxoo.eventbus.EventBusServiceDestroyed
 import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.model.SavedCombo
@@ -71,8 +79,13 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.main_activity.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Random
+import java.util.TimerTask
 
 class MainActivity : FragmentActivity(),
     OnActivityCallback,
@@ -117,6 +130,7 @@ class MainActivity : FragmentActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+        EventBus.getDefault().register(this)
         sharedViewModel = ViewModelProvider(this).get(SharedViewModel::class.java)
         mergePermissionFragmentStarted = MergePermissionFragmentStarted.Builder().build()
 
@@ -217,6 +231,7 @@ class MainActivity : FragmentActivity(),
 //            startService(SoundPoolService.getCommand(this, StopServiceCommand()))
 //        }
         rewardedVideoAd.destroy(this)
+        EventBus.getDefault().unregister(this)
         super.onDestroy()
     }
 
@@ -633,5 +648,14 @@ class MainActivity : FragmentActivity(),
 
     override fun onRewardedVideoAdFailedToLoad(p0: Int) {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun serviceDestroyed(eventBusServiceDestroyed: EventBusServiceDestroyed) {
+        // the reason for this is that if the service gets destroyed, which holds all the logic for the soundpool
+        // and timer, the activity needs to restart to recreate the service. Therefore forcing a finish on the applications
+        // i am thinking that the user does not want to use the service and the application anymore if he presses 'X'
+        Log.d(TAG, "serviceDestroyed: called")
+        this.finish()
     }
 }

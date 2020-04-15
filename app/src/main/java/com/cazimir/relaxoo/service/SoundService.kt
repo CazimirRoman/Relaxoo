@@ -18,10 +18,32 @@ import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.application.MyApplication
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
-import com.cazimir.relaxoo.eventbus.*
+import com.cazimir.relaxoo.eventbus.EventBusLoad
+import com.cazimir.relaxoo.eventbus.EventBusLoadSingle
+import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
+import com.cazimir.relaxoo.eventbus.EventBusPlayingSounds
+import com.cazimir.relaxoo.eventbus.EventBusServiceDestroyed
+import com.cazimir.relaxoo.eventbus.EventBusStop
+import com.cazimir.relaxoo.eventbus.EventBusStopAll
+import com.cazimir.relaxoo.eventbus.EventBusTimer
+import com.cazimir.relaxoo.eventbus.EventBusUnload
 import com.cazimir.relaxoo.model.PlayingSound
 import com.cazimir.relaxoo.model.Sound
-import com.cazimir.relaxoo.service.commands.*
+import com.cazimir.relaxoo.service.commands.ISoundServiceCommand
+import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
+import com.cazimir.relaxoo.service.commands.LoadSoundsCommand
+import com.cazimir.relaxoo.service.commands.MuteAllSoundsCommand
+import com.cazimir.relaxoo.service.commands.PlayCommand
+import com.cazimir.relaxoo.service.commands.PlayingSoundsCommand
+import com.cazimir.relaxoo.service.commands.ShowNotificationCommand
+import com.cazimir.relaxoo.service.commands.StopAllSoundsCommand
+import com.cazimir.relaxoo.service.commands.StopCommand
+import com.cazimir.relaxoo.service.commands.StopServiceCommand
+import com.cazimir.relaxoo.service.commands.TimerTextCommand
+import com.cazimir.relaxoo.service.commands.ToggleCountDownTimerCommand
+import com.cazimir.relaxoo.service.commands.TriggerComboCommand
+import com.cazimir.relaxoo.service.commands.UnloadSoundCommand
+import com.cazimir.relaxoo.service.commands.VolumeCommand
 import org.greenrobot.eventbus.EventBus
 import java.util.concurrent.TimeUnit
 
@@ -68,7 +90,7 @@ class SoundService : Service(), ISoundService {
             is StopServiceCommand -> {
                 stopAllSounds().also { stopSelf() }
             }
-            is LoadSoundsCommand -> load(event.sounds)
+            is LoadSoundsCommand -> loadToSoundPool(event.sounds)
             is UnloadSoundCommand -> unload(event.id, event.soundPoolId)
             is VolumeCommand -> setVolume(event.id, event.streamId, event.leftVolume, event.rightVolume)
             is PlayCommand -> play(event)
@@ -86,7 +108,7 @@ class SoundService : Service(), ISoundService {
             }
         }
 
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     private fun toggleMute() {
@@ -189,10 +211,23 @@ class SoundService : Service(), ISoundService {
 
         playingSoundsListLive.observeForever(Observer { playingSounds ->
             if (playingSounds.size == 0) {
-                stopForeground(true)
+                //stopForeground(true)
+                notificationView.setImageViewResource(
+                    R.id.remote_view_play_stop,
+                    R.drawable.ic_play_black
+                )
+                notificationView.setTextViewText(R.id.remote_view_playing_txt, "No sound playing")
+                this.notificationBuilder.setCustomContentView(notificationView)
+                triggerNotificationRefresh()
             } else {
-                notificationView.setTextViewText(R.id.remote_view_playing_txt, getNotificationText(playingSounds.size))
-                notificationView.setOnClickPendingIntent(R.id.remote_view_stop, stopAllPendingIntent)
+                notificationView.setTextViewText(
+                    R.id.remote_view_playing_txt,
+                    getNotificationText(playingSounds.size)
+                )
+                notificationView.setOnClickPendingIntent(
+                    R.id.remote_view_play_stop,
+                    stopAllPendingIntent
+                )
                 notificationView.setOnClickPendingIntent(R.id.remote_view_mute, mutePendingIntent)
 
                 val notification = this.notificationBuilder
@@ -208,7 +243,10 @@ class SoundService : Service(), ISoundService {
                         // I need to update the builder with the updated view and then retrigger the notification makings sure the builder has this flag : .setOnlyAlertOnce(true)
                         triggerNotificationRefresh()
                     } else {
-                        notificationView.setImageViewResource(R.id.remote_view_mute, R.drawable.ic_mute_off_black)
+                        notificationView.setImageViewResource(
+                            R.id.remote_view_mute,
+                            R.drawable.ic_mute_off_black
+                        )
                         this.notificationBuilder.setCustomContentView(notificationView)
                         triggerNotificationRefresh()
                     }
@@ -217,15 +255,22 @@ class SoundService : Service(), ISoundService {
         })
     }
 
+    override fun onDestroy() {
+        // also kill activity if used decides to kill service so that everything is recreated on relaunch
+        Log.d(TAG, "onDestroy: called")
+        EventBus.getDefault().post(EventBusServiceDestroyed())
+        super.onDestroy()
+    }
+
     private fun triggerNotificationRefresh() {
         startForeground(1, this.notificationBuilder.build())
     }
 
     private fun createNotificationBuilder() {
         this.notificationBuilder = NotificationCompat.Builder(this, MyApplication.CHANNEL_ID)
-                .setContentTitle("SoundPoolService")
-                .setOnlyAlertOnce(true)
-                .setAutoCancel(false)
+            .setContentTitle("SoundPoolService")
+            .setOnlyAlertOnce(true)
+            .setAutoCancel(false)
                 .setSmallIcon(R.drawable.ic_delete)
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                 .setCustomContentView(notificationView)
@@ -245,11 +290,11 @@ class SoundService : Service(), ISoundService {
         }
     }
 
-    override fun load(sounds: ArrayList<Sound>) {
+    override fun loadToSoundPool(sounds: ArrayList<Sound>?) {
 
         var processedSounds = mutableListOf<Sound>()
 
-        sounds.mapTo(processedSounds, { sound ->
+        sounds?.mapTo(processedSounds, { sound ->
             if (sound.soundPoolId == -1) {
                 val soundPoolId = soundPool.load(sound.filePath, 1)
                 sound.copy(soundPoolId = soundPoolId)
