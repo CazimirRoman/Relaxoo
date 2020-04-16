@@ -27,7 +27,6 @@ import com.cazimir.relaxoo.eventbus.EventBusStop
 import com.cazimir.relaxoo.eventbus.EventBusStopAll
 import com.cazimir.relaxoo.eventbus.EventBusTimer
 import com.cazimir.relaxoo.eventbus.EventBusUnload
-import com.cazimir.relaxoo.model.PlayingSound
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.commands.ISoundServiceCommand
 import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
@@ -41,12 +40,12 @@ import com.cazimir.relaxoo.service.commands.StopCommand
 import com.cazimir.relaxoo.service.commands.StopServiceCommand
 import com.cazimir.relaxoo.service.commands.TimerTextCommand
 import com.cazimir.relaxoo.service.commands.ToggleCountDownTimerCommand
+import com.cazimir.relaxoo.service.commands.TogglePlayStopCommand
 import com.cazimir.relaxoo.service.commands.TriggerComboCommand
 import com.cazimir.relaxoo.service.commands.UnloadSoundCommand
 import com.cazimir.relaxoo.service.commands.VolumeCommand
 import org.greenrobot.eventbus.EventBus
 import java.util.concurrent.TimeUnit
-
 
 class SoundService : Service(), ISoundService {
 
@@ -59,6 +58,11 @@ class SoundService : Service(), ISoundService {
     private val _timerText: MutableLiveData<String> = MutableLiveData("")
     private var countDownTimer: CountDownTimer? = null
     private var timerTextEnding = ""
+    private lateinit var pendingIntent: PendingIntent
+    private lateinit var soundPool: SoundPool
+    private var playingSoundsList: ArrayList<Sound> = ArrayList()
+    private var playingSoundsListCached: ArrayList<Sound> = ArrayList()
+    private val playingSoundsListLive: MutableLiveData<ArrayList<Sound>> = MutableLiveData()
 
     companion object {
         private const val TAG = "SoundPoolService"
@@ -71,12 +75,6 @@ class SoundService : Service(), ISoundService {
             return intent
         }
     }
-
-    private lateinit var pendingIntent: PendingIntent
-    private lateinit var soundPool: SoundPool
-
-    private var playingSoundsList: ArrayList<PlayingSound> = ArrayList()
-    private val playingSoundsListLive: MutableLiveData<ArrayList<PlayingSound>> = MutableLiveData()
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -103,12 +101,21 @@ class SoundService : Service(), ISoundService {
             is TimerTextCommand -> sendTimerText()
             is LoadCustomSoundCommand -> loadCustomSound(event.sound)
             is MuteAllSoundsCommand -> toggleMute()
+            is TogglePlayStopCommand -> togglePlayStop()
             else -> { // Note the block
                 print("x is neither 1 nor 2")
             }
         }
 
         return START_STICKY
+    }
+
+    private fun togglePlayStop() {
+        if (playingSoundsList.size != 0) {
+            stopAllSounds()
+        } else {
+            playingSoundsListCached.forEach { sound -> play(PlayCommand(sound)) }
+        }
     }
 
     private fun toggleMute() {
@@ -180,7 +187,7 @@ class SoundService : Service(), ISoundService {
 
     private fun triggerCombo(soundList: List<Sound>) {
         stopAllSounds()
-        soundList.forEach { sound -> play(PlayCommand(sound.id, sound.soundPoolId, sound.streamId, sound.volume, sound.volume, 0, -1, 1f)) }
+        soundList.forEach { sound -> play(PlayCommand(sound)) }
     }
 
     // TODO: 11-Apr-20 I should bundle these in a single EventBus update
@@ -201,11 +208,18 @@ class SoundService : Service(), ISoundService {
         val notificationIntent = Intent(this, MainActivity::class.java)
         this.pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
-        val stopAllIntent = getCommand(this, StopAllSoundsCommand())
-        val muteIntent = getCommand(this, MuteAllSoundsCommand())
+        // val stopAllIntent = getCommand(this, StopAllSoundsCommand())
+        val togglePlayStop = getCommand(this, TogglePlayStopCommand())
 
-        val stopAllPendingIntent = PendingIntent.getService(this, 0, stopAllIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        val mutePendingIntent = PendingIntent.getService(this, 1, muteIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val muteIntent = getCommand(this, MuteAllSoundsCommand())
+        val closeIntent = getCommand(this, StopServiceCommand())
+
+        val togglePlayStopIntent =
+            PendingIntent.getService(this, 0, togglePlayStop, PendingIntent.FLAG_UPDATE_CURRENT)
+        val mutePendingIntent =
+            PendingIntent.getService(this, 1, muteIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val closePendingIntent =
+            PendingIntent.getService(this, 2, closeIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         createNotificationBuilder()
 
@@ -224,14 +238,19 @@ class SoundService : Service(), ISoundService {
                     R.id.remote_view_playing_txt,
                     getNotificationText(playingSounds.size)
                 )
+                notificationView.setImageViewResource(
+                    R.id.remote_view_play_stop,
+                    R.drawable.ic_stop_black
+                )
                 notificationView.setOnClickPendingIntent(
                     R.id.remote_view_play_stop,
-                    stopAllPendingIntent
+                    togglePlayStopIntent
                 )
                 notificationView.setOnClickPendingIntent(R.id.remote_view_mute, mutePendingIntent)
+                notificationView.setOnClickPendingIntent(R.id.remote_view_close, closePendingIntent)
 
                 val notification = this.notificationBuilder
-                        .build()
+                    .build()
 
                 startForeground(1, notification)
 
@@ -318,35 +337,43 @@ class SoundService : Service(), ISoundService {
 
     // TODO: 28-Mar-20 take whole sound object for play command
     override fun play(playCommand: PlayCommand) {
-        Log.d(TAG, "play: called with: ${playCommand.soundPoolID}")
+        Log.d(TAG, "play: called with: ${playCommand.sound.soundPoolId}")
         val streamId = soundPool.play(
-                playCommand.soundPoolID,
-                playCommand.leftVolume,
-                playCommand.rightVolume,
-                playCommand.priority,
-                playCommand.loop,
-                playCommand.rate
+            playCommand.sound.soundPoolId,
+            playCommand.sound.volume,
+            playCommand.sound.volume,
+            0,
+            -1,
+            1f
         )
 
+        val newSoundWithStreamId = playCommand.sound.copy(streamId = streamId)
+
         //the playing sounds list sends back an observable that is updated each time playing sounds is beeing updated.
-        playingSoundsList.add(PlayingSound(playCommand.id, streamId, playCommand.leftVolume)).also { playingSoundsListLive.value = playingSoundsList }
+        playingSoundsList.add(newSoundWithStreamId)
+            .also { playingSoundsListLive.value = playingSoundsList }
     }
 
     override fun stop(stopCommand: StopCommand) {
-        Log.d(TAG, "stop: called with: ${stopCommand.soundPoolId}")
-        soundPool.stop(stopCommand.streamId)
+        Log.d(TAG, "stop: called with: ${stopCommand.sound.soundPoolId}")
+        soundPool.stop(stopCommand.sound.streamId)
 
-        playingSoundsList.remove(PlayingSound(stopCommand.id, stopCommand.streamId)).also { playingSoundsListLive.value = playingSoundsList }
+        playingSoundsList.remove(stopCommand.sound)
+            .also { playingSoundsListLive.value = playingSoundsList }
 
-        EventBus.getDefault().post(EventBusStop(stopCommand.soundPoolId))
+        EventBus.getDefault().post(EventBusStop(stopCommand.sound.soundPoolId))
     }
 
     override fun stopAllSounds() {
         Log.d(TAG, "stopAllSounds in service: called")
 
-        for (playingSound: PlayingSound in playingSoundsList) {
+        for (playingSound: Sound in playingSoundsList) {
             soundPool.stop(playingSound.streamId)
         }
+
+        //save current state of playing sounds so by pressing play again the last selected sounds will
+        // be played
+        playingSoundsListCached = playingSoundsList.toMutableList() as ArrayList<Sound>
 
         playingSoundsList.clear().also { playingSoundsListLive.value = playingSoundsList }
         countDownTimer?.cancel().also { _timerRunning.value = false }
@@ -361,7 +388,9 @@ class SoundService : Service(), ISoundService {
         val indexOf = playingSoundsList.indexOf(toBeReplaced)
         val replaceWith = toBeReplaced.copy(volume = leftVolume)
 
-        playingSoundsList = playingSoundsList.toMutableList().apply { this[indexOf] = replaceWith } as ArrayList<PlayingSound>
+        playingSoundsList = playingSoundsList.toMutableList().apply {
+            this[indexOf] = replaceWith
+        } as ArrayList<Sound>
     }
 
     fun stopAll(view: View) {

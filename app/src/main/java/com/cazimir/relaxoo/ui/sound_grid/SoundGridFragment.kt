@@ -79,7 +79,7 @@ class SoundGridFragment() : Fragment() {
             sendCommandToService(
                     SoundService.getCommand(
                             context,
-                            StopCommand(sound.id, sound.streamId, sound.soundPoolId)
+                            StopCommand(sound)
                     )
             )
         } else {
@@ -87,7 +87,7 @@ class SoundGridFragment() : Fragment() {
             sendCommandToService(
                     SoundService.getCommand(
                             context,
-                            PlayCommand(sound.id, sound.soundPoolId, sound.streamId, 0.5f, 0.5f, 0, -1, 1f)
+                        PlayCommand(sound)
                     )
             )
         }

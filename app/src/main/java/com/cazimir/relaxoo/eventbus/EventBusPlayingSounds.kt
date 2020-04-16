@@ -1,6 +1,6 @@
 package com.cazimir.relaxoo.eventbus
 
 import androidx.lifecycle.MutableLiveData
-import com.cazimir.relaxoo.model.PlayingSound
+import com.cazimir.relaxoo.model.Sound
 
-class EventBusPlayingSounds(val playingSounds: MutableLiveData<ArrayList<PlayingSound>>)
+class EventBusPlayingSounds(val playingSounds: MutableLiveData<ArrayList<Sound>>)

@@ -22,7 +22,7 @@ data class Sound(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val sound = other as Sound
-        return soundPoolId == sound.soundPoolId
+        return id == sound.id
     }
 
     override fun hashCode(): Int {

@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import com.cazimir.relaxoo.eventbus.EventBusPlayingSounds
 import com.cazimir.relaxoo.eventbus.EventBusTimer
 import com.cazimir.relaxoo.model.ListOfSavedCustom
-import com.cazimir.relaxoo.model.PlayingSound
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.google.firebase.database.DataSnapshot
@@ -25,8 +24,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.io.File
-import java.util.*
-import kotlin.collections.ArrayList
+import java.util.Arrays
 
 
 class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
@@ -297,7 +295,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
         Log.d(TAG, "updatePlayingSoundsInViewModel: called")
 
-        eventBusPlayingSounds.playingSounds.observeForever { playingSounds: ArrayList<PlayingSound> ->
+        eventBusPlayingSounds.playingSounds.observeForever { playingSounds: ArrayList<Sound> ->
             if (playingSounds.isNotEmpty()) {
                 val filteredList = allSounds.filterBasedOnId(playingSounds)
 
@@ -307,7 +305,11 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
                     val index = playingSounds.indexOfFirst { it.id == sound.id }
 
-                    val fetchedSound = sound.copy(volume = playingSounds[index].volume, streamId = playingSounds[index].streamId, playing = true)
+                    val fetchedSound = sound.copy(
+                        volume = playingSounds[index].volume,
+                        streamId = playingSounds[index].streamId,
+                        playing = true
+                    )
 
                     allSounds = allSounds.replace(sound, fetchedSound) as ArrayList<Sound>
                 }
@@ -333,7 +335,8 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 //    }
 
 
-    private fun List<Sound>.filterBasedOnId(soundPoolListFromService: List<PlayingSound>) = filter { m -> soundPoolListFromService.any { it.id == m.id } }
+    private fun List<Sound>.filterBasedOnId(soundPoolListFromService: List<Sound>) =
+        filter { m -> soundPoolListFromService.any { it.id == m.id } }
 
     // replace element in an array (any iterable for that matter)
     fun <E> Iterable<E>.replace(old: E, new: E) = map { if (it == old) new else it }
