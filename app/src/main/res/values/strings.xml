@@ -26,4 +26,6 @@
     <string name="hello_blank_fragment">Hello F1</string>
     <string name="saved_combo">Saved combo</string>
     <string name="empty_field">Please enter a value</string>
+    <string name="mute_off">mute_off</string>
+    <string name="mute_on">mute_on</string>
 </resources>

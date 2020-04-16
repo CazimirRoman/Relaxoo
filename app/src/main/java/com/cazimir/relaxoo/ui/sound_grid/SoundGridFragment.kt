@@ -23,6 +23,7 @@ import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
 import com.cazimir.relaxoo.eventbus.EventBusLoad
 import com.cazimir.relaxoo.eventbus.EventBusLoadSingle
 import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
+import com.cazimir.relaxoo.eventbus.EventBusMuteStatus
 import com.cazimir.relaxoo.eventbus.EventBusStop
 import com.cazimir.relaxoo.eventbus.EventBusStopAll
 import com.cazimir.relaxoo.eventbus.EventBusUnload
@@ -34,13 +35,14 @@ import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.SoundService.Companion.SOUND_POOL_ACTION
 import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
 import com.cazimir.relaxoo.service.commands.LoadSoundsCommand
-import com.cazimir.relaxoo.service.commands.MuteAllSoundsCommand
+import com.cazimir.relaxoo.service.commands.MuteStatusCommand
 import com.cazimir.relaxoo.service.commands.PlayCommand
 import com.cazimir.relaxoo.service.commands.PlayingSoundsCommand
 import com.cazimir.relaxoo.service.commands.StopAllSoundsCommand
 import com.cazimir.relaxoo.service.commands.StopCommand
 import com.cazimir.relaxoo.service.commands.TimerTextCommand
 import com.cazimir.relaxoo.service.commands.ToggleCountDownTimerCommand
+import com.cazimir.relaxoo.service.commands.ToggleMuteCommand
 import com.cazimir.relaxoo.service.commands.TriggerComboCommand
 import com.cazimir.relaxoo.service.commands.UnloadSoundCommand
 import com.cazimir.relaxoo.service.commands.VolumeCommand
@@ -57,7 +59,6 @@ class SoundGridFragment() : Fragment() {
     private var gridArrayAdapter: GridAdapter? = null
     private lateinit var viewModel: SoundGridViewModel
     private lateinit var playingSounds: ArrayList<Sound>
-    private var muted = false
     private lateinit var activityCallback: OnActivityCallback
     private val timerPickerListener =
         OnTimeSetListener { view: TimePicker?, hours: Int, minutes: Int -> toggleCountdownTimer((hours * 60) + minutes) }
@@ -135,20 +136,9 @@ class SoundGridFragment() : Fragment() {
             if (finished) {
                 sendCommandToService(SoundService.getCommand(context, PlayingSoundsCommand()))
                 sendCommandToService(SoundService.getCommand(context, TimerTextCommand()))
+                sendCommandToService(SoundService.getCommand(context, MuteStatusCommand()))
             }
         })
-
-        viewModel
-                .mutedLiveData()
-                .observe(
-                        viewLifecycleOwner,
-                        Observer { muted ->
-                            if (muted) {
-                                mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_on))
-                            } else {
-                                mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off))
-                            }
-                })
         // listen for changes to the sound lists live data object to set the adapter for the gridview
 // along with the callback methods (clicked & volume changed)
         viewModel
@@ -308,29 +298,12 @@ class SoundGridFragment() : Fragment() {
         mute_button.setOnClickListener(
             object : View.OnClickListener {
                 override fun onClick(v: View) {
-                    muted = !muted
-                    if (muted) {
-                        for (sound: Sound in playingSounds) {
-
-                            sendCommandToService(
-                                    SoundService.getCommand(
-                                            context,
-                                            MuteAllSoundsCommand()
-                                    )
-                            )
-                        }
-                    } else {
-                        for (sound: Sound in playingSounds) {
-
-                            sendCommandToService(
-                                    SoundService.getCommand(
-                                            context,
-                                            MuteAllSoundsCommand()
-                                    )
-                            )
-                        }
-                    }
-                    viewModel.updateMuteLiveData(muted)
+                    sendCommandToService(
+                        SoundService.getCommand(
+                            context,
+                            ToggleMuteCommand()
+                        )
+                    )
                 }
             })
         random_button.setOnClickListener {
@@ -494,8 +467,6 @@ class SoundGridFragment() : Fragment() {
         Log.d(TAG, "serviceCallbackStopAll: called")
         viewModel.updateViewModelWithPlayingSoundsFalse()
         hideTimerText()
-        viewModel.updateMuteLiveData(false)
-        muted = false
 
     }
 
@@ -537,6 +508,22 @@ class SoundGridFragment() : Fragment() {
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun saveAllSoundsToSharedPreferences(eventBusLoad: EventBusLoadSingle) {
         viewModel.addSingleSoundToSounds(eventBusLoad.sound)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun muteStatusReceived(eventBusLoad: EventBusMuteStatus) {
+        eventBusLoad.muteStatus.observe(viewLifecycleOwner, Observer {
+            if (it) {
+                mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_on))
+                //used for espresso
+                mute_button.tag = getString(R.string.mute_on)
+            } else {
+                mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off))
+                //used for espresso
+                mute_button.tag = getString(R.string.mute_off)
+            }
+
+        })
     }
 
     companion object {

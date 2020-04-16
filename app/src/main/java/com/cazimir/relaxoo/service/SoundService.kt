@@ -21,6 +21,7 @@ import com.cazimir.relaxoo.dialog.timer.TimerDialog
 import com.cazimir.relaxoo.eventbus.EventBusLoad
 import com.cazimir.relaxoo.eventbus.EventBusLoadSingle
 import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
+import com.cazimir.relaxoo.eventbus.EventBusMuteStatus
 import com.cazimir.relaxoo.eventbus.EventBusPlayingSounds
 import com.cazimir.relaxoo.eventbus.EventBusServiceDestroyed
 import com.cazimir.relaxoo.eventbus.EventBusStop
@@ -31,7 +32,7 @@ import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.commands.ISoundServiceCommand
 import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
 import com.cazimir.relaxoo.service.commands.LoadSoundsCommand
-import com.cazimir.relaxoo.service.commands.MuteAllSoundsCommand
+import com.cazimir.relaxoo.service.commands.MuteStatusCommand
 import com.cazimir.relaxoo.service.commands.PlayCommand
 import com.cazimir.relaxoo.service.commands.PlayingSoundsCommand
 import com.cazimir.relaxoo.service.commands.ShowNotificationCommand
@@ -40,6 +41,7 @@ import com.cazimir.relaxoo.service.commands.StopCommand
 import com.cazimir.relaxoo.service.commands.StopServiceCommand
 import com.cazimir.relaxoo.service.commands.TimerTextCommand
 import com.cazimir.relaxoo.service.commands.ToggleCountDownTimerCommand
+import com.cazimir.relaxoo.service.commands.ToggleMuteCommand
 import com.cazimir.relaxoo.service.commands.TogglePlayStopCommand
 import com.cazimir.relaxoo.service.commands.TriggerComboCommand
 import com.cazimir.relaxoo.service.commands.UnloadSoundCommand
@@ -100,14 +102,19 @@ class SoundService : Service(), ISoundService {
             is ToggleCountDownTimerCommand -> toggleCountDownTimer(event.minutes)
             is TimerTextCommand -> sendTimerText()
             is LoadCustomSoundCommand -> loadCustomSound(event.sound)
-            is MuteAllSoundsCommand -> toggleMute()
+            is ToggleMuteCommand -> toggleMute()
             is TogglePlayStopCommand -> togglePlayStop()
+            is MuteStatusCommand -> sendMuteStatus()
             else -> { // Note the block
                 print("x is neither 1 nor 2")
             }
         }
 
         return START_STICKY
+    }
+
+    private fun sendMuteStatus() {
+        EventBus.getDefault().post(EventBusMuteStatus(_muted))
     }
 
     private fun togglePlayStop() {
@@ -211,7 +218,7 @@ class SoundService : Service(), ISoundService {
         // val stopAllIntent = getCommand(this, StopAllSoundsCommand())
         val togglePlayStop = getCommand(this, TogglePlayStopCommand())
 
-        val muteIntent = getCommand(this, MuteAllSoundsCommand())
+        val muteIntent = getCommand(this, ToggleMuteCommand())
         val closeIntent = getCommand(this, StopServiceCommand())
 
         val togglePlayStopIntent =
@@ -346,6 +353,9 @@ class SoundService : Service(), ISoundService {
             -1,
             1f
         )
+
+        // if mute is active new playing sounds should also be paused
+        if (muted) soundPool.autoPause()
 
         val newSoundWithStreamId = playCommand.sound.copy(streamId = streamId)
 

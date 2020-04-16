@@ -56,7 +56,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     /**
      * used to show notification in MainActivity to let user know that a sound is playing
      */
-    private val _mutedLiveData = MutableLiveData<Boolean>()
     private var soundsAlreadyFetched = false
     private var _timerRunning = MutableLiveData<Boolean>()
 
@@ -75,10 +74,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
     fun timerRunning(): MutableLiveData<Boolean> {
         return _timerRunning
-    }
-
-    fun mutedLiveData(): MutableLiveData<Boolean> {
-        return _mutedLiveData
     }
 
     fun fetchSounds() { // TODO: 01-Mar-20 Move to repository class so you can test
@@ -247,10 +242,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         allSounds = newList as ArrayList<Sound>
 
         nextSoundLiveData()
-    }
-
-    fun updateMuteLiveData(muted: Boolean) {
-        _mutedLiveData.value = muted
     }
 
     fun loadedToSoundPool() {
