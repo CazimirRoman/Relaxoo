@@ -40,14 +40,40 @@
 
     </LinearLayout>
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/splash"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/darker_gray"
-        android:scaleType="centerCrop"
-        app:srcCompat="@drawable/splash"
-        tools:visibility="gone" />
+        android:layout_height="match_parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/splash"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/darker_gray"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/splash"
+            tools:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+        </ProgressBar>
+
+        <TextView
+            android:id="@+id/no_internet_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:layout_marginBottom="50dp"
+            android:text="@string/no_internet"
+            android:textColor="@android:color/white"
+            android:visibility="gone">
+
+        </TextView>
+
+    </FrameLayout>
 
 </FrameLayout>
 

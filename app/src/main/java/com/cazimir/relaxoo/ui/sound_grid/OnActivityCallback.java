@@ -36,4 +36,6 @@ public interface OnActivityCallback {
   void pinToDashBoardActionCalled(@NotNull Sound sound);
 
   void playRewardAd();
+
+  void hideProgress();
 }

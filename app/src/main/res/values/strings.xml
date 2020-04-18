@@ -29,4 +29,5 @@
     <string name="mute_off">mute_off</string>
     <string name="mute_on">mute_on</string>
     <string name="no_recording_text">Please enter a new name</string>
+    <string name="no_internet">No internet available…Please connect</string>
 </resources>

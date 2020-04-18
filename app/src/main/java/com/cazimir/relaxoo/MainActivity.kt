@@ -19,6 +19,8 @@ import android.os.Environment
 import android.os.Handler
 import android.util.Log
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
@@ -54,6 +56,7 @@ import com.cazimir.relaxoo.ui.favorites.FavoritesFragment
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment
+import com.cazimir.relaxoo.util.InternetUtil
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -107,8 +110,9 @@ class MainActivity : FragmentActivity(),
 
     private val areWritePermissionsGranted = MutableLiveData<Boolean>()
     private val isSoundGridFragmentStarted = MutableLiveData<Boolean>()
+    private val isInternetAvailable = MutableLiveData<Boolean>()
 
-    private var mergePermissionFragmentStarted: MergePermissionFragmentStarted? = null
+    private var preconditionsToStartFetchingData: PreconditionsToStartFetchingData = PreconditionsToStartFetchingData()
 
     private val skuList = listOf("remove_ads")
 
@@ -120,7 +124,6 @@ class MainActivity : FragmentActivity(),
         setContentView(R.layout.main_activity)
         EventBus.getDefault().register(this)
         sharedViewModel = ViewModelProvider(this).get(SharedViewModel::class.java)
-        mergePermissionFragmentStarted = MergePermissionFragmentStarted.Builder().build()
 
         shouldShowSplash()
         setupViewPager()
@@ -132,36 +135,52 @@ class MainActivity : FragmentActivity(),
         setupBillingClient()
         setupRewardVideoAd()
 
-        val result = MediatorLiveData<MergePermissionFragmentStarted>()
+        val result = MediatorLiveData<PreconditionsToStartFetchingData>()
+
+        InternetUtil.init(application)
+        InternetUtil.observe(this, Observer { internetUp ->
+            isInternetAvailable.value = internetUp
+            when {
+                internetUp -> {
+                    no_internet_text.visibility = GONE
+                }
+                else -> {
+                    no_internet_text.visibility = VISIBLE
+                }
+            }
+        })
 
         result.addSource(
-                areWritePermissionsGranted
-        ) { permissionsGranted: Boolean ->
+                areWritePermissionsGranted) { permissionsGranted: Boolean ->
             Log.d(TAG, "permissions granted: " + permissionsGranted)
-            mergePermissionFragmentStarted = MergePermissionFragmentStarted.withPermissionGranted(mergePermissionFragmentStarted, permissionsGranted)
-            result.setValue(mergePermissionFragmentStarted)
+            preconditionsToStartFetchingData = preconditionsToStartFetchingData.copy(arePermissionsGranted = permissionsGranted)
+            result.setValue(preconditionsToStartFetchingData)
         }
 
-        result.addSource(
-                isSoundGridFragmentStarted
-        ) { fragmentStarted: Boolean ->
+        result.addSource(isSoundGridFragmentStarted) { fragmentStarted: Boolean ->
             Log.d(TAG, "soundGridFragmentStarted: " + fragmentStarted)
-            mergePermissionFragmentStarted = MergePermissionFragmentStarted.withFragmentInstantiated(mergePermissionFragmentStarted, fragmentStarted)
-            result.setValue(mergePermissionFragmentStarted)
+            preconditionsToStartFetchingData = preconditionsToStartFetchingData.copy(isFragmentStarted = fragmentStarted)
+            result.setValue(preconditionsToStartFetchingData)
+        }
+
+        result.addSource(isInternetAvailable) { internetUp ->
+            preconditionsToStartFetchingData = preconditionsToStartFetchingData.copy(isInternetUp = internetUp)
+            result.setValue(preconditionsToStartFetchingData)
         }
 
         // TODO: 14-Mar-20 This observer is called 2 times - fix it
         result.observe(
                 this,
-                Observer { mergePermissionFragmentStarted: MergePermissionFragmentStarted ->
+                Observer { preconditionsToStartFetchingData: PreconditionsToStartFetchingData ->
                     Log.d(
                             TAG, (
                             "onChanged() called with: mergePermissionFragmentStarted: " +
-                                    mergePermissionFragmentStarted.toString()))
-                    if (mergePermissionFragmentStarted.isFragmentStarted && mergePermissionFragmentStarted.isPermissionsGranted) {
+                                    preconditionsToStartFetchingData.toString()))
+                    if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted && preconditionsToStartFetchingData.isInternetUp) {
                         if (!getSoundGridFragment().soundsAlreadyFetched()) {
                             Log.d(
                                     TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched())
+
                             getSoundGridFragment().fetchSounds()
                             EspressoIdlingResource.increment()
                         }
@@ -409,6 +428,10 @@ class MainActivity : FragmentActivity(),
             timerDialog = TimerDialog(this)
         }
         timerDialog?.show(supportFragmentManager, "timer")
+    }
+
+    override fun hideProgress() {
+        progress_bar.visibility = GONE
     }
 
     override fun triggerCombo(savedCombo: SavedCombo) {

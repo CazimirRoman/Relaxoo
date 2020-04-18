@@ -26,16 +26,6 @@ import org.greenrobot.eventbus.ThreadMode
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.Iterable
-import kotlin.collections.List
-import kotlin.collections.any
-import kotlin.collections.filter
-import kotlin.collections.filterTo
-import kotlin.collections.indexOfFirst
-import kotlin.collections.isNotEmpty
-import kotlin.collections.map
-import kotlin.collections.mapTo
-import kotlin.collections.mutableListOf
 
 class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
@@ -180,7 +170,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             soundsAlreadyFetched = true
         }
 
-        // send a request to service to get playing sounds
+        // send a request to service to get playing sounds, mute and timer observables
         _fetchFinished.value = true
     }
 

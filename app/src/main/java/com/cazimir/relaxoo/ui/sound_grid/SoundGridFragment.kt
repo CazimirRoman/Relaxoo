@@ -57,7 +57,6 @@ class SoundGridFragment() : Fragment() {
     }
 
     private fun playStopSound(sound: Sound) {
-
         if (sound.playing) {
             Log.d(TAG, "stopping sound")
             sendCommandToService(
@@ -223,6 +222,7 @@ class SoundGridFragment() : Fragment() {
                             if (viewModel.allSounds().safeValue?.size != 0) {
                                 // hide splash if viewmodel sound livedata size equals the number of sounds added to the soundpool
                                 if (soundsAdded == viewModel.allSounds().safeValue?.size) {
+                                    activityCallback.hideProgress()
                                     activityCallback.hideSplash()
                                 }
                             }
