@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.repository.ISoundRepository
 import java.io.File
-import java.util.ArrayList
+import java.util.*
 
 class CreateSoundViewModel : ViewModel() {
 
@@ -22,13 +22,16 @@ class CreateSoundViewModel : ViewModel() {
 
         recordings = repository.getRecordings()
 
-        val recordingsList = ArrayList<Recording>()
+        val recordingsList = mutableListOf<Recording>()
 
-        for (file in recordings!!) {
-            recordingsList.add(Recording.Builder().withFile(file).withFileName(file.name).build())
+        // after changing to viewpager2 the recordings returned null so I needed a safe call here
+        recordings?.let {
+            for (file in recordings!!) {
+                recordingsList.add(Recording.Builder().withFile(file).withFileName(file.name).build())
+            }
         }
 
-        _recordingsLive.value = recordingsList
+        _recordingsLive.value = recordingsList as ArrayList<Recording>
     }
 
     fun deleteRecording(recording: Recording) {

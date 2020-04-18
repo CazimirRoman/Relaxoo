@@ -29,7 +29,7 @@ class SoundRepository : ISoundRepository {
         return from.renameTo(to)
     }
 
-    override fun getRecordings(): Array<File> {
+    override fun getRecordings(): Array<File>? {
 
         val ownSoundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/own_sounds")
 

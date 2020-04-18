@@ -17,34 +17,9 @@ import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.application.MyApplication
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
-import com.cazimir.relaxoo.eventbus.EventBusLoad
-import com.cazimir.relaxoo.eventbus.EventBusLoadSingle
-import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
-import com.cazimir.relaxoo.eventbus.EventBusMuteStatus
-import com.cazimir.relaxoo.eventbus.EventBusPlayingSounds
-import com.cazimir.relaxoo.eventbus.EventBusServiceDestroyed
-import com.cazimir.relaxoo.eventbus.EventBusStop
-import com.cazimir.relaxoo.eventbus.EventBusStopAll
-import com.cazimir.relaxoo.eventbus.EventBusTimer
-import com.cazimir.relaxoo.eventbus.EventBusUnload
+import com.cazimir.relaxoo.eventbus.*
 import com.cazimir.relaxoo.model.Sound
-import com.cazimir.relaxoo.service.commands.ISoundServiceCommand
-import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
-import com.cazimir.relaxoo.service.commands.LoadSoundsCommand
-import com.cazimir.relaxoo.service.commands.MuteStatusCommand
-import com.cazimir.relaxoo.service.commands.PlayCommand
-import com.cazimir.relaxoo.service.commands.PlayingSoundsCommand
-import com.cazimir.relaxoo.service.commands.ShowNotificationCommand
-import com.cazimir.relaxoo.service.commands.StopAllSoundsCommand
-import com.cazimir.relaxoo.service.commands.StopCommand
-import com.cazimir.relaxoo.service.commands.StopServiceCommand
-import com.cazimir.relaxoo.service.commands.TimerTextCommand
-import com.cazimir.relaxoo.service.commands.ToggleCountDownTimerCommand
-import com.cazimir.relaxoo.service.commands.ToggleMuteCommand
-import com.cazimir.relaxoo.service.commands.TogglePlayStopCommand
-import com.cazimir.relaxoo.service.commands.TriggerComboCommand
-import com.cazimir.relaxoo.service.commands.UnloadSoundCommand
-import com.cazimir.relaxoo.service.commands.VolumeCommand
+import com.cazimir.relaxoo.service.commands.*
 import org.greenrobot.eventbus.EventBus
 import java.util.concurrent.TimeUnit
 
@@ -146,7 +121,7 @@ class SoundService : Service(), ISoundService {
 
         soundPool.setOnLoadCompleteListener { soundPool: SoundPool?, soundPoolId: Int, status: Int ->
             Log.d(TAG, "onLoadComplete: " + soundPoolId)
-            //broadcast to viewModel
+            // broadcast to viewModel
             EventBus.getDefault().post(EventBusLoadedToSoundPool(soundPoolId))
         }
 
@@ -241,7 +216,7 @@ class SoundService : Service(), ISoundService {
 
         playingSoundsListLive.observeForever(Observer { playingSounds ->
             if (playingSounds.size == 0) {
-                //stopForeground(true)
+                // stopForeground(true)
                 notificationView.setImageViewResource(
                     R.id.remote_view_play_stop,
                     R.drawable.ic_play_black
@@ -326,7 +301,7 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun loadToSoundPool(sounds: ArrayList<Sound>?) {
-        Log.d(TAG, "loadToSoundPool: called with sounds: ${sounds.toString()}")
+        Log.d(TAG, "loadToSoundPool: called with sounds: $sounds")
 
         var processedSounds = mutableListOf<Sound>()
 
@@ -371,7 +346,7 @@ class SoundService : Service(), ISoundService {
 
         val newSoundWithStreamId = playCommand.sound.copy(streamId = streamId)
 
-        //the playing sounds list sends back an observable that is updated each time playing sounds is beeing updated.
+        // the playing sounds list sends back an observable that is updated each time playing sounds is beeing updated.
         playingSoundsList.add(newSoundWithStreamId)
             .also { playingSoundsListLive.value = playingSoundsList }
     }
@@ -393,7 +368,7 @@ class SoundService : Service(), ISoundService {
             soundPool.stop(playingSound.streamId)
         }
 
-        //save current state of playing sounds so by pressing play again the last selected sounds will
+        // save current state of playing sounds so by pressing play again the last selected sounds will
         // be played
         playingSoundsListCached = playingSoundsList.toMutableList() as ArrayList<Sound>
 

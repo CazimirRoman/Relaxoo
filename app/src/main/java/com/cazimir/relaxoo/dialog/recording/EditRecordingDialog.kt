@@ -7,9 +7,11 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.dialog.RetainableDialogFragment
 import com.cazimir.relaxoo.model.Recording
@@ -19,7 +21,16 @@ import org.apache.commons.io.FilenameUtils
 class EditRecordingDialog(val recording: Recording, val callback: RecordingBottomCallback) :
         RetainableDialogFragment() {
 
-    val editTextString = MutableLiveData("")
+    private lateinit var positiveButton: Button
+    val editTextString: MutableLiveData<String> = MutableLiveData()
+
+    override fun onStart() {
+        super.onStart()
+        val d = dialog as AlertDialog?
+        if (d != null) {
+            this.positiveButton = d.getButton(Dialog.BUTTON_POSITIVE)
+        }
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 
@@ -29,6 +40,16 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
             Log.d(TAG, "new_recording_name: changed: $it")
             editTextString.value = it
         }
+
+        editTextString.observe(this, Observer {
+            if (it.isEmpty()) {
+                view.new_recording_name.error = getString(R.string.no_recording_text)
+                positiveButton.isEnabled = false
+            } else {
+                positiveButton.isEnabled = true
+            }
+
+        })
 
         val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(activity!!)
 

@@ -30,14 +30,7 @@ import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder
 import cafe.adriel.androidaudiorecorder.model.AudioChannel
 import cafe.adriel.androidaudiorecorder.model.AudioSampleRate
 import cafe.adriel.androidaudiorecorder.model.AudioSource
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.BillingFlowParams
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchasesUpdatedListener
-import com.android.billingclient.api.SkuDetails
-import com.android.billingclient.api.SkuDetailsParams
+import com.android.billingclient.api.*
 import com.cazimir.relaxoo.adapter.PagerAdapter
 import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog
 import com.cazimir.relaxoo.dialog.OnDeleted
@@ -69,6 +62,7 @@ import com.google.android.gms.ads.reward.RewardItem
 import com.google.android.gms.ads.reward.RewardedVideoAd
 import com.google.android.gms.ads.reward.RewardedVideoAdListener
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.tabs.TabLayoutMediator
 import com.google.gson.JsonSyntaxException
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
@@ -83,9 +77,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Random
-import java.util.TimerTask
+import java.util.*
 
 class MainActivity : FragmentActivity(),
     OnActivityCallback,
@@ -99,13 +91,9 @@ class MainActivity : FragmentActivity(),
     companion object {
         private val TAG = "MainActivity"
         private val LIFECYCLE = "Lifecycle"
-        private val FAVORITE_FRAGMENT = ":1"
-        private val SOUND_GRID_FRAGMENT = ":0"
-        private val CREATE_SOUND_FRAGMENT = ":2"
         private val CHANNEL_WHATEVER = "" + ""
         private val RECORDING_REQ_CODE = 0
         val PINNED_RECORDINGS = "PINNED_RECORDINGS"
-        private val NOTIFY_ID = 1337
     }
 
     private var doubleBackToExitPressedOnce: Boolean = false
@@ -144,9 +132,8 @@ class MainActivity : FragmentActivity(),
         setupBillingClient()
         setupRewardVideoAd()
 
-        val result = MediatorLiveData<MergePermissionFragmentStarted?>()
+        val result = MediatorLiveData<MergePermissionFragmentStarted>()
 
-        Log.d(TAG, "onCreate: called before result add source")
         result.addSource(
                 areWritePermissionsGranted
         ) { permissionsGranted: Boolean ->
@@ -166,18 +153,17 @@ class MainActivity : FragmentActivity(),
         // TODO: 14-Mar-20 This observer is called 2 times - fix it
         result.observe(
                 this,
-                Observer { mergePermissionFragmentStarted: MergePermissionFragmentStarted? ->
+                Observer { mergePermissionFragmentStarted: MergePermissionFragmentStarted ->
                     Log.d(
                             TAG, (
                             "onChanged() called with: mergePermissionFragmentStarted: " +
                                     mergePermissionFragmentStarted.toString()))
-                    if (mergePermissionFragmentStarted!!.isFragmentStarted() && mergePermissionFragmentStarted.isPermissionsGranted()) {
-                        if (!getSoundGridFragment()!!.soundsAlreadyFetched()) {
+                    if (mergePermissionFragmentStarted.isFragmentStarted && mergePermissionFragmentStarted.isPermissionsGranted) {
+                        if (!getSoundGridFragment().soundsAlreadyFetched()) {
                             Log.d(
-                                    TAG, "sounds already fetched: " + getSoundGridFragment()!!.soundsAlreadyFetched())
-                            getSoundGridFragment()!!.fetchSounds()
+                                    TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched())
+                            getSoundGridFragment().fetchSounds()
                             EspressoIdlingResource.increment()
-
                         }
                     }
                 })
@@ -204,12 +190,13 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun setupViewPagerDots() {
-        tabDots.setupWithViewPager(pager, true)
+        // new way to attach the tablayout to viewpager2
+        TabLayoutMediator(tabDots, pager) { tab, position -> }.attach()
     }
 
     private fun setupViewPager() {
-        pager.offscreenPageLimit = 4
-        pager.adapter = PagerAdapter(supportFragmentManager)
+        pager.offscreenPageLimit = 3
+        pager.adapter = PagerAdapter(this)
     }
 
     override fun onPause() {
@@ -446,16 +433,16 @@ class MainActivity : FragmentActivity(),
 
     private val favoriteFragment: FavoritesFragment?
         get() = supportFragmentManager
-                .findFragmentByTag("android:switcher:" + R.id.pager + FAVORITE_FRAGMENT) as FavoritesFragment?
+                .findFragmentByTag("f1") as FavoritesFragment?
 
-    private fun getSoundGridFragment(): SoundGridFragment? {
+    private fun getSoundGridFragment(): SoundGridFragment {
         return supportFragmentManager
-                .findFragmentByTag("android:switcher:" + R.id.pager + SOUND_GRID_FRAGMENT) as SoundGridFragment?
+                .findFragmentByTag("f0") as SoundGridFragment
     }
 
     private val createSoundFragment: CreateSoundFragment?
         get() = supportFragmentManager
-                .findFragmentByTag("android:switcher:" + R.id.pager + CREATE_SOUND_FRAGMENT) as CreateSoundFragment?
+                .findFragmentByTag("f2") as CreateSoundFragment?
 
     override fun startCountDownTimer(minutes: Int) {
         soundGridFragment!!.startCountDownTimer(minutes)

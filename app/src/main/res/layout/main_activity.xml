@@ -13,12 +13,12 @@
     <LinearLayout
         android:id="@+id/main_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         tools:visibility="visible"
         android:visibility="invisible">
 
-        <androidx.viewpager.widget.ViewPager
+        <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/pager"
             android:layout_height="0dp"
             android:layout_width="match_parent"

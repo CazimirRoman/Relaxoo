@@ -16,7 +16,8 @@ data class Sound(
         val playing: Boolean = false,
         @Exclude val volume: Float = 0.5f,
         val pro: Boolean = false,
-        val custom: Boolean = false) : Serializable {
+        val custom: Boolean = false
+) : Serializable {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

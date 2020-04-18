@@ -21,42 +21,23 @@ import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.GridAdapter
 import com.cazimir.relaxoo.dialog.custom.BottomCustomDeleteFragment
 import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
-import com.cazimir.relaxoo.eventbus.EventBusLoad
-import com.cazimir.relaxoo.eventbus.EventBusLoadSingle
-import com.cazimir.relaxoo.eventbus.EventBusLoadedToSoundPool
-import com.cazimir.relaxoo.eventbus.EventBusMuteStatus
-import com.cazimir.relaxoo.eventbus.EventBusStop
-import com.cazimir.relaxoo.eventbus.EventBusStopAll
-import com.cazimir.relaxoo.eventbus.EventBusUnload
+import com.cazimir.relaxoo.eventbus.*
 import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.SoundService.Companion.SOUND_POOL_ACTION
-import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
-import com.cazimir.relaxoo.service.commands.LoadSoundsCommand
-import com.cazimir.relaxoo.service.commands.MuteStatusCommand
-import com.cazimir.relaxoo.service.commands.PlayCommand
-import com.cazimir.relaxoo.service.commands.PlayingSoundsCommand
-import com.cazimir.relaxoo.service.commands.StopAllSoundsCommand
-import com.cazimir.relaxoo.service.commands.StopCommand
-import com.cazimir.relaxoo.service.commands.TimerTextCommand
-import com.cazimir.relaxoo.service.commands.ToggleCountDownTimerCommand
-import com.cazimir.relaxoo.service.commands.ToggleMuteCommand
-import com.cazimir.relaxoo.service.commands.TriggerComboCommand
-import com.cazimir.relaxoo.service.commands.UnloadSoundCommand
-import com.cazimir.relaxoo.service.commands.VolumeCommand
+import com.cazimir.relaxoo.service.commands.*
 import kotlinx.android.synthetic.main.sound_list_fragment.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import java.util.ArrayList
-import java.util.Random
+import java.util.*
 
 class SoundGridFragment() : Fragment() {
 
-    private val _soundsStopped: MutableLiveData<Boolean> = MutableLiveData(false)
+    private val _allSoundsStopped: MutableLiveData<Boolean> = MutableLiveData(false)
     private var timerRunning: Boolean = false
     private var gridArrayAdapter: GridAdapter? = null
     private lateinit var viewModel: SoundGridViewModel
@@ -126,7 +107,7 @@ class SoundGridFragment() : Fragment() {
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this)
         }
-        //used to pass the savedstate to ViewModel when application is beeing destroyed by the Android OS
+        // used to pass the savedstate to ViewModel when application is beeing destroyed by the Android OS
         val factory = SavedStateViewModelFactory(activity!!.application, activity as FragmentActivity)
 
         viewModel = ViewModelProvider(this, factory).get(SoundGridViewModel::class.java)
@@ -208,12 +189,10 @@ class SoundGridFragment() : Fragment() {
                             gridView.adapter = gridArrayAdapter
                             // if sound not loaded yet and sounds list not yet populated
                             if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
-                                //saveListToSharedPreferences(sounds)
-                                //hopefully the service is started by the 'play command'
+                                // saveListToSharedPreferences(sounds)
+                                // hopefully the service is started by the 'play command'
                                 loadListToSoundPool(sounds)
                             }
-
-
                         }
                 )
         // listen to the playing sounds live data object to change the play stop getLogoPath icon on top
@@ -240,7 +219,7 @@ class SoundGridFragment() : Fragment() {
                 .observe(
                         viewLifecycleOwner,
                         Observer { soundsAdded ->
-                            Log.d(TAG, "viewModel.soundsLoadedToSoundPool: called with: ${soundsAdded}")
+                            Log.d(TAG, "viewModel.soundsLoadedToSoundPool: called with: $soundsAdded")
                             if (viewModel.allSounds().safeValue?.size != 0) {
                                 // hide splash if viewmodel sound livedata size equals the number of sounds added to the soundpool
                                 if (soundsAdded == viewModel.allSounds().safeValue?.size) {
@@ -310,33 +289,47 @@ class SoundGridFragment() : Fragment() {
                 }
             })
         random_button.setOnClickListener {
-            stopAllSounds()
 
-            //observe once -> wait for above stop to finish
-            _soundsStopped.observe(viewLifecycleOwner, object : Observer<Boolean> {
+            // observe _allsoundstopped and trigger a random play if all sounds are stopped
+
+            // i need to set this to false because for whatever reason it stays on true
+            _allSoundsStopped.value = false
+            // observe once -> wait for above stop to finish
+            _allSoundsStopped.observe(viewLifecycleOwner, object : Observer<Boolean> {
                 override fun onChanged(allSoundsStopped: Boolean) {
                     if (allSoundsStopped) {
-                        val totalNumberOfSounds = Random()
                         // total number of available sounds can be found in viewmodel in sounds variable
                         val listAllSounds: List<Sound> = (viewModel.allSounds().value)!!
+                        val listSize = listAllSounds.size
 
-                        val duplicates = mutableListOf<Sound>()
+                        val processed = mutableListOf<Sound>()
 
-                        while (duplicates.size < 3) {
+                        while (processed.size < calculateLimit(listAllSounds)) {
+                            Log.d(TAG, "while called: with processed size: ${processed.size}")
                             val randomSound = listAllSounds.random()
-                            if (!randomSound.pro && !randomSound.playing && !duplicates.contains(
-                                    randomSound
-                                )
+                            if (!randomSound.pro && !randomSound.playing && !processed.contains(randomSound)
                             ) {
                                 playStopSound(randomSound)
-                                duplicates.add(randomSound)
+                                processed.add(randomSound)
                             }
                         }
+                        // remove observer after observer emitted 'true'. we need a single emit otherwise this observer
+                        // will trigger each time all the sounds are stopped
+                        _allSoundsStopped.removeObserver(this)
+                    }
+                }
+
+                private fun calculateLimit(listSize: List<Sound>): Int {
+
+                    val notPro = listSize.filter { !it.pro }
+                    if (notPro.size < MAX_RANDOM_SOUNDS) {
+                        return notPro.size
                     }
 
-                    _soundsStopped.removeObserver(this)
+                    return MAX_RANDOM_SOUNDS
                 }
             })
+            stopAllSounds()
         }
         play_button.setOnClickListener(
                 object : View.OnClickListener {
@@ -344,7 +337,6 @@ class SoundGridFragment() : Fragment() {
                         if (playingSounds.size > 0) {
                             stopAllSounds()
                         }
-
                     }
                 })
         save_fav_button.setOnClickListener {
@@ -364,7 +356,6 @@ class SoundGridFragment() : Fragment() {
                 } else {
                     activityCallback.showTimerDialog()
                 }
-
             } else {
                 activityCallback.showToast("You must play at least one sound")
             }
@@ -461,7 +452,7 @@ class SoundGridFragment() : Fragment() {
 
     fun rewardUserByPlayingProSound() {
 
-        //if not null
+        // if not null
         viewModel.currentlyClickedProSound?.let { sound ->
             playStopSound(sound)
         }
@@ -482,7 +473,7 @@ class SoundGridFragment() : Fragment() {
     fun serviceCallbackStopAll(eventBusStopAll: EventBusStopAll) {
         Log.d(TAG, "serviceCallbackStopAll: called")
         viewModel.updateViewModelWithPlayingSoundsFalse()
-        _soundsStopped.value = true
+        _allSoundsStopped.value = true
         // TODO: 16.04.2020 move this to the observer of playing sounds
         hideTimerText()
     }
@@ -527,19 +518,19 @@ class SoundGridFragment() : Fragment() {
         eventBusLoad.muteStatus.observe(viewLifecycleOwner, Observer {
             if (it) {
                 mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_on))
-                //used for espresso
+                // used for espresso
                 mute_button.tag = getString(R.string.mute_on)
             } else {
                 mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off))
-                //used for espresso
+                // used for espresso
                 mute_button.tag = getString(R.string.mute_off)
             }
-
         })
     }
 
     companion object {
         private val TAG = "SoundGridFragment"
+        private val MAX_RANDOM_SOUNDS = 3
 
         fun newInstance(): SoundGridFragment {
             return SoundGridFragment()

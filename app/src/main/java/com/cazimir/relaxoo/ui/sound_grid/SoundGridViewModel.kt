@@ -24,8 +24,18 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.io.File
-import java.util.Arrays
-
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.Iterable
+import kotlin.collections.List
+import kotlin.collections.any
+import kotlin.collections.filter
+import kotlin.collections.filterTo
+import kotlin.collections.indexOfFirst
+import kotlin.collections.isNotEmpty
+import kotlin.collections.map
+import kotlin.collections.mapTo
+import kotlin.collections.mutableListOf
 
 class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
@@ -51,7 +61,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     private var _allSounds: MutableLiveDataKtx<ArrayList<Sound>> = MutableLiveDataKtx()
 
     val _fetchFinished: MutableLiveData<Boolean> = MutableLiveData(false)
-
 
     /**
      * used to show notification in MainActivity to let user know that a sound is playing
@@ -171,13 +180,11 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             soundsAlreadyFetched = true
         }
 
-
         // send a request to service to get playing sounds
         _fetchFinished.value = true
     }
 
     private fun updatePlayingFromServiceIfRunning() {
-
     }
 
     fun allSounds(): LiveDataKtx<ArrayList<Sound>> {
@@ -253,7 +260,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         val newList = allSounds.map {
             if (it.soundPoolId == sound?.soundPoolId) {
                 it.copy(volume = volume)
-
             } else {
                 it
             }
@@ -290,7 +296,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             if (playingSounds.isNotEmpty()) {
                 val filteredList = allSounds.filterBasedOnId(playingSounds)
 
-                //update allSounds with playing status and streamId so you can control
+                // update allSounds with playing status and streamId so you can control
                 // TODO: 10-Apr-20 fix this
                 for (sound: Sound in filteredList) {
 
@@ -324,7 +330,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 //    fun getNumberOfUnreadMessages(): LiveData<Integer> {
 //        return Transformations.map(model.getUnreadMessages(), { it.size })
 //    }
-
 
     private fun List<Sound>.filterBasedOnId(soundPoolListFromService: List<Sound>) =
         filter { m -> soundPoolListFromService.any { it.id == m.id } }
