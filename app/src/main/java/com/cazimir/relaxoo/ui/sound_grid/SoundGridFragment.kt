@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.TimePicker
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProvider
@@ -55,6 +56,7 @@ import java.util.Random
 
 class SoundGridFragment() : Fragment() {
 
+    private val _soundsStopped: MutableLiveData<Boolean> = MutableLiveData(false)
     private var timerRunning: Boolean = false
     private var gridArrayAdapter: GridAdapter? = null
     private lateinit var viewModel: SoundGridViewModel
@@ -119,6 +121,7 @@ class SoundGridFragment() : Fragment() {
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
+        Log.d(TAG, "onActivityCreated: called")
         super.onActivityCreated(savedInstanceState)
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this)
@@ -308,19 +311,32 @@ class SoundGridFragment() : Fragment() {
             })
         random_button.setOnClickListener {
             stopAllSounds()
-            val totalNumberOfSounds = Random()
-            // total number of available sounds can be found in viewmodel in sounds variable
-            val value: List<Sound> = (viewModel.allSounds().value)!!
-            for (i in value.indices) {
-                Log.d(
-                        TAG,
-                        "randomClick for loop called: $i"
-                )
-                val sound = value[totalNumberOfSounds.nextInt(value.size)]
-                if (!sound.pro && !sound.playing) {
-                    playStopSound(sound)
+
+            //observe once -> wait for above stop to finish
+            _soundsStopped.observe(viewLifecycleOwner, object : Observer<Boolean> {
+                override fun onChanged(allSoundsStopped: Boolean) {
+                    if (allSoundsStopped) {
+                        val totalNumberOfSounds = Random()
+                        // total number of available sounds can be found in viewmodel in sounds variable
+                        val listAllSounds: List<Sound> = (viewModel.allSounds().value)!!
+
+                        val duplicates = mutableListOf<Sound>()
+
+                        while (duplicates.size < 3) {
+                            val randomSound = listAllSounds.random()
+                            if (!randomSound.pro && !randomSound.playing && !duplicates.contains(
+                                    randomSound
+                                )
+                            ) {
+                                playStopSound(randomSound)
+                                duplicates.add(randomSound)
+                            }
+                        }
+                    }
+
+                    _soundsStopped.removeObserver(this)
                 }
-            }
+            })
         }
         play_button.setOnClickListener(
                 object : View.OnClickListener {
@@ -466,8 +482,9 @@ class SoundGridFragment() : Fragment() {
     fun serviceCallbackStopAll(eventBusStopAll: EventBusStopAll) {
         Log.d(TAG, "serviceCallbackStopAll: called")
         viewModel.updateViewModelWithPlayingSoundsFalse()
+        _soundsStopped.value = true
+        // TODO: 16.04.2020 move this to the observer of playing sounds
         hideTimerText()
-
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
@@ -498,11 +515,6 @@ class SoundGridFragment() : Fragment() {
 
         val newObject = ListOfSavedCustom(newList)
         ModelPreferencesManager.save(newObject, MainActivity.PINNED_RECORDINGS)
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
-    fun updateViewModelWithLoad(eventBusLoad: EventBusLoadSingle) {
-        viewModel.addSingleSoundToSounds(eventBusLoad.sound)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)

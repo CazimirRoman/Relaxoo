@@ -208,6 +208,7 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun setupViewPager() {
+        pager.offscreenPageLimit = 4
         pager.adapter = PagerAdapter(supportFragmentManager)
     }
 

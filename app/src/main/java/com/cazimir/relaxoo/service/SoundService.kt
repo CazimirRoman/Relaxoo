@@ -9,7 +9,6 @@ import android.media.SoundPool
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.util.Log
-import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.MutableLiveData
@@ -86,13 +85,20 @@ class SoundService : Service(), ISoundService {
 
         val event = intent?.getSerializableExtra(SOUND_POOL_ACTION) as? ISoundServiceCommand
 
+        Log.d(TAG, "onStartCommand: called with: $event")
+
         when (event) {
             is StopServiceCommand -> {
                 stopAllSounds().also { stopSelf() }
             }
             is LoadSoundsCommand -> loadToSoundPool(event.sounds)
             is UnloadSoundCommand -> unload(event.id, event.soundPoolId)
-            is VolumeCommand -> setVolume(event.id, event.streamId, event.leftVolume, event.rightVolume)
+            is VolumeCommand -> setVolume(
+                event.id,
+                event.streamId,
+                event.leftVolume,
+                event.rightVolume
+            )
             is PlayCommand -> play(event)
             is StopCommand -> stop(event)
             is StopAllSoundsCommand -> stopAllSounds()
@@ -166,6 +172,7 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun toggleCountDownTimer(minutes: Int) {
+        Log.d(TAG, "toggleCountDownTimer: called")
         if (timerRunning) {
             countDownTimer?.cancel()
             _timerRunning.value = false
@@ -193,6 +200,7 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun triggerCombo(soundList: List<Sound>) {
+        Log.d(TAG, "triggerCombo: called")
         stopAllSounds()
         soundList.forEach { sound -> play(PlayCommand(sound)) }
     }
@@ -203,6 +211,7 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun sendTimerText() {
+        Log.d(TAG, "sendTimerText: called")
         if (timerRunning) {
             EventBus.getDefault().post(EventBusTimer(_timerRunning, _timerText))
         }
@@ -317,6 +326,7 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun loadToSoundPool(sounds: ArrayList<Sound>?) {
+        Log.d(TAG, "loadToSoundPool: called with sounds: ${sounds.toString()}")
 
         var processedSounds = mutableListOf<Sound>()
 
@@ -333,18 +343,20 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun loadCustomSound(sound: Sound) {
+        Log.d(TAG, "loadCustomSound: called")
         val soundWithSoundPoolId = sound.copy(soundPoolId = soundPool.load(sound.filePath, 1))
         EventBus.getDefault().post(EventBusLoadSingle(soundWithSoundPoolId))
     }
 
     override fun unload(soundId: String, soundPoolId: Int) {
+        Log.d(TAG, "unload: called with: soundId: $soundId and soundPoolId: $soundPoolId")
         soundPool.unload(soundPoolId)
         EventBus.getDefault().post(EventBusUnload(soundId, soundPoolId))
     }
 
     // TODO: 28-Mar-20 take whole sound object for play command
     override fun play(playCommand: PlayCommand) {
-        Log.d(TAG, "play: called with: ${playCommand.sound.soundPoolId}")
+        Log.d(TAG, "play: called with: ${playCommand.sound}")
         val streamId = soundPool.play(
             playCommand.sound.soundPoolId,
             playCommand.sound.volume,
@@ -365,7 +377,7 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun stop(stopCommand: StopCommand) {
-        Log.d(TAG, "stop: called with: ${stopCommand.sound.soundPoolId}")
+        Log.d(TAG, "stop: called with: ${stopCommand.sound}")
         soundPool.stop(stopCommand.sound.streamId)
 
         playingSoundsList.remove(stopCommand.sound)
@@ -393,6 +405,7 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun setVolume(id: String, streamId: Int, leftVolume: Float, rightVolume: Float) {
+        Log.d(TAG, "setVolume: called")
         soundPool.setVolume(streamId, leftVolume, rightVolume)
         val toBeReplaced = playingSoundsList.first { playingSound -> playingSound.id == id }
         val indexOf = playingSoundsList.indexOf(toBeReplaced)
@@ -401,9 +414,5 @@ class SoundService : Service(), ISoundService {
         playingSoundsList = playingSoundsList.toMutableList().apply {
             this[indexOf] = replaceWith
         } as ArrayList<Sound>
-    }
-
-    fun stopAll(view: View) {
-        stopAllSounds()
     }
 }

@@ -173,7 +173,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
 
         // send a request to service to get playing sounds
-        _fetchFinished.postValue(true)
+        _fetchFinished.value = true
     }
 
     private fun updatePlayingFromServiceIfRunning() {
