@@ -12,26 +12,38 @@ import androidx.test.espresso.contrib.RecyclerViewActions.scrollToPosition
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import androidx.test.rule.ActivityTestRule
+import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.UiDevice
 import com.cazimir.relaxoo.adapter.SavedComboAdapter
 import com.cazimir.relaxoo.util.TestUtil.Companion.checkVisibilityOfView
-import com.cazimir.relaxoo.util.TestUtil.Companion.clearSharedPreferences
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickChildViewWithId
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnPlayStopButton
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnSaveComboButton
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnSounds
-import com.cazimir.relaxoo.util.TestUtil.Companion.startActivity
 import com.cazimir.relaxoo.util.TestUtil.Companion.swipeViewPagerLeft
 import com.cazimir.relaxoo.util.TestUtil.Companion.swipeViewPagerRight
 import com.cazimir.relaxoo.util.TestUtil.Companion.withRecyclerView
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4ClassRunner::class)
 class ComboTest {
+
+    @Rule
+    @JvmField
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+    @Rule
+    @JvmField
+    val grantPermissionRule2: GrantPermissionRule = GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+
+    @get:Rule
+    var activityRule: ActivityTestRule<MainActivity> = ActivityTestRule(MainActivity::class.java)
 
     companion object {
         private const val TAG = "ComboTest"
@@ -41,21 +53,22 @@ class ComboTest {
 
     @Before
     fun setup() {
-        Log.d(TAG, "setup: called")
+//        clearSharedPreferences()
+//        startActivity()
         IdlingRegistry.getInstance().register(EspressoIdlingResource.countingIdlingResource)
         device.setOrientationNatural()
-        clearSharedPreferences()
+
     }
 
     @After
     fun teardown() {
         Log.d(TAG, "teardown: called")
         IdlingRegistry.getInstance().unregister(EspressoIdlingResource.countingIdlingResource)
+        clickOnPlayStopButton()
     }
 
     @Test
     fun add_combo() {
-        startActivity()
         clickOnSounds(2)
         clickOnSaveComboButton()
         checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)
@@ -72,8 +85,6 @@ class ComboTest {
 
     @Test
     fun delete_combo() {
-
-        startActivity()
         clickOnSounds(2)
         clickOnSaveComboButton()
 
@@ -101,7 +112,6 @@ class ComboTest {
 
     @Test
     fun trigger_combo() {
-        startActivity()
         clickOnSounds(2)
         clickOnSaveComboButton()
         checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)

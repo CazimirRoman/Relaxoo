@@ -13,6 +13,7 @@ android {
         versionCode 2
         versionName "1.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: 'true'
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -39,6 +40,8 @@ android {
         unitTests {
             includeAndroidResources = true
         }
+
+//        execution 'ANDROIDX_TEST_ORCHESTRATOR'
     }
 
     buildTypes {
@@ -87,7 +90,7 @@ dependencies {
     implementation "com.shopify:livedata-ktx:3.0.0"
 
     // Espresso
-    def androidx_test_espresso = "3.1.0"
+    def androidx_test_espresso = "3.1.1"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidx_test_espresso"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:$androidx_test_espresso"
     implementation "androidx.test.espresso:espresso-idling-resource:$androidx_test_espresso"
@@ -106,7 +109,8 @@ dependencies {
     androidTestImplementation "androidx.test:runner:$androidx_test"
     androidTestImplementation "androidx.test:core:$androidx_test"
     androidTestImplementation "androidx.test.ext:junit-ktx:$androidx_test"
-
+//    androidTestUtil 'androidx.test:orchestrator:1.1.0'
+    androidTestImplementation 'androidx.test:rules:1.2.0'
     androidTestImplementation 'com.android.support.test.uiautomator:uiautomator-v18:2.1.3'
 
 }

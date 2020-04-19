@@ -99,6 +99,8 @@ class MainActivity : FragmentActivity(),
         val PINNED_RECORDINGS = "PINNED_RECORDINGS"
     }
 
+    private var splashShown: Boolean = false
+    private var fetchRunning: Boolean = false
     private var doubleBackToExitPressedOnce: Boolean = false
     private lateinit var adView: AdView
     private lateinit var adUnitId: String
@@ -125,7 +127,7 @@ class MainActivity : FragmentActivity(),
         EventBus.getDefault().register(this)
         sharedViewModel = ViewModelProvider(this).get(SharedViewModel::class.java)
 
-        shouldShowSplash()
+        //shouldShowSplash()
         setupViewPager()
         setupViewPagerDots()
         setupNotifications()
@@ -174,15 +176,17 @@ class MainActivity : FragmentActivity(),
                 Observer { preconditionsToStartFetchingData: PreconditionsToStartFetchingData ->
                     Log.d(
                             TAG, (
-                            "onChanged() called with: mergePermissionFragmentStarted: " +
+                            "onChanged() called with: preconditionsToStartFetchingData: " +
                                     preconditionsToStartFetchingData.toString()))
                     if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted && preconditionsToStartFetchingData.isInternetUp) {
                         if (!getSoundGridFragment().soundsAlreadyFetched()) {
                             Log.d(
                                     TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched())
 
-                            getSoundGridFragment().fetchSounds()
-                            EspressoIdlingResource.increment()
+                            if (!fetchRunning) {
+                                getSoundGridFragment().fetchSounds()
+                                fetchRunning = true
+                            }
                         }
                     }
                 })
@@ -482,10 +486,15 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun hideSplash() {
-        splash.visibility = View.GONE
-        main_layout.visibility = View.VISIBLE
-        sharedViewModel.splashShown()
-        EspressoIdlingResource.decrement()
+        Log.d(TAG, "hideSplash: called")
+        if (!splashShown) {
+            splash.visibility = GONE
+            main_layout.visibility = VISIBLE
+            splashShown = true
+            fetchRunning = false
+            Log.d(TAG, "EspressoIdlingResource.decrement called")
+            EspressoIdlingResource.decrement()
+        }
     }
 
     override fun removeAds() {

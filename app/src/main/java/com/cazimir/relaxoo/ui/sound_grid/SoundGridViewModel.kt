@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.cazimir.relaxoo.EspressoIdlingResource
 import com.cazimir.relaxoo.eventbus.EventBusPlayingSounds
 import com.cazimir.relaxoo.eventbus.EventBusTimer
 import com.cazimir.relaxoo.model.ListOfSavedCustom
@@ -83,6 +84,8 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         val soundsRef = database.getReference("sounds")
         // check database for sounds
         // Read from the database
+        Log.d(TAG, "EspressoIdlingResource.increment called")
+        EspressoIdlingResource.increment()
         soundsRef.addListenerForSingleValueEvent(
                 object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
