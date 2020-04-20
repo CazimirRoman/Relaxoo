@@ -6,7 +6,7 @@ import com.cazimir.relaxoo.service.commands.StopCommand
 
 interface ISoundService {
     fun loadToSoundPool(sounds: ArrayList<Sound>?)
-    fun unload(soundPoolId1: String, sound: Int)
+    fun unload(sound: Sound)
     fun play(playCommand: PlayCommand)
     fun stop(stopCommand: StopCommand)
     fun stopAllSounds()

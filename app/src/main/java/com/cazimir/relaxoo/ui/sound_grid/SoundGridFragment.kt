@@ -23,6 +23,7 @@ import com.cazimir.relaxoo.dialog.custom.BottomCustomDeleteFragment
 import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
 import com.cazimir.relaxoo.eventbus.*
 import com.cazimir.relaxoo.model.ListOfSavedCustom
+import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
@@ -434,10 +435,12 @@ class SoundGridFragment() : Fragment() {
 
     private fun removeRecordingFromSoundPool(sound: Sound) {
 
+        Log.d(TAG, "removeRecordingFromSoundPool: called with sound: $sound")
+
         sendCommandToService(
                 SoundService.getCommand(
                         context,
-                        UnloadSoundCommand(sound.id, sound.soundPoolId)
+                        UnloadSoundCommand(sound)
                 )
         )
     }
@@ -494,15 +497,17 @@ class SoundGridFragment() : Fragment() {
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun updateViewModelWithUnload(eventBusUnload: EventBusUnload) {
-        viewModel.removeSingleSoundFromSounds(eventBusUnload.soundPoolId)
+        viewModel.removeSingleSoundFromSounds(eventBusUnload.sound.id)
 
         val newList = mutableListOf<Sound>()
         val pinnedRecordings = ModelPreferencesManager.get<ListOfSavedCustom>(MainActivity.PINNED_RECORDINGS)
         val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
 
         list.filterTo(newList, {
-            it.id != eventBusUnload.id
+            it.id != eventBusUnload.sound.id
         })
+
+        Log.d(TAG, "unload called from service. Saving new list to SP: $newList")
 
         val newObject = ListOfSavedCustom(newList)
         ModelPreferencesManager.save(newObject, MainActivity.PINNED_RECORDINGS)
@@ -511,6 +516,7 @@ class SoundGridFragment() : Fragment() {
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun saveAllSoundsToSharedPreferences(eventBusLoad: EventBusLoadSingle) {
         viewModel.addSingleSoundToSounds(eventBusLoad.sound)
+        scrollToBottom()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
@@ -526,6 +532,21 @@ class SoundGridFragment() : Fragment() {
                 mute_button.tag = getString(R.string.mute_off)
             }
         })
+    }
+
+    fun removeCustomSoundFromDashboardIfThere(recording: Recording) {
+        Log.d(TAG, "removeCustomSoundFromDashboardIfThere: called with recording id: ${recording.id}")
+        val filtered = mutableListOf<Sound>()
+        viewModel.allSounds().safeValue?.filterTo(filtered, predicate = {
+            it.id == recording.id
+        })
+
+        // i imagine there will be only one
+        if (filtered.size != 0) {
+
+            //found recording in the sounds store
+            removeRecordingFromSoundPool(filtered.first())
+        }
     }
 
     companion object {

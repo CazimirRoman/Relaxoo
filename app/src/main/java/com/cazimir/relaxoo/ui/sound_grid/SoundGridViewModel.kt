@@ -203,12 +203,12 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         nextSoundLiveData()
     }
 
-    fun removeSingleSoundFromSounds(soundPoolId: Int) {
+    fun removeSingleSoundFromSounds(id: String) {
 
         val newList = mutableListOf<Sound>()
 
         allSounds.filterTo(newList, { sound ->
-            sound.soundPoolId != soundPoolId
+            sound.id != id
         })
         allSounds = newList as ArrayList<Sound>
 

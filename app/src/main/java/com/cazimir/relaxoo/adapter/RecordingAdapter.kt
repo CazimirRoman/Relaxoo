@@ -64,6 +64,7 @@ class RecordingAdapter(
                         listener.onStopClicked()
                         if (currentlyPlaying != null) {
                             val recordingWithStop = Recording.Builder()
+                                    .withId(currentlyPlaying!!.id)
                                     .withFile(currentlyPlaying!!.file)
                                     .withFileName(currentlyPlaying!!.file.name)
                                     .withFileName(currentlyPlaying!!.file.name)
@@ -74,6 +75,7 @@ class RecordingAdapter(
                             currentlyPlaying = null
                         }
                         val recordingWithPlay = Recording.Builder()
+                                .withId(item.id)
                                 .withFile(item.file)
                                 .withFileName(item.file.name)
                                 .withFileName(item.file.name)
@@ -88,7 +90,9 @@ class RecordingAdapter(
         holder.playRecording.setImageDrawable(
                 if (item.isPlaying) context?.resources?.getDrawable(R.drawable.ic_stop) else context?.resources?.getDrawable(R.drawable.ic_play))
         holder.optionsRecording.setOnClickListener(
-                View.OnClickListener { listener.onOptionsClicked(list[position]) })
+                View.OnClickListener {
+                    listener.onOptionsClicked(list[position])
+                })
     }
 
     override fun getItemCount(): Int {

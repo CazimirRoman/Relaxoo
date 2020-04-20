@@ -1,3 +1,5 @@
 package com.cazimir.relaxoo.service.commands
 
-class UnloadSoundCommand(val id: String, val soundPoolId: Int) : ISoundServiceCommand
+import com.cazimir.relaxoo.model.Sound
+
+class UnloadSoundCommand(val sound: Sound) : ISoundServiceCommand

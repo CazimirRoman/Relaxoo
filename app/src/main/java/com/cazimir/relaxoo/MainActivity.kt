@@ -511,7 +511,9 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun deleteRecording(recording: Recording) {
+        //should also search is any custom sounds are pinned to dashboard and remove those as well
         createSoundFragment!!.deleteRecording(recording)
+        getSoundGridFragment().removeCustomSoundFromDashboardIfThere(recording)
     }
 
     override fun renameRecording(recording: Recording, newName: String) {
@@ -519,6 +521,15 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun pinToDashBoardActionCalled(sound: Sound) {
+
+        val pinnedRecordings = ModelPreferencesManager.get<ListOfSavedCustom>(PINNED_RECORDINGS)
+        val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
+
+        if (list.contains(sound)) {
+            showToast("Sound already on dashboard")
+            return
+        }
+
         getSoundGridFragment()!!.addRecordingToSoundPool(sound)
         try {
             val pinnedRecordings = ModelPreferencesManager.get<ListOfSavedCustom>(PINNED_RECORDINGS)
@@ -561,7 +572,6 @@ class MainActivity : FragmentActivity(),
 
     private fun scrollViewPager() {
         pager.currentItem = 0
-        getSoundGridFragment()!!.scrollToBottom()
     }
 
     private fun checkRecordingPermission() {

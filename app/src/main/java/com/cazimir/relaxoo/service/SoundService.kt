@@ -67,12 +67,12 @@ class SoundService : Service(), ISoundService {
                 stopAllSounds().also { stopSelf() }
             }
             is LoadSoundsCommand -> loadToSoundPool(event.sounds)
-            is UnloadSoundCommand -> unload(event.id, event.soundPoolId)
+            is UnloadSoundCommand -> unload(event.sound)
             is VolumeCommand -> setVolume(
-                event.id,
-                event.streamId,
-                event.leftVolume,
-                event.rightVolume
+                    event.id,
+                    event.streamId,
+                    event.leftVolume,
+                    event.rightVolume
             )
             is PlayCommand -> play(event)
             is StopCommand -> stop(event)
@@ -323,20 +323,21 @@ class SoundService : Service(), ISoundService {
         EventBus.getDefault().post(EventBusLoadSingle(soundWithSoundPoolId))
     }
 
-    override fun unload(soundId: String, soundPoolId: Int) {
-        Log.d(TAG, "unload: called with: soundId: $soundId and soundPoolId: $soundPoolId")
-        soundPool.unload(soundPoolId)
-        EventBus.getDefault().post(EventBusUnload(soundId, soundPoolId))
+    override fun unload(sound: Sound) {
+        Log.d(TAG, "unload: called with: soundId: $sound.id and soundPoolId: ${sound.soundPoolId}")
+        stop(StopCommand(sound))
+        soundPool.unload(sound.soundPoolId)
+        EventBus.getDefault().post(EventBusUnload(sound))
     }
 
     // TODO: 28-Mar-20 take whole sound object for play command
     override fun play(playCommand: PlayCommand) {
         Log.d(TAG, "play: called with: ${playCommand.sound}")
         val streamId = soundPool.play(
-            playCommand.sound.soundPoolId,
-            playCommand.sound.volume,
-            playCommand.sound.volume,
-            0,
+                playCommand.sound.soundPoolId,
+                playCommand.sound.volume,
+                playCommand.sound.volume,
+                0,
             -1,
             1f
         )

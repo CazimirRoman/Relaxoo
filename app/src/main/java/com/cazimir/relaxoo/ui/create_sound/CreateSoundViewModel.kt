@@ -1,5 +1,6 @@
 package com.cazimir.relaxoo.ui.create_sound
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.cazimir.relaxoo.model.Recording
@@ -27,9 +28,11 @@ class CreateSoundViewModel : ViewModel() {
         // after changing to viewpager2 the recordings returned null so I needed a safe call here
         recordings?.let {
             for (file in recordings!!) {
-                recordingsList.add(Recording.Builder().withFile(file).withFileName(file.name).build())
+                recordingsList.add(Recording.Builder().withId(file.name).withFile(file).withFileName(file.name).build())
             }
         }
+
+        Log.d(TAG, "refreshList called: $recordingsList")
 
         _recordingsLive.value = recordingsList as ArrayList<Recording>
     }

@@ -1,3 +1,5 @@
 package com.cazimir.relaxoo.eventbus
 
-class EventBusUnload(val id: String, val soundPoolId: Int)
+import com.cazimir.relaxoo.model.Sound
+
+class EventBusUnload(val sound: Sound)
