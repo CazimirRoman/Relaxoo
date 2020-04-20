@@ -37,6 +37,10 @@ class RecordingOwnSoundsTest {
     @JvmField
     val grantPermissionRule2: GrantPermissionRule = GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE)
 
+    @Rule
+    @JvmField
+    val grantPermissionRule3: GrantPermissionRule = GrantPermissionRule.grant(android.Manifest.permission.RECORD_AUDIO)
+
     @get:Rule
     var activityRule: ActivityTestRule<MainActivity> = ActivityTestRule(MainActivity::class.java)
 
@@ -109,6 +113,10 @@ class RecordingOwnSoundsTest {
 
 //    @Test
 //    fun external_recording_library() {
-//        TODO("Not yet implemented")
+//        swipeViewPagerLeft(2)
+//        onView(withId(R.id.add_recording)).perform(customClick())
+////        onView(withId(R.id.record)).check(matches(isDisplayed()))
+//
+//
 //    }
 }

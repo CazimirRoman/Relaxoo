@@ -362,11 +362,11 @@ class MainActivity : FragmentActivity(),
                         Observer { backgroundColor: Int? ->
                             val duration = 1500
                             val animator: ObjectAnimator = ObjectAnimator.ofObject(
-                                    parentLayout,
-                                    "backgroundColor",
-                                    ArgbEvaluator(),
-                                    sharedViewModel.previousColor,
-                                    sharedViewModel.nextColor.getValue())
+                                            parent_layout_main,
+                                            "backgroundColor",
+                                            ArgbEvaluator(),
+                                            sharedViewModel.previousColor,
+                                            sharedViewModel.nextColor.getValue())
                                     .setDuration(duration.toLong())
                             animator.addListener(
                                     object : AnimatorListenerAdapter() {

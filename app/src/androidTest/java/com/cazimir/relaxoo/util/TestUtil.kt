@@ -5,20 +5,20 @@ import android.content.res.Resources
 import android.util.Log
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
+import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
-import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
-import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
+import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -29,10 +29,6 @@ class TestUtil {
     companion object {
 
         private const val TAG = "TestUtil"
-
-        fun startActivity() {
-            ActivityScenario.launch(MainActivity::class.java)
-        }
 
         fun clearSharedPreferences() {
             Log.d(TAG, "clearSharedPreferences: called")
@@ -172,6 +168,18 @@ class TestUtil {
                 }
             }
         }
+    }
+
+    class RecyclerViewItemCountAssertion(private val expectedCount: Int) : ViewAssertion {
+        override fun check(view: View, noViewFoundException: NoMatchingViewException) {
+            if (noViewFoundException != null) {
+                throw noViewFoundException
+            }
+            val recyclerView = view as RecyclerView
+            val adapter = recyclerView.adapter
+            assertThat(adapter!!.itemCount, `is`(expectedCount))
+        }
+
     }
 }
 

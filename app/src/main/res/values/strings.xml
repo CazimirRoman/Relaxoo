@@ -7,6 +7,7 @@
     <string name="toast">Value: %1$s</string>
     <string name="favorites_combos">Favorites combos</string>
     <string name="delete_confirmation">Are you sure you want to delete?</string>
+    <string name="delete_confirmation_recording">Are you sure you want to delete the recording? \n All pinned sounds on dashboard will also be removed</string>
     <string name="create_sound">Create your sound</string>
     <string name="actions_text">You can do these actions to play sound</string>
     <string name="view_ads">View ads</string>

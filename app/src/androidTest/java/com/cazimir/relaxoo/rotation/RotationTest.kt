@@ -48,17 +48,14 @@ class RotationTest {
 
     @Before
     fun setup() {
-//        startActivity()
         IdlingRegistry.getInstance().register(EspressoIdlingResource.countingIdlingResource)
         device.setOrientationNatural()
-//        clearSharedPreferences()
     }
 
     @After
     fun teardown() {
         Log.d(TAG, "teardown: called")
         IdlingRegistry.getInstance().unregister(EspressoIdlingResource.countingIdlingResource)
-        clickOnPlayStopButton()
     }
 
     @Test
@@ -104,5 +101,6 @@ class RotationTest {
         onView(withId(R.id.timerText)).check(matches(allOf(isDisplayed(), not(withText("Sounds will stop in 00:00:00")))))
         device.setOrientationLeft()
         onView(withId(R.id.timerText)).check(matches(allOf(isDisplayed(), not(withText("Sounds will stop in 00:00:00")))))
+        clickOnPlayStopButton()
     }
 }

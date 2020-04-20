@@ -59,7 +59,7 @@ class SavedComboAdapter(private val context: Context, private val list: ListOfSa
 
         init {
             comboText = view.findViewById(R.id.comboText)
-            parentLayout = view.findViewById(R.id.parentLayout)
+            parentLayout = view.findViewById(R.id.parent_saved_combo)
             deleteCombo = view.findViewById(R.id.deleteCombo)
 
             // rest of the views

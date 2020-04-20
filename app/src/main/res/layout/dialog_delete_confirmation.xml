@@ -6,6 +6,7 @@
 
     <TextView
         android:layout_width="wrap_content"
+        android:id="@+id/delete_confirmation_text"
         android:text="@string/delete_confirmation"
         android:layout_height="wrap_content">
     </TextView>
