@@ -46,4 +46,14 @@
         app:srcCompat="@drawable/ic_more_vert"
         tools:visibility="visible" />
 
+    <ProgressBar
+        android:id="@+id/grid_item_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Loading"
+        android:textColor="@android:color/white"
+        android:visibility="gone">
+
+    </ProgressBar>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

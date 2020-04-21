@@ -25,8 +25,6 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.io.File
-import java.util.*
-import kotlin.collections.ArrayList
 
 class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
@@ -48,8 +46,8 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     var soundsLoadedToSoundPool = MutableLiveData(0)
 
     private var _timerText = MutableLiveData<String>()
-    private var allSounds = ArrayList<Sound>()
-    private var _allSounds: MutableLiveDataKtx<ArrayList<Sound>> = MutableLiveDataKtx()
+    private var soundsStorage = ArrayList<Sound>()
+    private var _soundsStorage: MutableLiveDataKtx<ArrayList<Sound>> = MutableLiveDataKtx()
 
     val _fetchFinished: MutableLiveData<Boolean> = MutableLiveData(false)
 
@@ -107,7 +105,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     }
 
     private fun getAssetsFromFirebaseStorage(sounds: ArrayList<Sound>) {
-        allSounds.clear()
+        soundsStorage.clear()
         // check if files already downloaded locally
         val soundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/sounds")
         val logosFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/logos")
@@ -128,6 +126,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                     logosFolder.mkdirs()
                 }
                 val soundFile = File(soundsFolder, sound.filePath)
+                Log.d(TAG, "getAssetsFromFirebaseStorage: soundFile: $soundFile")
                 val logoFile = File(logosFolder, sound.logoPath)
                 // download sound from Firebase
                 soundReference
@@ -138,37 +137,41 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                             imageReference
                                     .getFile(logoFile)
                                     .addOnSuccessListener { imageSnapshot: FileDownloadTask.TaskSnapshot? ->
-                                        Log.d(TAG, "onSuccess: called")
+                                        Log.d(TAG, "onSuccess for imageReference: called")
 
                                         val fetchedSound = sound.copy(logoPath = logoFile.path, filePath = soundFile.path)
 
-                                        allSounds.addAll(Arrays.asList(fetchedSound))
+                                        soundsStorage.addAll(listOf(fetchedSound))
                                         // addCustomSoundsAsWell();
 
                                         val customSounds = ModelPreferencesManager.get<ListOfSavedCustom>("PINNED_RECORDINGS")
 
-                                        customSounds?.savedCustomList?.let { this.allSounds.addAll(it) }
+                                        customSounds?.savedCustomList?.let { this.soundsStorage.addAll(it) }
 
                                         // TODO: 14-Mar-20 Add custom sounds here
-                                        if (allSounds.size == sounds.size) {
+                                        if (soundsStorage.size == sounds.size) {
                                             nextSoundLiveData()
                                             soundsAlreadyFetched = true
                                         }
                                     }
-                                    .addOnFailureListener { e: Exception -> Log.d(TAG, "onFailure: " + e.message) }
+                                    .addOnFailureListener { e: Exception ->
+                                        Log.d(TAG, "onFailure logo: " + e.message)
+                                    }
                         }
-                        .addOnFailureListener { e: Exception -> Log.d(TAG, "onFailure: " + e.message) }
+                        .addOnFailureListener { e: Exception ->
+                            Log.d(TAG, "onFailure sound: " + e.message)
+                        }
             }
         } else {
             Log.d(TAG, "getAssetsFromFirebaseStorage: loading assets from local storage")
             val logosDirectory = File(logosFolder.absolutePath)
             for (sound in sounds) {
                 val localSound = sound.copy(logoPath = logosDirectory.toString() + "/" + sound.logoPath, filePath = soundsDirectory.toString() + "/" + sound.filePath)
-                allSounds.add(localSound)
+                soundsStorage.add(localSound)
             }
 
             val customSounds = ModelPreferencesManager.get<ListOfSavedCustom>("PINNED_RECORDINGS")
-            customSounds?.savedCustomList?.let { this.allSounds.addAll(it) }
+            customSounds?.savedCustomList?.let { this.soundsStorage.addAll(it) }
             nextSoundLiveData()
             soundsAlreadyFetched = true
         }
@@ -181,25 +184,25 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     }
 
     fun allSounds(): LiveDataKtx<ArrayList<Sound>> {
-        return _allSounds
+        return _soundsStorage
     }
 
     fun playingSounds(): LiveDataKtx<ArrayList<Sound>> {
-        return _allSounds.map { soundsList -> soundsList.filter { sound -> sound.playing } as ArrayList<Sound> }
+        return _soundsStorage.map { soundsList -> soundsList.filter { sound -> sound.playing } as ArrayList<Sound> }
     }
 
     private fun nextSoundLiveData() {
-        Log.d(TAG, "refreshSoundLiveData: called: $allSounds")
-        _allSounds.value = allSounds
+        Log.d(TAG, "refreshSoundLiveData: called: $soundsStorage")
+        _soundsStorage.value = soundsStorage
     }
 
     fun addToSounds(sounds: List<Sound>) {
-        allSounds = sounds as ArrayList<Sound>
+        soundsStorage = sounds as ArrayList<Sound>
         nextSoundLiveData()
     }
 
     fun addSingleSoundToSounds(sound: Sound) {
-        allSounds.add(sound)
+        soundsStorage.add(sound)
         nextSoundLiveData()
     }
 
@@ -207,50 +210,69 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
         val newList = mutableListOf<Sound>()
 
-        allSounds.filterTo(newList, { sound ->
+        soundsStorage.filterTo(newList, { sound ->
             sound.id != id
         })
-        allSounds = newList as ArrayList<Sound>
+        soundsStorage = newList as ArrayList<Sound>
 
         nextSoundLiveData()
     }
 
+    // TODO: 20-Apr-20 refactor this -> make generic update single anything, not only soundPoolId, streamId etc
     fun updateSingleSoundInViewModel(soundPoolId: Int, streamId: Int) {
 
-        var newList = mutableListOf<Sound>()
+        val newList = mutableListOf<Sound>()
 
-        allSounds.mapTo(newList, {
+        soundsStorage.mapTo(newList, {
             if (it.soundPoolId == soundPoolId) {
                 it.copy(soundPoolId = soundPoolId, streamId = streamId, playing = !it.playing)
             } else {
                 it
             }
         })
-        allSounds = newList as ArrayList<Sound>
+        soundsStorage = newList as ArrayList<Sound>
 
         nextSoundLiveData()
     }
+
 
     fun updateViewModelWithPlayingSoundsFalse() {
 
-        var newList = mutableListOf<Sound>()
+        val newList = mutableListOf<Sound>()
 
-        allSounds.mapTo(newList, {
+        soundsStorage.mapTo(newList, {
             it.copy(playing = false)
         })
 
-        allSounds = newList as ArrayList<Sound>
+        soundsStorage = newList as ArrayList<Sound>
 
         nextSoundLiveData()
     }
 
-    fun loadedToSoundPool() {
+    fun loadedToSoundPool(soundPoolId: Int) {
         soundsLoadedToSoundPool.value = soundsLoadedToSoundPool.value!! + 1
+        // update soundStorage with loaded = true
+        updateLoaded(soundPoolId)
+    }
+
+    fun updateLoaded(soundPoolId: Int) {
+
+        val newList = soundsStorage.map {
+            if (it.soundPoolId == soundPoolId) {
+                it.copy(loaded = true)
+            } else {
+                it
+            }
+        }
+
+        soundsStorage = newList as ArrayList<Sound>
+
+        nextSoundLiveData()
     }
 
     fun updateVolume(sound: Sound, volume: Float) {
 
-        val newList = allSounds.map {
+        val newList = soundsStorage.map {
             if (it.soundPoolId == sound?.soundPoolId) {
                 it.copy(volume = volume)
             } else {
@@ -258,7 +280,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             }
         }
 
-        allSounds = newList as ArrayList<Sound>
+        soundsStorage = newList as ArrayList<Sound>
 
         nextSoundLiveData()
     }
@@ -287,7 +309,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
         eventBusPlayingSounds.playingSounds.observeForever { playingSounds: ArrayList<Sound> ->
             if (playingSounds.isNotEmpty()) {
-                val filteredList = allSounds.filterBasedOnId(playingSounds)
+                val filteredList = soundsStorage.filterBasedOnId(playingSounds)
 
                 // update allSounds with playing status and streamId so you can control
                 // TODO: 10-Apr-20 fix this
@@ -301,7 +323,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                         playing = true
                     )
 
-                    allSounds = allSounds.replace(sound, fetchedSound) as ArrayList<Sound>
+                    soundsStorage = soundsStorage.replace(sound, fetchedSound) as ArrayList<Sound>
                 }
 
                 nextSoundLiveData()

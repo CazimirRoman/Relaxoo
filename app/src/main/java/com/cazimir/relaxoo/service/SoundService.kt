@@ -38,7 +38,7 @@ class SoundService : Service(), ISoundService {
     private lateinit var soundPool: SoundPool
     private var playingSoundsList: ArrayList<Sound> = ArrayList()
     private var playingSoundsListCached: ArrayList<Sound> = ArrayList()
-    private val playingSoundsListLive: MutableLiveData<ArrayList<Sound>> = MutableLiveData()
+    private val _playingSoundsListLive: MutableLiveData<ArrayList<Sound>> = MutableLiveData()
 
     companion object {
         private const val TAG = "SoundPoolService"
@@ -125,7 +125,7 @@ class SoundService : Service(), ISoundService {
             EventBus.getDefault().post(EventBusLoadedToSoundPool(soundPoolId))
         }
 
-        playingSoundsListLive.observeForever(Observer {
+        _playingSoundsListLive.observeForever(Observer {
             timerTextEnding = if (it.size > 1) {
                 "s"
             } else {
@@ -182,7 +182,7 @@ class SoundService : Service(), ISoundService {
 
     // TODO: 11-Apr-20 I should bundle these in a single EventBus update
     private fun sendPlayingSounds() {
-        EventBus.getDefault().post(EventBusPlayingSounds(playingSoundsListLive))
+        EventBus.getDefault().post(EventBusPlayingSounds(_playingSoundsListLive))
     }
 
     private fun sendTimerText() {
@@ -214,12 +214,12 @@ class SoundService : Service(), ISoundService {
 
         createNotificationBuilder()
 
-        playingSoundsListLive.observeForever(Observer { playingSounds ->
+        _playingSoundsListLive.observeForever(Observer { playingSounds ->
             if (playingSounds.size == 0) {
                 // stopForeground(true)
                 notificationView.setImageViewResource(
-                    R.id.remote_view_play_stop,
-                    R.drawable.ic_play_black
+                        R.id.remote_view_play_stop,
+                        R.drawable.ic_play_black
                 )
                 notificationView.setTextViewText(R.id.remote_view_playing_txt, "No sound playing")
                 this.notificationBuilder.setCustomContentView(notificationView)
@@ -308,6 +308,7 @@ class SoundService : Service(), ISoundService {
         sounds?.mapTo(processedSounds, { sound ->
             if (sound.soundPoolId == -1) {
                 val soundPoolId = soundPool.load(sound.filePath, 1)
+                Log.d(TAG, "loadToSoundPool in Service: called")
                 sound.copy(soundPoolId = soundPoolId)
             } else {
                 sound
@@ -349,7 +350,7 @@ class SoundService : Service(), ISoundService {
 
         // the playing sounds list sends back an observable that is updated each time playing sounds is beeing updated.
         playingSoundsList.add(newSoundWithStreamId)
-            .also { playingSoundsListLive.value = playingSoundsList }
+                .also { _playingSoundsListLive.value = playingSoundsList }
     }
 
     override fun stop(stopCommand: StopCommand) {
@@ -357,7 +358,7 @@ class SoundService : Service(), ISoundService {
         soundPool.stop(stopCommand.sound.streamId)
 
         playingSoundsList.remove(stopCommand.sound)
-            .also { playingSoundsListLive.value = playingSoundsList }
+                .also { _playingSoundsListLive.value = playingSoundsList }
 
         EventBus.getDefault().post(EventBusStop(stopCommand.sound.soundPoolId))
     }
@@ -373,7 +374,7 @@ class SoundService : Service(), ISoundService {
         // be played
         playingSoundsListCached = playingSoundsList.toMutableList() as ArrayList<Sound>
 
-        playingSoundsList.clear().also { playingSoundsListLive.value = playingSoundsList }
+        playingSoundsList.clear().also { _playingSoundsListLive.value = playingSoundsList }
         countDownTimer?.cancel().also { _timerRunning.value = false }
 
         EventBus.getDefault().post(EventBusStopAll())

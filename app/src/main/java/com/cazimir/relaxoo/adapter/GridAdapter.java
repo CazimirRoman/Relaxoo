@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 
 import androidx.annotation.NonNull;
@@ -19,17 +20,19 @@ import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.model.Sound;
 import com.cazimir.relaxoo.ui.sound_grid.OnSoundClickListener;
 
-import java.util.List;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
 
 public class GridAdapter extends ArrayAdapter<Sound> {
 
-  private static final String TAG = "GridAdapter";
-  private OnSoundClickListener listener;
+    private static final String TAG = "GridAdapter";
+    private OnSoundClickListener listener;
 
-  public GridAdapter(Context ctx, List<Sound> sounds, OnSoundClickListener listener) {
-    super(ctx, 0, sounds);
-    this.listener = listener;
-  }
+    public GridAdapter(Context ctx, ArrayList<Sound> sounds, OnSoundClickListener listener) {
+        super(ctx, 0, sounds);
+        this.listener = listener;
+    }
 
   @NonNull
   @Override
@@ -54,6 +57,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
         viewHolderItem.parentLayout = convertView.findViewById(R.id.cl);
         viewHolderItem.proIcon = convertView.findViewById(R.id.pro_icon);
         viewHolderItem.moreOptions = convertView.findViewById(R.id.more_options);
+        viewHolderItem.loading = convertView.findViewById(R.id.grid_item_loading);
 
         // store the holder with the view.
         convertView.setTag(viewHolderItem);
@@ -70,7 +74,12 @@ public class GridAdapter extends ArrayAdapter<Sound> {
       viewHolderItem.soundVolume.setVisibility(sound.getPlaying() ? View.VISIBLE : View.INVISIBLE);
       viewHolderItem.moreOptions.setVisibility(sound.getCustom() ? View.VISIBLE : View.INVISIBLE);
       viewHolderItem.soundImage.setImageBitmap(BitmapFactory.decodeFile(sound.getLogoPath()));
-
+      // hide progressbar once sound loaded to soundpool
+      if (sound.getLoaded() == false) {
+          viewHolderItem.loading.setVisibility(View.VISIBLE);
+      } else {
+          viewHolderItem.loading.setVisibility(View.GONE);
+      }
       // because playing the sound refreshes the grid change color based on playing status
       if (sound.getPlaying()) {
           viewHolderItem.soundImage.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
@@ -118,15 +127,25 @@ public class GridAdapter extends ArrayAdapter<Sound> {
                   }
               });
 
-    return convertView;
+      return convertView;
   }
 
-  private static class ViewHolderItem {
+    public void refreshList(@NotNull ArrayList<Sound> sounds) {
+        clear();
+        for (Sound sound : sounds) {
+            insert(sound, getCount());
+        }
 
-    private ImageView soundImage;
-    private SeekBar soundVolume;
-    private ConstraintLayout parentLayout;
-      private ImageView proIcon;
-      private ImageView moreOptions;
-  }
+        notifyDataSetChanged();
+    }
+
+    private static class ViewHolderItem {
+
+        private ImageView soundImage;
+        private SeekBar soundVolume;
+        private ConstraintLayout parentLayout;
+        private ImageView proIcon;
+        private ImageView moreOptions;
+        private ProgressBar loading;
+    }
 }

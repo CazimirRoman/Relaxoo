@@ -134,61 +134,70 @@ class SoundGridFragment() : Fragment() {
                                     TAG,
                                     "Sound list changed: " + sounds
                             )
-                            gridArrayAdapter = GridAdapter(
-                                    context,
-                                    sounds,
-                                    object : OnSoundClickListener {
-                                        override fun clicked(sound: Sound) {
-                                            if (sound.pro && !sound.playing) {
-                                                viewModel.setClickedProSound(sound)
-                                                activityCallback.showBottomDialogForPro()
-                                            } else {
-                                                playStopSound(sound)
-                                            }
-                                        }
 
-                                        override fun volumeChange(
-                                                sound: Sound,
-                                                volume: Int
-                                        ) { // TODO: 18.12.2019 refactor this float to string to double transformation
-                                            val volumeToSet: Float =
-                                                    (volume.toDouble() / 100).toString().toFloat()
-                                            Log.d(
-                                                    TAG,
-                                                    "volumeChange: called with volume: " + volumeToSet
-                                            )
-
-                                            val volumeCommand = SoundService.getCommand(
-                                                    context, VolumeCommand(sound.id,
-                                                    sound.streamId,
-                                                    volumeToSet,
-                                                    volumeToSet
-                                            )
-                                            )
-
-                                            sendCommandToService(volumeCommand)
-                                        }
-
-                                        override fun volumeChangeStopped(
-                                                sound: Sound,
-                                                progress: Int
-                                        ) {
-                                            viewModel.updateVolume(
-                                                    sound, (progress.toDouble() / 100).toString().toFloat()
-                                            )
-                                        }
-
-                                        override fun moreOptionsClicked(sound: Sound) {
-                                            BottomCustomDeleteFragment(sound, object : CustomBottomCallback {
-                                                override fun deletedClicked(sound: Sound) {
-                                                    removeRecordingFromSoundPool(sound)
+                            if (gridArrayAdapter == null) {
+                                gridArrayAdapter = GridAdapter(
+                                        context,
+                                        sounds,
+                                        object : OnSoundClickListener {
+                                            override fun clicked(sound: Sound) {
+                                                if (sound.pro && !sound.playing) {
+                                                    viewModel.setClickedProSound(sound)
+                                                    activityCallback.showBottomDialogForPro()
+                                                } else {
+                                                    playStopSound(sound)
                                                 }
-                                            }).show(getParentFragmentManager(), "deleteCustom")
-                                        }
-                                    })
-                            gridView.adapter = gridArrayAdapter
+                                            }
+
+                                            override fun volumeChange(
+                                                    sound: Sound,
+                                                    volume: Int
+                                            ) { // TODO: 18.12.2019 refactor this float to string to double transformation
+                                                val volumeToSet: Float =
+                                                        (volume.toDouble() / 100).toString().toFloat()
+                                                Log.d(
+                                                        TAG,
+                                                        "volumeChange: called with volume: " + volumeToSet
+                                                )
+
+                                                val volumeCommand = SoundService.getCommand(
+                                                        context, VolumeCommand(sound.id,
+                                                        sound.streamId,
+                                                        volumeToSet,
+                                                        volumeToSet
+                                                )
+                                                )
+
+                                                sendCommandToService(volumeCommand)
+                                            }
+
+                                            override fun volumeChangeStopped(
+                                                    sound: Sound,
+                                                    progress: Int
+                                            ) {
+                                                viewModel.updateVolume(
+                                                        sound, (progress.toDouble() / 100).toString().toFloat()
+                                                )
+                                            }
+
+                                            override fun moreOptionsClicked(sound: Sound) {
+                                                BottomCustomDeleteFragment(sound, object : CustomBottomCallback {
+                                                    override fun deletedClicked(sound: Sound) {
+                                                        removeRecordingFromSoundPool(sound)
+                                                    }
+                                                }).show(parentFragmentManager, "deleteCustom")
+                                            }
+                                        })
+
+                                gridView.adapter = gridArrayAdapter
+
+
+                            } else {
+                                gridArrayAdapter!!.refreshList(sounds)
+                            }
+
                             // if sound not loaded yet and sounds list not yet populated
-                            if (!sounds.isEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
+                            if (sounds.isNotEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds)) {
                                 // saveListToSharedPreferences(sounds)
                                 // hopefully the service is started by the 'play command'
                                 loadListToSoundPool(sounds)
@@ -221,8 +230,16 @@ class SoundGridFragment() : Fragment() {
                         Observer { soundsAdded ->
                             Log.d(TAG, "viewModel.soundsLoadedToSoundPool: called with: $soundsAdded")
                             if (viewModel.allSounds().safeValue?.size != 0) {
+
                                 // hide splash if viewmodel sound livedata size equals the number of sounds added to the soundpool
-                                if (soundsAdded == viewModel.allSounds().safeValue?.size) {
+
+//                                if (soundsAdded == viewModel.allSounds().safeValue?.size) {
+//                                    activityCallback.hideProgress()
+//                                    activityCallback.hideSplash()
+//
+//                                }
+                                // wait for at least 3 sounds to load then show dashboard and rest will load in background. until then a spinner will show
+                                if (soundsAdded == 3) {
                                     activityCallback.hideProgress()
                                     activityCallback.hideSplash()
                                 }
@@ -487,7 +504,7 @@ class SoundGridFragment() : Fragment() {
                 TAG,
                 "updateViewModelSoundsLoadedToSoundPool: called with ${eventBusLoadedToSoundPool.soundPoolId}"
         )
-        viewModel.loadedToSoundPool()
+        viewModel.loadedToSoundPool(eventBusLoadedToSoundPool.soundPoolId)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)

@@ -68,7 +68,7 @@ class ComboTest {
         clickOnSounds(2)
         clickOnSaveComboButton()
         checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)
-        onView(withId(R.id.comboName)).perform(typeText("Saved combo"))
+        onView(withId(R.id.combo_name)).perform(typeText("Saved combo"))
         onView(withText("OK")).perform(click())
         clickOnPlayStopButton()
         swipeViewPagerLeft(1)
