@@ -17,6 +17,7 @@ import androidx.test.uiautomator.UiDevice
 import com.cazimir.relaxoo.adapter.RecordingAdapter
 import com.cazimir.relaxoo.adapter.SavedComboAdapter
 import com.cazimir.relaxoo.util.TestUtil.Companion.checkVisibilityOfView
+import com.cazimir.relaxoo.util.TestUtil.Companion.clearSharedPreferences
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickChildViewWithId
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnPlayStopButton
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnSaveComboButton
@@ -54,6 +55,7 @@ class ComboTest {
     fun setup() {
         IdlingRegistry.getInstance().register(EspressoIdlingResource.countingIdlingResource)
         device.setOrientationNatural()
+        clearSharedPreferences()
 
     }
 
@@ -65,6 +67,8 @@ class ComboTest {
 
     @Test
     fun add_trigger_delete() {
+        //adding this sleep here because the sound has not been loaded yet
+        Thread.sleep(1000)
         clickOnSounds(2)
         clickOnSaveComboButton()
         checkVisibilityOfView(R.id.save_favorites_dialog, Visibility.VISIBLE)

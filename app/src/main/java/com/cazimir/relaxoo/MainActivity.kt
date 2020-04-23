@@ -390,7 +390,7 @@ class MainActivity : FragmentActivity(),
                     object : TimerTask() {
                         override fun run() {
                             runOnUiThread {
-                                sharedViewModel.nextColor.setValue(randomColor)
+                                sharedViewModel.nextColor.value = randomColor
                                 Log.d(
                                         TAG, String.format(
                                         "run: called. previousColor: %s and nextColor: %s",
@@ -405,8 +405,22 @@ class MainActivity : FragmentActivity(),
     private val randomColor: Int
         get() {
             val random = Random()
-            return Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256))
+            return colorArray[random.nextInt(colorArray.size)]
         }
+
+    private val colorArray = listOf(
+            Color.argb(255, 115, 44, 44),
+            Color.argb(255, 66, 75, 84),
+            Color.argb(255, 179, 141, 151),
+            Color.argb(255, 255, 67, 101),
+            Color.argb(255, 105, 153, 93),
+            Color.argb(255, 2, 8, 135),
+            Color.argb(255, 9, 56, 36),
+            Color.argb(255, 123, 136, 107),
+            Color.argb(255, 46, 82, 102),
+            Color.argb(255, 164, 74, 63),
+            Color.argb(255, 175, 27, 63)
+    )
 
     private fun setupNotifications() {
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

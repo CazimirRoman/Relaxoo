@@ -94,7 +94,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                             }
                         }
                         if (soundsInFirebase.size > 0) {
-                            getAssetsFromFirebaseStorage(soundsInFirebase)
+                            getAssetsStorage(soundsInFirebase)
                         }
                     }
 
@@ -104,7 +104,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                 })
     }
 
-    private fun getAssetsFromFirebaseStorage(sounds: ArrayList<Sound>) {
+    private fun getAssetsStorage(sounds: ArrayList<Sound>) {
         soundsStorage.clear()
         // check if files already downloaded locally
         val soundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/sounds")
@@ -117,7 +117,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         val files = soundsDirectory.listFiles()
         // there are some sounds missing locally
         if (files == null || files.size < sounds.size) {
-            Log.d(TAG, "getAssetsFromFirebaseStorage: loading assets from firebase")
+            Log.d(TAG, "getAssetsStorage: loading assets from firebase")
             // get sounds
             for (sound in sounds) {
                 val soundReference = FirebaseStorage.getInstance().reference.child("sounds").child(sound.filePath)
@@ -163,7 +163,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                         }
             }
         } else {
-            Log.d(TAG, "getAssetsFromFirebaseStorage: loading assets from local storage")
+            Log.d(TAG, "getAssetsStorage: loading assets from local storage")
             val logosDirectory = File(logosFolder.absolutePath)
             for (sound in sounds) {
                 val localSound = sound.copy(logoPath = logosDirectory.toString() + "/" + sound.logoPath, filePath = soundsDirectory.toString() + "/" + sound.filePath)

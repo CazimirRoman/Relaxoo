@@ -31,7 +31,7 @@ class CreateSoundViewModelTest {
 
     @Before
     fun setUp() {
-        viewModel._recordingsLive.observeForever(recordingsObserver)
+        viewModel.recordingsLive.observeForever(recordingsObserver)
         viewModel.repository = mockSoundRepository
     }
 
