@@ -25,21 +25,6 @@ import java.util.concurrent.TimeUnit
 
 class SoundService : Service(), ISoundService {
 
-    private lateinit var notificationBuilder: NotificationCompat.Builder
-    private lateinit var notificationView: RemoteViews
-    private var muted = false
-    private val _muted: MutableLiveData<Boolean> = MutableLiveData(false)
-    private var timerRunning = false
-    private var _timerRunning: MutableLiveData<Boolean> = MutableLiveData()
-    private val _timerText: MutableLiveData<String> = MutableLiveData("")
-    private var countDownTimer: CountDownTimer? = null
-    private var timerTextEnding = ""
-    private lateinit var pendingIntent: PendingIntent
-    private lateinit var soundPool: SoundPool
-    private var playingSoundsList: ArrayList<Sound> = ArrayList()
-    private var playingSoundsListCached: ArrayList<Sound> = ArrayList()
-    private val _playingSoundsListLive: MutableLiveData<ArrayList<Sound>> = MutableLiveData()
-
     companion object {
         private const val TAG = "SoundPoolService"
         private const val MAX_SOUNDS = 999
@@ -49,6 +34,42 @@ class SoundService : Service(), ISoundService {
             val intent = Intent(context, SoundService::class.java)
             intent.putExtra(SOUND_POOL_ACTION, command)
             return intent
+        }
+    }
+
+    private val _muted: MutableLiveData<Boolean> = MutableLiveData(false)
+    private val _playingSoundsListLive: MutableLiveData<ArrayList<Sound>> = MutableLiveData()
+    private val _timerRunning: MutableLiveData<Boolean> = MutableLiveData()
+    private val _timerText: MutableLiveData<String> = MutableLiveData("")
+    private lateinit var notificationBuilder: NotificationCompat.Builder
+    private lateinit var notificationView: RemoteViews
+    private var muted = false
+    private var timerRunning = false
+    private var countDownTimer: CountDownTimer? = null
+    private var timerTextEnding = ""
+    private lateinit var pendingIntent: PendingIntent
+    private lateinit var soundPool: SoundPool
+    private var playingSoundsList: ArrayList<Sound> = ArrayList()
+    private var playingSoundsListCached: ArrayList<Sound> = ArrayList()
+
+
+    private val playingSoundsObserver: Observer<ArrayList<Sound>> = Observer {
+        timerTextEnding = if (it.size > 1) {
+            "s"
+        } else {
+            ""
+        }
+    }
+
+    private val timerRunningObserver: Observer<Boolean> = Observer {
+        timerRunning = it
+    }
+
+    private val mutedObserver: Observer<Boolean> = Observer {
+        if (it) {
+            soundPool.autoPause()
+        } else {
+            soundPool.autoResume()
         }
     }
 
@@ -125,25 +146,9 @@ class SoundService : Service(), ISoundService {
             EventBus.getDefault().post(EventBusLoadedToSoundPool(soundPoolId))
         }
 
-        _playingSoundsListLive.observeForever(Observer {
-            timerTextEnding = if (it.size > 1) {
-                "s"
-            } else {
-                ""
-            }
-        })
-
-        _timerRunning.observeForever(Observer {
-            timerRunning = it
-        })
-
-        _muted.observeForever(Observer {
-            if (it) {
-                soundPool.autoPause()
-            } else {
-                soundPool.autoResume()
-            }
-        })
+        _playingSoundsListLive.observeForever(playingSoundsObserver)
+        _timerRunning.observeForever(timerRunningObserver)
+        _muted.observeForever(mutedObserver)
     }
 
     private fun toggleCountDownTimer(minutes: Int) {
@@ -269,6 +274,9 @@ class SoundService : Service(), ISoundService {
         // also kill activity if used decides to kill service so that everything is recreated on relaunch
         Log.d(TAG, "onDestroy: called")
         EventBus.getDefault().post(EventBusServiceDestroyed())
+        _playingSoundsListLive.removeObserver { playingSoundsObserver }
+        _timerRunning.removeObserver { timerRunningObserver }
+        _muted.removeObserver { mutedObserver }
         super.onDestroy()
     }
 

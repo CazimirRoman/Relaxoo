@@ -323,6 +323,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                         playing = true
                     )
 
+                    // TODO: 22-Apr-20 replace with mapTo or filterTo - remove 'replace' method
                     soundsStorage = soundsStorage.replace(sound, fetchedSound) as ArrayList<Sound>
                 }
 

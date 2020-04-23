@@ -58,7 +58,7 @@ class BottomRecordingDialogFragment(val recording: Recording, val callback: OnAc
             val sound = Sound(custom = true,
                     filePath = recording.file.path,
                     logoPath = "/storage/emulated/0/Relaxoo/logos/thunder.png",
-                    name = "Custom",
+                    name = recording.file.name,
                     id = recording.file.name)
 
             callback.pinToDashBoardActionCalled(sound)

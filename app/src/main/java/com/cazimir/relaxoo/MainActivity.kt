@@ -49,7 +49,10 @@ import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.cazimir.relaxoo.repository.ModelPreferencesManager.save
+import com.cazimir.relaxoo.service.SoundService
+import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
 import com.cazimir.relaxoo.shared.SharedViewModel
+import com.cazimir.relaxoo.ui.about.AboutFragment
 import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment
 import com.cazimir.relaxoo.ui.create_sound.OnRecordingStarted
 import com.cazimir.relaxoo.ui.favorites.FavoritesFragment
@@ -99,7 +102,6 @@ class MainActivity : FragmentActivity(),
         val PINNED_RECORDINGS = "PINNED_RECORDINGS"
     }
 
-    private var splashShown: Boolean = false
     private var fetchRunning: Boolean = false
     private var doubleBackToExitPressedOnce: Boolean = false
     private lateinit var adView: AdView
@@ -127,7 +129,8 @@ class MainActivity : FragmentActivity(),
         EventBus.getDefault().register(this)
         sharedViewModel = ViewModelProvider(this).get(SharedViewModel::class.java)
 
-        //shouldShowSplash()
+        //using this because the splash will be shown again if the user rotates the screen
+        shouldHideSplash()
         setupViewPager()
         setupViewPagerDots()
         setupNotifications()
@@ -136,9 +139,11 @@ class MainActivity : FragmentActivity(),
         // should also be done in onResume()
         setupBillingClient()
         setupRewardVideoAd()
+        subscribeObservers()
+    }
 
+    private fun subscribeObservers() {
         val result = MediatorLiveData<PreconditionsToStartFetchingData>()
-
         InternetUtil.init(application)
         InternetUtil.observe(this, Observer { internetUp ->
             isInternetAvailable.value = internetUp
@@ -195,6 +200,7 @@ class MainActivity : FragmentActivity(),
         sharedViewModel.adsBought.observe(this, Observer { adsBought: Boolean ->
             if (adsBought) {
                 removeAdsView()
+                getAboutFragment().hideRemoveAdsButton()
             } else {
                 loadAds()
             }
@@ -253,20 +259,21 @@ class MainActivity : FragmentActivity(),
             return
         }
         doubleBackToExitPressedOnce = true
-        Snackbar.make(this.window.decorView.findViewById(android.R.id.content), "Please click BACK again to exit", Snackbar.LENGTH_SHORT).show()
+
+        showSnackBar(getString(R.string.back_exit))
 
         Handler().postDelayed(Runnable { doubleBackToExitPressedOnce = false }, 2000)
     }
 
-    private fun shouldShowSplash() {
-        if (sharedViewModel.splashShown) {
-            hideSplash()
+    private fun shouldHideSplash() {
+        if (sharedViewModel.splashScreenShown) {
+            hideSplashScreen()
         }
     }
 
     private fun setupBillingClient() {
         billingClient =
-            BillingClient.newBuilder(this).enablePendingPurchases().setListener(this).build()
+                BillingClient.newBuilder(this).enablePendingPurchases().setListener(this).build()
         billingClient.startConnection(
                 object : BillingClientStateListener {
                     override fun onBillingSetupFinished(billingResult: BillingResult) {
@@ -301,7 +308,7 @@ class MainActivity : FragmentActivity(),
                     for (skuDetail: SkuDetails in skuDetailsList) {
                         val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
                         billingClient.launchBillingFlow(this, flowParams)
-                        Toast.makeText(this, skuDetail.description, Toast.LENGTH_SHORT).show()
+                        showSnackBar(skuDetail.description)
                     }
                 } else {
                     Log.d(TAG, "loadAllSKUs() called with: skuDetailsList is empty")
@@ -443,7 +450,7 @@ class MainActivity : FragmentActivity(),
                 TAG, (
                 "triggerCombo in MainActivity: called with: " +
                         savedCombo.sounds.toString()))
-        getSoundGridFragment()!!.triggerCombo(savedCombo)
+        getSoundGridFragment().triggerCombo(savedCombo)
     }
 
     override fun showDeleteConfirmationDialog(deleted: OnDeleted) {
@@ -456,6 +463,7 @@ class MainActivity : FragmentActivity(),
     override fun saved(savedCombo: SavedCombo) {
         Log.d(TAG, "saved: called")
         favoriteFragment!!.updateList(savedCombo)
+        showSnackBar(getString(R.string.saved_combo))
     }
 
     private val favoriteFragment: FavoritesFragment?
@@ -463,8 +471,18 @@ class MainActivity : FragmentActivity(),
                 .findFragmentByTag("f1") as FavoritesFragment?
 
     private fun getSoundGridFragment(): SoundGridFragment {
+
+        return if (supportFragmentManager.findFragmentByTag("f0") != null) {
+            supportFragmentManager
+                    .findFragmentByTag("f0") as SoundGridFragment
+        } else {
+            supportFragmentManager.fragments[0] as SoundGridFragment
+        }
+    }
+
+    private fun getAboutFragment(): AboutFragment {
         return supportFragmentManager
-                .findFragmentByTag("f0") as SoundGridFragment
+                .findFragmentByTag("f3") as AboutFragment
     }
 
     private val createSoundFragment: CreateSoundFragment?
@@ -485,16 +503,15 @@ class MainActivity : FragmentActivity(),
         soundGridFragment = getSoundGridFragment()
     }
 
-    override fun hideSplash() {
+    override fun hideSplashScreen() {
         Log.d(TAG, "hideSplash: called")
-        if (!splashShown) {
-            splash.visibility = GONE
-            main_layout.visibility = VISIBLE
-            splashShown = true
-            fetchRunning = false
-            Log.d(TAG, "EspressoIdlingResource.decrement called")
-            EspressoIdlingResource.decrement()
-        }
+        hideProgress()
+        splash.visibility = GONE
+        main_layout.visibility = VISIBLE
+        sharedViewModel.splashScreenShown = true
+        fetchRunning = false
+        Log.d(TAG, "EspressoIdlingResource.decrement called")
+        EspressoIdlingResource.decrement()
     }
 
     override fun removeAds() {
@@ -516,6 +533,10 @@ class MainActivity : FragmentActivity(),
         getSoundGridFragment().removeCustomSoundFromDashboardIfThere(recording)
     }
 
+    override fun showSnackBar(string: String) {
+        Snackbar.make(coordinator, string, Snackbar.LENGTH_SHORT).show()
+    }
+
     override fun renameRecording(recording: Recording, newName: String) {
         createSoundFragment!!.renameRecording(recording, newName)
     }
@@ -526,11 +547,16 @@ class MainActivity : FragmentActivity(),
         val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
 
         if (list.contains(sound)) {
-            showToast("Sound already on dashboard")
+            showSnackBar(getString(R.string.sound_already_pinned))
             return
         }
 
-        getSoundGridFragment()!!.addRecordingToSoundPool(sound)
+
+//        getSoundGridFragment().addRecordingToSoundPool(sound)
+
+        Log.d(TAG, "pinToDashBoardActionCalled: called. Sending command to service: LoadCustomSoundCommand")
+        sendCommandToService(SoundService.getCommand(this, LoadCustomSoundCommand(sound)))
+
         try {
             val pinnedRecordings = ModelPreferencesManager.get<ListOfSavedCustom>(PINNED_RECORDINGS)
             val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
@@ -544,6 +570,11 @@ class MainActivity : FragmentActivity(),
         scrollViewPager()
     }
 
+    private fun sendCommandToService(intent: Intent) {
+        Log.d(TAG, "sendCommandToService: called with command: ${intent.getSerializableExtra(SoundService.SOUND_POOL_ACTION)}")
+        startService(intent)
+    }
+
     override fun playRewardAd() {
         if (rewardedVideoAd.isLoaded) {
             rewardedVideoAd.show()
@@ -552,7 +583,7 @@ class MainActivity : FragmentActivity(),
 
     private fun redirectUserToPlayStore() {
         val marketUri =
-            Uri.parse("https://play.google.com/store/apps/details?id=com.cazimir.relaxoo")
+                Uri.parse("https://play.google.com/store/apps/details?id=com.cazimir.relaxoo")
         try {
             startActivity(Intent(Intent.ACTION_VIEW, marketUri))
         } catch (ex: ActivityNotFoundException) {
@@ -584,7 +615,7 @@ class MainActivity : FragmentActivity(),
                             }
 
                             override fun onPermissionDenied(response: PermissionDeniedResponse) {
-                                showToast("You need to grant recording permissions to record your own sound")
+                                showSnackBar(getString(R.string.recording_permission_denied))
                             }
 
                             override fun onPermissionRationaleShouldBeShown(
@@ -600,11 +631,11 @@ class MainActivity : FragmentActivity(),
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 0) {
             if (resultCode == Activity.RESULT_OK) {
-                showToast("Sound saved to file")
+                showSnackBar(getString(R.string.sound_saved))
                 createSoundFragment!!.updateList()
                 // Great! User has recorded and saved the audio file
             } else if (resultCode == Activity.RESULT_CANCELED) {
-                showToast("User canceled!")
+                showSnackBar(getString(R.string.canceled))
             }
         }
     }

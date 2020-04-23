@@ -25,7 +25,7 @@ public interface OnActivityCallback {
 
   void soundGridFragmentStarted();
 
-  void hideSplash();
+  void hideSplashScreen();
 
   void removeAds();
 
@@ -38,4 +38,6 @@ public interface OnActivityCallback {
   void playRewardAd();
 
   void hideProgress();
+
+  void showSnackBar(@NotNull String string);
 }

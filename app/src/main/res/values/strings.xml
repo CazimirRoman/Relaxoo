@@ -19,11 +19,7 @@
     <string name="delete_recording">Delete recording</string>
     <string name="loading_sounds">Loading sounds...</string>
     <string name="share_text">Relaxoo - Help you concentrate at day and easy to fall asleep at night</string>
-    <string name="ad_test">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="ad_prod">ca-app-pub-7748272108558557/1855871257</string>
     <string name="delete_custom_sound">Delete sound</string>
-    <string name="reward_ad_test">ca-app-pub-3940256099942544/5224354917</string>
-    <string name="reward_ad_prod">ca-app-pub-7748272108558557/3205446097</string>
     <string name="hello_blank_fragment">Hello F1</string>
     <string name="saved_combo">Saved combo</string>
     <string name="empty_field">Please enter a value</string>
@@ -32,4 +28,17 @@
     <string name="no_recording_text">Please enter a new name</string>
     <string name="no_combo_text">Please a name for your combo</string>
     <string name="no_internet">No internet available…Please connect</string>
+    <string name="sound_loading">Please wait. Sound is still loading</string>
+    <string name="back_exit">Please click BACK again to exit</string>
+    <string name="sound_already_pinned">Sound already on dashboard</string>
+    <string name="recording_permission_denied">You need to grant recording permissions to record your own sound</string>
+    <string name="sound_saved">Sound saved to file</string>
+    <string name="canceled">Canceled recording action</string>
+    <string name="play_one_sound">You must play at least one sound</string>
+
+    <string name="reward_ad_test">ca-app-pub-3940256099942544/5224354917</string>
+    <string name="reward_ad_prod">ca-app-pub-7748272108558557/3205446097</string>
+
+    <string name="ad_test">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="ad_prod">ca-app-pub-7748272108558557/1855871257</string>
 </resources>

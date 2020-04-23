@@ -51,7 +51,6 @@ class FavoritesFragment : Fragment() {
                                 private var positionToBeDeleted = 0
                                 override fun onItemClick(savedCombo: SavedCombo) {
                                     activityCallback?.triggerCombo(savedCombo)
-                                    // adapter.updateComboWithPlayingStatus(savedCombo);
                                 }
 
                                 override fun onItemDeleted(position: Int) {

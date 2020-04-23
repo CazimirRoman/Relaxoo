@@ -18,7 +18,6 @@ import com.cazimir.relaxoo.adapter.AboutListAdapter.Interactor
 import com.cazimir.relaxoo.model.AboutItem
 import com.cazimir.relaxoo.model.MenuItemType
 import com.cazimir.relaxoo.shared.SharedViewModel
-import com.cazimir.relaxoo.ui.more_apps.MoreAppsActivity
 import com.cazimir.relaxoo.ui.privacy_policy.PrivacyPolicyActivity
 import com.cazimir.relaxoo.ui.settings.SettingsActivity
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
@@ -71,8 +70,13 @@ class AboutFragment : Fragment() {
     }
 
     private fun startMoreAppsActivity() {
-        val intent = Intent(activity, MoreAppsActivity::class.java)
-        startActivity(putAdsBoughExtra(intent))
+        val appPackageName: String = activity!!.packageName// getPackageName() from Context or Activity object
+
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/developer?id=Cazimir+Roman&hl=en")))
+        } catch (e: ActivityNotFoundException) {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$appPackageName")))
+        }
     }
 
     private fun startPrivacyPolicyActivity() {
@@ -129,6 +133,11 @@ class AboutFragment : Fragment() {
         aboutItems.add(AboutItem(MenuItemType.RATE_APP, R.drawable.ic_message))
         aboutItems.add(AboutItem(MenuItemType.MORE_APPS, R.drawable.ic_message))
         return aboutItems
+    }
+
+    fun hideRemoveAdsButton() {
+        val adapter = aboutRecyclerView.adapter as AboutListAdapter
+        adapter.removeRemoveAds()
     }
 
     companion object {

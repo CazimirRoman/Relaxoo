@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -52,6 +53,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
         // will set up the RowHolder
 
         viewHolderItem = new ViewHolderItem();
+        viewHolderItem.soundName = convertView.findViewById(R.id.sound_name);
         viewHolderItem.soundImage = convertView.findViewById(R.id.sound_image);
         viewHolderItem.soundVolume = convertView.findViewById(R.id.sound_volume);
         viewHolderItem.parentLayout = convertView.findViewById(R.id.cl);
@@ -70,6 +72,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
       // object item based on the position
       final Sound sound = getItem(position);
 
+      viewHolderItem.soundName.setText(sound.getName());
       viewHolderItem.soundVolume.setProgress(Math.round(sound.getVolume() * 100));
       viewHolderItem.soundVolume.setVisibility(sound.getPlaying() ? View.VISIBLE : View.INVISIBLE);
       viewHolderItem.moreOptions.setVisibility(sound.getCustom() ? View.VISIBLE : View.INVISIBLE);
@@ -141,6 +144,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
 
     private static class ViewHolderItem {
 
+        private TextView soundName;
         private ImageView soundImage;
         private SeekBar soundVolume;
         private ConstraintLayout parentLayout;

@@ -35,9 +35,9 @@ class PrivacyPolicyActivity : AppCompatActivity() {
         supportActionBar?.setTitle("Privacy Policy")
 
         webView.webViewClient = WebViewClient()
-        webView.loadUrl("https://sites.google.com/view/relaxoo-app/home")
-        val webSettings = webView.settings
-        webSettings.javaScriptEnabled = true
+        webView.loadUrl("file:///assets/privacy_policy.html")
+
+
     }
 
     private fun initializeAdView() {

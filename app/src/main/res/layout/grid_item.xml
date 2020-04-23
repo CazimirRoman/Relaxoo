@@ -16,6 +16,19 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:srcCompat="@tools:sample/avatars[0]" />
 
+    <TextView
+        android:id="@+id/sound_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:text="Sound name"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sound_image">
+
+    </TextView>
+
     <SeekBar
         android:id="@+id/sound_volume"
         android:layout_width="match_parent"
@@ -23,7 +36,7 @@
         android:max="100"
         android:padding="10dp"
         android:visibility="invisible"
-        app:layout_constraintTop_toBottomOf="@+id/sound_image" />
+        app:layout_constraintTop_toBottomOf="@+id/sound_name" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/pro_icon"
@@ -37,12 +50,13 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/more_options"
+        android:background="?android:attr/selectableItemBackground"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/sound_image"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/sound_volume"
+        app:layout_constraintTop_toTopOf="@id/sound_name"
         app:srcCompat="@drawable/ic_more_vert"
         tools:visibility="visible" />
 

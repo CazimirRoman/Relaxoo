@@ -1,12 +1,12 @@
 package com.cazimir.relaxoo.ui.create_sound
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.repository.ISoundRepository
 import java.io.File
-import java.util.*
 
 class CreateSoundViewModel : ViewModel() {
 
@@ -15,7 +15,10 @@ class CreateSoundViewModel : ViewModel() {
     }
 
     private var recordings: Array<File>? = null
-    val _recordingsLive = MutableLiveData<ArrayList<Recording>>()
+    private val _recordingsLive = MutableLiveData<ArrayList<Recording>>()
+
+    val recordingsLive: LiveData<ArrayList<Recording>>
+        get() = _recordingsLive
 
     lateinit var repository: ISoundRepository
 

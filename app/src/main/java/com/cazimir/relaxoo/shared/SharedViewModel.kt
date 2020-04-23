@@ -4,8 +4,7 @@ import TimerTaskExtended
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import java.util.Timer
-import java.util.TimerTask
+import java.util.*
 
 class SharedViewModel : ViewModel() {
 
@@ -27,11 +26,7 @@ class SharedViewModel : ViewModel() {
 
     var nextColor: MutableLiveData<Int> = MutableLiveData(0)
 
-    var splashShown = false
-
-    fun splashShown() {
-        splashShown = true
-    }
+    var splashScreenShown = false
 
     fun adsBought(bought: Boolean) {
         adsBought.value = bought

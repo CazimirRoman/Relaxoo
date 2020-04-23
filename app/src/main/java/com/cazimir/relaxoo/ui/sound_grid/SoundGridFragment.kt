@@ -144,6 +144,8 @@ class SoundGridFragment() : Fragment() {
                                                 if (sound.pro && !sound.playing) {
                                                     viewModel.setClickedProSound(sound)
                                                     activityCallback.showBottomDialogForPro()
+                                                } else if (!sound.loaded) {
+                                                    activityCallback.showSnackBar(getString(R.string.sound_loading))
                                                 } else {
                                                     playStopSound(sound)
                                                 }
@@ -193,7 +195,11 @@ class SoundGridFragment() : Fragment() {
 
 
                             } else {
-                                gridArrayAdapter!!.refreshList(sounds)
+                                // TODO: 21-Apr-20 this is called so many times!!
+                                if (sounds.size != 0) {
+                                    gridArrayAdapter!!.refreshList(sounds)
+                                }
+
                             }
 
                             // if sound not loaded yet and sounds list not yet populated
@@ -240,8 +246,7 @@ class SoundGridFragment() : Fragment() {
 //                                }
                                 // wait for at least 3 sounds to load then show dashboard and rest will load in background. until then a spinner will show
                                 if (soundsAdded == 3) {
-                                    activityCallback.hideProgress()
-                                    activityCallback.hideSplash()
+                                    activityCallback.hideSplashScreen()
                                 }
                             }
                         })
@@ -362,7 +367,7 @@ class SoundGridFragment() : Fragment() {
             if (atLeastOneIsPlaying != null) {
                 activityCallback.showAddToFavoritesDialog(playingSounds)
             } else {
-                activityCallback.showToast("You must play at least one sound")
+                activityCallback.showSnackBar(getString(R.string.play_one_sound))
             }
         }
 
@@ -375,7 +380,7 @@ class SoundGridFragment() : Fragment() {
                     activityCallback.showTimerDialog()
                 }
             } else {
-                activityCallback.showToast("You must play at least one sound")
+                activityCallback.showSnackBar(getString(R.string.play_one_sound))
             }
         }
     }
@@ -531,7 +536,8 @@ class SoundGridFragment() : Fragment() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
-    fun saveAllSoundsToSharedPreferences(eventBusLoad: EventBusLoadSingle) {
+    fun singleSoundLoadedToSoundpoolCallback(eventBusLoad: EventBusLoadSingle) {
+        Log.d(TAG, "singleSoundLoadedToSoundpoolCallback: called")
         viewModel.addSingleSoundToSounds(eventBusLoad.sound)
         scrollToBottom()
     }

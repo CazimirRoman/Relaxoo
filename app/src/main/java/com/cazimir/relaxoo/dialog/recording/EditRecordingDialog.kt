@@ -6,6 +6,9 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
@@ -21,6 +24,7 @@ import org.apache.commons.io.FilenameUtils
 class EditRecordingDialog(val recording: Recording, val callback: RecordingBottomCallback) :
         RetainableDialogFragment() {
 
+    private lateinit var layout: View
     private lateinit var positiveButton: Button
     val editTextString: MutableLiveData<String> = MutableLiveData()
 
@@ -32,18 +36,24 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
         }
     }
 
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        layout.new_recording_name.requestFocus()
+        dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        return super.onCreateView(inflater, container, savedInstanceState)
+    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 
-        val view = activity!!.layoutInflater.inflate(R.layout.edit_recording, null)
+        layout = activity!!.layoutInflater.inflate(R.layout.edit_recording, null)
 
-        view.new_recording_name.onChange {
+        layout.new_recording_name.onChange {
             Log.d(TAG, "new_recording_name: changed: $it")
             editTextString.value = it
         }
 
         editTextString.observe(this, Observer {
             if (it.isEmpty()) {
-                view.new_recording_name.error = getString(R.string.no_recording_text)
+                layout.new_recording_name.error = getString(R.string.no_recording_text)
                 positiveButton.isEnabled = false
             } else {
                 positiveButton.isEnabled = true
@@ -53,24 +63,24 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
 
         val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(activity!!)
 
-        view?.let {
+        layout?.let {
 
             // set prompts.xml to alertdialog builder
-            alertDialogBuilder.setView(view)
+            alertDialogBuilder.setView(layout)
 
-            view.new_recording_name.setText(FilenameUtils.removeExtension(recording.file.name))
+            layout.new_recording_name.setText(FilenameUtils.removeExtension(recording.file.name))
             // set dialog message
             alertDialogBuilder
-                .setTitle("Rename created sound")
-                .setCancelable(false)
-                .setPositiveButton(
+                    .setTitle("Rename created sound")
+                    .setCancelable(false)
+                    .setPositiveButton(
                     "OK",
                     object : DialogInterface.OnClickListener {
                         override fun onClick(dialog: DialogInterface?, which: Int) {
 
                             callback.edited(
                                 recording,
-                                view.new_recording_name?.getText().toString()
+                                    layout.new_recording_name?.getText().toString()
                             )
                         }
                     })

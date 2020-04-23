@@ -86,11 +86,12 @@ class CreateSoundFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        // TODO: 22-Apr-20 use the factory thing here to provide the repository via the constructor
         viewModel = ViewModelProvider(this).get(CreateSoundViewModel::class.java)
         viewModel.repository = SoundRepository()
         viewModel.refreshList()
         viewModel
-                ._recordingsLive
+                .recordingsLive
                 .observe(
                         viewLifecycleOwner,
                         Observer<ArrayList<Recording>> { files: ArrayList<Recording> ->
@@ -103,7 +104,7 @@ class CreateSoundFragment : Fragment() {
         mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
     }
 
-    fun onAddRecordingClicked() {
+    private fun onAddRecordingClicked() {
         Log.d(TAG, "onViewClicked() called")
         activityCallback.recordingStarted()
     }

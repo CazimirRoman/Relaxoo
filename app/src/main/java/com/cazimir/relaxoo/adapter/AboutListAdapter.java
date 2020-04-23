@@ -66,6 +66,11 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
         return data.size();
     }
 
+    public void removeRemoveAds() {
+        data.remove(0);
+        notifyItemRemoved(0);
+    }
+
     public interface Interactor {
         void onItemClick(AboutItem item);
     }

@@ -88,7 +88,6 @@ class SaveToFavoritesDialog(private val playingSoundIds: List<Sound>) : Retainab
                 .withPlaying(true)
                 .build()
         addToListInFragmentCallback!!.saved(savedCombo)
-        Toast.makeText(activity, getString(R.string.saved_combo), Toast.LENGTH_LONG).show()
     }
 
     override fun onDismiss(unused: DialogInterface) {
