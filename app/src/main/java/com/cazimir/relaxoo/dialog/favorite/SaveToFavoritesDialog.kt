@@ -59,8 +59,8 @@ class SaveToFavoritesDialog(private val playingSoundIds: List<Sound>) : Retainab
         return builder
                 .setTitle("Save Favorites Combos")
                 .setView(form)
-                .setPositiveButton(android.R.string.ok, this)
-                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(getString(R.string.ok), this)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .create()
     }
 

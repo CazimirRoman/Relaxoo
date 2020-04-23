@@ -22,12 +22,12 @@
             android:id="@+id/pager"
             android:layout_height="0dp"
             android:layout_width="match_parent"
-            android:layout_weight="9"></androidx.viewpager2.widget.ViewPager2>
+            android:layout_weight="9" />
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:id="@+id/coordinator"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"></androidx.coordinatorlayout.widget.CoordinatorLayout>
+            android:layout_height="wrap_content" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabDots"
@@ -67,7 +67,7 @@
 
         </ProgressBar>
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/no_internet_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -77,7 +77,7 @@
             android:textColor="@android:color/white"
             android:visibility="gone">
 
-        </TextView>
+        </androidx.appcompat.widget.AppCompatTextView>
 
     </FrameLayout>
 

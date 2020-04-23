@@ -64,17 +64,18 @@
 
         </LinearLayout>
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/timerText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:text="Sounds will stop in 00:00:00"
             android:textColor="@android:color/white"
-            android:visibility="invisible" />
+            android:visibility="gone" />
 
         <GridView
             android:id="@+id/gridView"
+            android:scrollbars="none"
             android:listSelector="#00000000"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

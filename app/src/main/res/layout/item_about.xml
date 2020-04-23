@@ -9,7 +9,7 @@
     android:clickable="true"
     android:focusable="true"
     android:orientation="horizontal"
-    android:padding="10dp">
+    android:padding="15dp">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/about_item_logo"
@@ -19,12 +19,10 @@
         app:srcCompat="@drawable/ic_message"
         tools:srcCompat="@tools:sample/avatars" />
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/about_item_name"
+        style="@style/ListItemRecording"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:layout_weight="0.8"
-        android:text="TextView"
-        android:textColor="@android:color/white" />
+        android:layout_weight="0.8" />
 </LinearLayout>

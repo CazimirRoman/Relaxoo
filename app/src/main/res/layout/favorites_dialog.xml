@@ -8,10 +8,11 @@
 
     <EditText
         android:id="@+id/combo_name"
+        android:layout_margin="10dp"
+        android:autofillHints=""
         android:layout_width="match_parent"
-        android:focusedByDefault="true"
         android:layout_height="wrap_content"
-        android:hint="Enter your combo name here">
-    </EditText>
+        android:hint="@string/combo_hint"
+        android:inputType="text"></EditText>
 
 </LinearLayout>

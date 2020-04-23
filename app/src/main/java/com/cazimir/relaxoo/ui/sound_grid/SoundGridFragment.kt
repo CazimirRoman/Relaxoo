@@ -245,9 +245,10 @@ class SoundGridFragment() : Fragment() {
 //
 //                                }
                                 // wait for at least 3 sounds to load then show dashboard and rest will load in background. until then a spinner will show
-                                if (soundsAdded == 3) {
-                                    activityCallback.hideSplashScreen()
-                                }
+//                                if (soundsAdded == 3) {
+//                                    activityCallback.hideSplashScreen()
+//                                }
+                                activityCallback.hideSplashScreen()
                             }
                         })
 

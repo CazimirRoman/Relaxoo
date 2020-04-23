@@ -12,7 +12,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/favorites_fragment_title"
             style="@style/FragmentTitle"
             android:text="@string/create_sound" />
@@ -26,7 +26,7 @@
 
     </LinearLayout>
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/no_recordings_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
         android:text="You don't have any recordings"
         android:textColor="@android:color/white">
 
-    </TextView>
+    </androidx.appcompat.widget.AppCompatTextView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_recording"

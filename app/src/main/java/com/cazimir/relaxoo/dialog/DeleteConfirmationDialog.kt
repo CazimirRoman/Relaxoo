@@ -11,17 +11,13 @@ import kotlinx.android.synthetic.main.dialog_delete_confirmation.view.*
 
 class DeleteConfirmationDialog(private val callback: OnDeleted) : RetainableDialogFragment(), DialogInterface.OnClickListener {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-
-        // instatiate callback
-
-//    callback = (OnDeleted) getContext();
         val form = activity!!.layoutInflater.inflate(R.layout.dialog_delete_confirmation, null)
 
         if (callback is RecordingDeleted) form.delete_confirmation_text.text = getString(R.string.delete_confirmation_recording)
 
         val builder = AlertDialog.Builder(activity!!)
-        builder.setNegativeButton(android.R.string.cancel, null)
-        builder.setPositiveButton(android.R.string.ok, this)
+        builder.setNegativeButton(getString(R.string.cancel), null)
+        builder.setPositiveButton(getString(R.string.ok), this)
         return builder.setTitle("Delete?").setView(form).create()
     }
 

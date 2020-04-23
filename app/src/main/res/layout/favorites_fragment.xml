@@ -13,7 +13,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/favorites_fragment_title"
             style="@style/FragmentTitle"
             android:text="@string/favorites_combos" />
@@ -22,11 +22,11 @@
             android:id="@+id/favoritesList"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="10dp"
+            android:layout_margin="15dp"
             android:layout_weight="0.9" />
     </LinearLayout>
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/no_favorites_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

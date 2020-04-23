@@ -14,13 +14,13 @@
         android:orientation="horizontal">
 
         <androidx.appcompat.widget.AppCompatImageView
-            style="@style/ProActionIcon"
-            app:srcCompat="@drawable/ic_message"
-            tools:src="@drawable/ic_message">
+            style="@style/BottomDialogIcon"
+            app:srcCompat="@drawable/ic_pin"
+            tools:src="@drawable/ic_pin">
 
         </androidx.appcompat.widget.AppCompatImageView>
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
@@ -35,14 +35,11 @@
         android:orientation="horizontal">
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/pro_invite_fb_friends_icon"
-            style="@style/ProActionIcon"
-            app:srcCompat="@drawable/ic_message"
-            tools:src="@drawable/ic_message">
+            style="@style/BottomDialogIcon"
+            app:srcCompat="@drawable/ic_edit"
+            tools:src="@drawable/ic_edit" />
 
-        </androidx.appcompat.widget.AppCompatImageView>
-
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
@@ -57,13 +54,13 @@
         android:orientation="horizontal">
 
         <androidx.appcompat.widget.AppCompatImageView
-            style="@style/ProActionIcon"
-            app:srcCompat="@drawable/ic_message"
-            tools:src="@drawable/ic_message">
+            style="@style/BottomDialogIcon"
+            app:srcCompat="@drawable/ic_delete_black"
+            tools:src="@drawable/ic_delete">
 
         </androidx.appcompat.widget.AppCompatImageView>
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"

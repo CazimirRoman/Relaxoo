@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.TextView
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.model.MoreApp
@@ -31,7 +31,7 @@ class MoreAppsAdapter(val context: Context, private val list: List<MoreApp>) : R
     class CustomViewHolder(val rowView: View, var item: MoreApp? = null) : RecyclerView.ViewHolder(rowView) {
 
         var logo: ImageView
-        var description: TextView
+        var description: AppCompatTextView
         val picasso = Picasso.get()
 
         init {

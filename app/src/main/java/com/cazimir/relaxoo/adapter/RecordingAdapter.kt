@@ -7,8 +7,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
@@ -16,6 +16,7 @@ import com.cazimir.relaxoo.model.Recording
 import kotlinx.android.synthetic.main.item_recording.view.*
 import org.apache.commons.io.FilenameUtils
 import java.io.File
+import java.text.SimpleDateFormat
 import java.util.*
 
 class RecordingAdapter(
@@ -49,7 +50,13 @@ class RecordingAdapter(
         holder.recordingDuration.setText("Duration: " + TimerDialog.getCountTimeByLong(millSecond.toLong()))
         val file = File(item.file.path)
         val lastModDate = Date(file.lastModified())
-        holder.recordingCreated.setText("Created at: $lastModDate")
+
+        val pattern = "yyyy-MM-dd HH:mm"
+        val simpleDateFormat = SimpleDateFormat(pattern)
+        val date: String = simpleDateFormat.format(lastModDate)
+
+
+        holder.recordingCreated.setText("Created at: $date")
         holder.playRecording.setOnClickListener(
                 View.OnClickListener {
                     // if current item is playing, stop it
@@ -122,9 +129,9 @@ class RecordingAdapter(
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val recordingName: TextView = view.recording_name
-        val recordingDuration: TextView = view.recording_duration
-        val recordingCreated: TextView = view.recording_created
+        val recordingName: AppCompatTextView = view.recording_name
+        val recordingDuration: AppCompatTextView = view.recording_duration
+        val recordingCreated: AppCompatTextView = view.recording_created
         val playRecording: AppCompatImageButton = view.play_recording
         val optionsRecording: AppCompatImageButton = view.options_recording
     }

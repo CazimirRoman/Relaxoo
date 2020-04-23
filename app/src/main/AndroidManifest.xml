@@ -36,6 +36,10 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-7748272108558557~3488437577" />
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
+
         <service
             android:name=".service.SoundService"
             android:enabled="true"

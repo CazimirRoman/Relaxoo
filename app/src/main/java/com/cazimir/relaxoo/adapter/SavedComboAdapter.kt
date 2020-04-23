@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import android.widget.TextView
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.cazimir.relaxoo.R
@@ -53,12 +53,12 @@ class SavedComboAdapter(private val context: Context, private val list: ListOfSa
      * is responsible for binding data as needed from our model into the widgets for a row
      */
     class ViewHolder internal constructor(view: View) : RecyclerView.ViewHolder(view) {
-        val comboText: TextView
+        val comboText: AppCompatTextView
         val deleteCombo: ImageButton
         val parentLayout: ConstraintLayout
 
         init {
-            comboText = view.findViewById(R.id.comboText)
+            comboText = view.findViewById(R.id.comboName)
             parentLayout = view.findViewById(R.id.parent_saved_combo)
             deleteCombo = view.findViewById(R.id.deleteCombo)
 

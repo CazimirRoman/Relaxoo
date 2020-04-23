@@ -3,54 +3,68 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="10dp">
-
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/play_recording"
-        style="@style/UpperButtons"
-        android:layout_width="75dp"
-        android:layout_height="75dp"
-        android:layout_gravity="center_vertical"
-        app:srcCompat="@drawable/ic_play" />
+    android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="0.8"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:padding="15dp">
 
-        <TextView
-            android:id="@+id/recording_name"
-            android:layout_width="match_parent"
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/play_recording"
+            style="@style/UpperButtons"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_gravity="center_vertical"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/ic_play" />
+
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Recording name"
-            android:textColor="@android:color/white" />
+            android:layout_gravity="center_vertical"
+            android:layout_weight="0.8"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/recording_duration"
-            android:layout_width="match_parent"
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/recording_name"
+                style="@style/ListItemRecording"
+                android:text="Recording name"
+                android:textColor="@android:color/white" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/recording_duration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Recording duration"
+                android:textColor="@android:color/white" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/recording_created"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Recording created"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/options_recording"
+            style="@style/UpperButtons"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Recording duration"
-            android:textColor="@android:color/white" />
-
-        <TextView
-            android:id="@+id/recording_created"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Recording created"
-            android:textColor="@android:color/white" />
-
+            android:layout_gravity="center_vertical"
+            android:layout_weight="0.1"
+            app:srcCompat="@drawable/ic_more_vert" />
     </LinearLayout>
 
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/options_recording"
-        style="@style/UpperButtons"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="0.1"
-        app:srcCompat="@drawable/ic_more_vert" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:alpha="0.8"
+        android:background="@color/divider"></View>
 
 </LinearLayout>

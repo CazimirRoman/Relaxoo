@@ -17,7 +17,7 @@
             android:layout_weight="0.2"
             tools:srcCompat="@tools:sample/avatars" />
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:layout_marginStart="10dp"
             android:id="@+id/appDescription"
             android:layout_width="wrap_content"

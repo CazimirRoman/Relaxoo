@@ -200,13 +200,10 @@ class SoundService : Service(), ISoundService {
     private fun setupNotifications() {
 
         this.notificationView = RemoteViews(packageName, R.layout.custom_notification)
-
         val notificationIntent = Intent(this, MainActivity::class.java)
         this.pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
-        // val stopAllIntent = getCommand(this, StopAllSoundsCommand())
         val togglePlayStop = getCommand(this, TogglePlayStopCommand())
-
         val muteIntent = getCommand(this, ToggleMuteCommand())
         val closeIntent = getCommand(this, StopServiceCommand())
 

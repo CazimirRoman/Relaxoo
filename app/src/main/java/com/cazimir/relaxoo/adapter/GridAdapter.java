@@ -12,9 +12,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.cazimir.relaxoo.R;
@@ -144,7 +144,7 @@ public class GridAdapter extends ArrayAdapter<Sound> {
 
     private static class ViewHolderItem {
 
-        private TextView soundName;
+        private AppCompatTextView soundName;
         private ImageView soundImage;
         private SeekBar soundVolume;
         private ConstraintLayout parentLayout;

@@ -7,17 +7,17 @@
     <string name="toast">Value: %1$s</string>
     <string name="favorites_combos">Favorites combos</string>
     <string name="delete_confirmation">Are you sure you want to delete?</string>
-    <string name="delete_confirmation_recording">Are you sure you want to delete the recording? \n All pinned sounds on dashboard will also be removed</string>
+    <string name="delete_confirmation_recording">Are you sure you want to delete the recording?\n \nAll pinned sounds will also be removed</string>
     <string name="create_sound">Create your sound</string>
-    <string name="actions_text">You can do these actions to play sound</string>
-    <string name="view_ads">View ads</string>
+    <string name="actions_text">You can do these actions to play sound once</string>
+    <string name="watch_an_ad">Watch an ad</string>
     <string name="invite_fb_friends">Invite friends with Facebook</string>
     <string name="invite_friends">Invite friends</string>
     <string name="about_fragment">About</string>
     <string name="pin_to_dashboard">Pin to dashboard</string>
     <string name="edit_recording_name">Edit name</string>
     <string name="delete_recording">Delete recording</string>
-    <string name="loading_sounds">Loading sounds...</string>
+    <string name="loading_sounds">Loading sounds…</string>
     <string name="share_text">Relaxoo - Help you concentrate at day and easy to fall asleep at night</string>
     <string name="delete_custom_sound">Delete sound</string>
     <string name="hello_blank_fragment">Hello F1</string>
@@ -41,4 +41,8 @@
 
     <string name="ad_test">ca-app-pub-3940256099942544/6300978111</string>
     <string name="ad_prod">ca-app-pub-7748272108558557/1855871257</string>
+    <string name="combo_hint">Enter your combo name here</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="buy_pro">Buy PRO</string>
 </resources>

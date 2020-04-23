@@ -262,7 +262,7 @@ class MainActivity : FragmentActivity(),
 
         showSnackBar(getString(R.string.back_exit))
 
-        Handler().postDelayed(Runnable { doubleBackToExitPressedOnce = false }, 2000)
+        Handler().postDelayed({ doubleBackToExitPressedOnce = false }, 2000)
     }
 
     private fun shouldHideSplash() {
@@ -548,7 +548,7 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun showSnackBar(string: String) {
-        Snackbar.make(coordinator, string, Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(coordinator, string, Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).show()
     }
 
     override fun renameRecording(recording: Recording, newName: String) {
@@ -574,7 +574,7 @@ class MainActivity : FragmentActivity(),
         try {
             val pinnedRecordings = ModelPreferencesManager.get<ListOfSavedCustom>(PINNED_RECORDINGS)
             val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
-            list?.add(sound)
+            list.add(sound)
             val newObject = ListOfSavedCustom(list)
             save(newObject, PINNED_RECORDINGS)
         } catch (e: JsonSyntaxException) {
@@ -705,7 +705,7 @@ class MainActivity : FragmentActivity(),
 
     override fun onRewardedVideoCompleted() {
         Log.d(TAG, "onRewardedVideoCompleted: called")
-        getSoundGridFragment()?.rewardUserByPlayingProSound()
+        getSoundGridFragment().rewardUserByPlayingProSound()
         loadRewardedVideoAd()
     }
 

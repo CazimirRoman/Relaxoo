@@ -126,12 +126,12 @@ class AboutFragment : Fragment() {
     private fun populateAboutItems(adsBought: Boolean?): List<AboutItem> {
         val aboutItems: MutableList<AboutItem> = ArrayList()
         if (!adsBought!!) {
-            aboutItems.add(AboutItem(MenuItemType.REMOVE_ADS, R.drawable.ic_message))
+            aboutItems.add(AboutItem(MenuItemType.REMOVE_ADS, R.drawable.ic_shop_white))
         }
-        aboutItems.add(AboutItem(MenuItemType.SHARE, R.drawable.ic_message))
-        aboutItems.add(AboutItem(MenuItemType.PRIVACY_POLICY, R.drawable.ic_message))
-        aboutItems.add(AboutItem(MenuItemType.RATE_APP, R.drawable.ic_message))
-        aboutItems.add(AboutItem(MenuItemType.MORE_APPS, R.drawable.ic_message))
+        aboutItems.add(AboutItem(MenuItemType.SHARE, R.drawable.ic_share_white))
+        aboutItems.add(AboutItem(MenuItemType.PRIVACY_POLICY, R.drawable.ic_info_white))
+        aboutItems.add(AboutItem(MenuItemType.RATE_APP, R.drawable.ic_star_white))
+        aboutItems.add(AboutItem(MenuItemType.MORE_APPS, R.drawable.ic_more_vert))
         return aboutItems
     }
 

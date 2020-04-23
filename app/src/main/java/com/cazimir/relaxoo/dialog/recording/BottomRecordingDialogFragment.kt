@@ -10,6 +10,7 @@ import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.synthetic.main.dialog_bottom_recording.view.*
+import org.apache.commons.io.FilenameUtils
 
 class BottomRecordingDialogFragment(val recording: Recording, val callback: OnActivityCallback) :
     BottomSheetDialogFragment() {
@@ -58,7 +59,7 @@ class BottomRecordingDialogFragment(val recording: Recording, val callback: OnAc
             val sound = Sound(custom = true,
                     filePath = recording.file.path,
                     logoPath = "/storage/emulated/0/Relaxoo/logos/thunder.png",
-                    name = recording.file.name,
+                    name = FilenameUtils.removeExtension(recording.file.name),
                     id = recording.file.name)
 
             callback.pinToDashBoardActionCalled(sound)

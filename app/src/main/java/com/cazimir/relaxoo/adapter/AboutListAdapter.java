@@ -6,8 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cazimir.relaxoo.R;
@@ -81,7 +81,7 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
     public static class RowHolder extends RecyclerView.ViewHolder {
 
         private LinearLayout rootLayout;
-        private TextView name;
+        private AppCompatTextView name;
         private ImageView icon;
 
         public RowHolder(View view) {
