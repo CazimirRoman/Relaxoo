@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.cazimir.relaxoo.model.Recording
-import com.cazimir.relaxoo.repository.ISoundRepository
+import com.cazimir.relaxoo.repository.IRecordingRepository
 import java.io.File
 
 class CreateSoundViewModel : ViewModel() {
@@ -20,7 +20,7 @@ class CreateSoundViewModel : ViewModel() {
     val recordingsLive: LiveData<ArrayList<Recording>>
         get() = _recordingsLive
 
-    lateinit var repository: ISoundRepository
+    lateinit var repository: IRecordingRepository
 
     fun refreshList() {
 

@@ -17,7 +17,7 @@ import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.RecordingAdapter
 import com.cazimir.relaxoo.model.Recording
-import com.cazimir.relaxoo.repository.SoundRepository
+import com.cazimir.relaxoo.repository.RecordingRepository
 import kotlinx.android.synthetic.main.create_sound_fragment.*
 import kotlinx.android.synthetic.main.create_sound_fragment.view.*
 import java.io.IOException
@@ -88,7 +88,7 @@ class CreateSoundFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         // TODO: 22-Apr-20 use the factory thing here to provide the repository via the constructor
         viewModel = ViewModelProvider(this).get(CreateSoundViewModel::class.java)
-        viewModel.repository = SoundRepository()
+        viewModel.repository = RecordingRepository()
         viewModel.refreshList()
         viewModel
                 .recordingsLive

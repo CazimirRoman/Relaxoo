@@ -40,26 +40,26 @@ class TestUtil {
 
         fun clickOnSounds(howMany: Int) {
             when (howMany) {
-                1 -> onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
+                1 -> onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0).perform(click())
                 2 -> {
-                    onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).perform(click())
-                    onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+                    onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0).perform(click())
+                    onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2).perform(click())
                 }
             }
         }
 
         fun checkIfVolumeSliderIsDisplayed(howMany: Int) {
             when (howMany) {
-                1 -> onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0)
+                1 -> onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0)
                         .onChildView(
                                 withId(R.id.sound_volume)
                         ).check(matches(ViewMatchers.isDisplayed()))
                 2 -> {
-                    onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0)
+                    onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0)
                             .onChildView(
                                     withId(R.id.sound_volume)
                             ).check(matches(ViewMatchers.isDisplayed()))
-                    onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2)
+                    onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2)
                             .onChildView(
                                     withId(R.id.sound_volume)
                             ).check(matches(ViewMatchers.isDisplayed()))

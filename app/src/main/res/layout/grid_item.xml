@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cl"
-    android:layout_width="150dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
@@ -19,6 +19,7 @@
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/sound_name"
         android:layout_width="wrap_content"
+        android:gravity="center_horizontal"
         android:layout_height="wrap_content"
         android:layout_marginTop="25dp"
         android:textColor="@android:color/white"
@@ -62,6 +63,7 @@
 
     <ProgressBar
         android:id="@+id/grid_item_loading"
+        android:indeterminateTint="@android:color/white"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="?android:attr/progressBarStyleSmall"

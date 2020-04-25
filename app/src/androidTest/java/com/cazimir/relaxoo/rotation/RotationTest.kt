@@ -70,9 +70,9 @@ class RotationTest {
     fun rotate_sound_grid_fragment() {
         clickOnPlayStopButton()
         checkVisibilityOfView(R.id.sound_list_fragment, Visibility.VISIBLE)
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).perform(click())
+        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2).perform(click())
         device.setOrientationLeft()
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
         clickOnPlayStopButton()
     }
 

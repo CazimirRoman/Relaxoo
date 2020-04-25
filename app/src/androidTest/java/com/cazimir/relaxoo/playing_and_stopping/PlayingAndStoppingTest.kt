@@ -67,12 +67,12 @@ class PlayingAndStoppingTest {
     @Test
     fun stop_all_sounds() {
         clickOnSounds(2)
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
 
         clickOnPlayStopButton()
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
+        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
+        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
 
     }
 

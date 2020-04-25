@@ -13,7 +13,6 @@ import androidx.test.uiautomator.UiDevice
 import com.cazimir.relaxoo.EspressoIdlingResource
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
-import com.cazimir.relaxoo.util.TestUtil
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnPlayStopButton
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnSounds
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnTimerButton
@@ -67,8 +66,8 @@ class TimerTest {
         onView(ViewMatchers.withId(R.id.timer_dialog)).check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
         onData(CoreMatchers.allOf()).inAdapterView(ViewMatchers.withId(R.id.timer_list)).atPosition(0).perform(ViewActions.click())
         onView(ViewMatchers.withId(R.id.timerText)).check(ViewAssertions.matches(CoreMatchers.allOf(ViewMatchers.isDisplayed(), CoreMatchers.not(ViewMatchers.withText("Sounds will stop in 00:00:00")))))
-        TestUtil.clickOnPlayStopButton()
-        onData(CoreMatchers.allOf()).inAdapterView(ViewMatchers.withId(R.id.gridView)).atPosition(0).onChildView(ViewMatchers.withId(R.id.sound_volume)).check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
+        clickOnPlayStopButton()
+        onData(CoreMatchers.allOf()).inAdapterView(ViewMatchers.withId(R.id.sounds_recycler_view)).atPosition(0).onChildView(ViewMatchers.withId(R.id.sound_volume)).check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
     }
 
     @Test
@@ -80,6 +79,6 @@ class TimerTest {
         onView(ViewMatchers.withId(R.id.timerText)).check(ViewAssertions.matches(CoreMatchers.allOf(ViewMatchers.isDisplayed(), CoreMatchers.not(ViewMatchers.withText("Sounds will stop in 00:00:00")))))
         clickOnTimerButton()
         onView(ViewMatchers.withId(R.id.timerText)).check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
-        onData(CoreMatchers.allOf()).inAdapterView(ViewMatchers.withId(R.id.gridView)).atPosition(0).onChildView(ViewMatchers.withId(R.id.sound_volume)).check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
+        onData(CoreMatchers.allOf()).inAdapterView(ViewMatchers.withId(R.id.sounds_recycler_view)).atPosition(0).onChildView(ViewMatchers.withId(R.id.sound_volume)).check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
     }
 }

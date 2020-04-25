@@ -16,6 +16,6 @@ class SoundGridFragmentTest {
     @Test
     fun testGridViewIsDisplayed() {
         val scenario = launchFragmentInContainer<SoundGridFragment>()
-        onView(withId(R.id.gridView)).check(matches(isDisplayed()))
+        onView(withId(R.id.sounds_recycler_view)).check(matches(isDisplayed()))
     }
 }

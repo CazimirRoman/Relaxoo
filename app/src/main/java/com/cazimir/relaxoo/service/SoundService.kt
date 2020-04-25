@@ -37,8 +37,8 @@ class SoundService : Service(), ISoundService {
         }
     }
 
-    private val _muted: MutableLiveData<Boolean> = MutableLiveData(false)
-    private val _playingSoundsListLive: MutableLiveData<ArrayList<Sound>> = MutableLiveData()
+    private val _muted: MutableLiveData<Boolean> = MutableLiveData()
+    private val _playingSoundsListLive: MutableLiveData<List<Sound>> = MutableLiveData()
     private val _timerRunning: MutableLiveData<Boolean> = MutableLiveData()
     private val _timerText: MutableLiveData<String> = MutableLiveData("")
     private lateinit var notificationBuilder: NotificationCompat.Builder
@@ -53,7 +53,7 @@ class SoundService : Service(), ISoundService {
     private var playingSoundsListCached: ArrayList<Sound> = ArrayList()
 
 
-    private val playingSoundsObserver: Observer<ArrayList<Sound>> = Observer {
+    private val textEndingObserver: Observer<List<Sound>> = Observer {
         timerTextEnding = if (it.size > 1) {
             "s"
         } else {
@@ -141,12 +141,20 @@ class SoundService : Service(), ISoundService {
         soundPool = SoundPool(MAX_SOUNDS, AudioManager.STREAM_MUSIC, 0)
 
         soundPool.setOnLoadCompleteListener { soundPool: SoundPool?, soundPoolId: Int, status: Int ->
-            Log.d(TAG, "onLoadComplete: " + soundPoolId)
+            Log.d(TAG, "onLoadComplete: $soundPoolId")
             // broadcast to viewModel
             EventBus.getDefault().post(EventBusLoadedToSoundPool(soundPoolId))
         }
 
-        _playingSoundsListLive.observeForever(playingSoundsObserver)
+        _playingSoundsListLive.observeForever(textEndingObserver)
+        _playingSoundsListLive.observeForever {
+            if (it.isEmpty()) {
+                countDownTimer?.cancel()
+                _timerRunning.value = false
+            }
+        }
+
+
         _timerRunning.observeForever(timerRunningObserver)
         _muted.observeForever(mutedObserver)
     }
@@ -208,16 +216,16 @@ class SoundService : Service(), ISoundService {
         val closeIntent = getCommand(this, StopServiceCommand())
 
         val togglePlayStopIntent =
-            PendingIntent.getService(this, 0, togglePlayStop, PendingIntent.FLAG_UPDATE_CURRENT)
+                PendingIntent.getService(this, 0, togglePlayStop, PendingIntent.FLAG_UPDATE_CURRENT)
         val mutePendingIntent =
-            PendingIntent.getService(this, 1, muteIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                PendingIntent.getService(this, 1, muteIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         val closePendingIntent =
-            PendingIntent.getService(this, 2, closeIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                PendingIntent.getService(this, 2, closeIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         createNotificationBuilder()
 
-        _playingSoundsListLive.observeForever(Observer { playingSounds ->
-            if (playingSounds.size == 0) {
+        _playingSoundsListLive.observeForever { playingSounds ->
+            if (playingSounds.isEmpty()) {
                 // stopForeground(true)
                 notificationView.setImageViewResource(
                         R.id.remote_view_play_stop,
@@ -228,50 +236,50 @@ class SoundService : Service(), ISoundService {
                 triggerNotificationRefresh()
             } else {
                 notificationView.setTextViewText(
-                    R.id.remote_view_playing_txt,
-                    getNotificationText(playingSounds.size)
+                        R.id.remote_view_playing_txt,
+                        getNotificationText(playingSounds.size)
                 )
                 notificationView.setImageViewResource(
-                    R.id.remote_view_play_stop,
-                    R.drawable.ic_stop_black
+                        R.id.remote_view_play_stop,
+                        R.drawable.ic_stop_black
                 )
                 notificationView.setOnClickPendingIntent(
-                    R.id.remote_view_play_stop,
-                    togglePlayStopIntent
+                        R.id.remote_view_play_stop,
+                        togglePlayStopIntent
                 )
                 notificationView.setOnClickPendingIntent(R.id.remote_view_mute, mutePendingIntent)
                 notificationView.setOnClickPendingIntent(R.id.remote_view_close, closePendingIntent)
 
                 val notification = this.notificationBuilder
-                    .build()
+                        .build()
 
                 startForeground(1, notification)
-
-                _muted.observeForever {
-                    if (it) {
-                        notificationView.setImageViewResource(R.id.remote_view_mute, R.drawable.ic_mute_on_black)
-                        this.notificationBuilder.setCustomContentView(notificationView)
-                        // this whole thing is done because of this : https://stackoverflow.com/questions/25821903/change-android-notification-text-dynamically
-                        // I need to update the builder with the updated view and then retrigger the notification makings sure the builder has this flag : .setOnlyAlertOnce(true)
-                        triggerNotificationRefresh()
-                    } else {
-                        notificationView.setImageViewResource(
-                            R.id.remote_view_mute,
-                            R.drawable.ic_mute_off_black
-                        )
-                        this.notificationBuilder.setCustomContentView(notificationView)
-                        triggerNotificationRefresh()
-                    }
-                }
             }
-        })
+        }
+
+        _muted.observeForever {
+            if (it) {
+                notificationView.setImageViewResource(R.id.remote_view_mute, R.drawable.ic_mute_on_black)
+                this.notificationBuilder.setCustomContentView(notificationView)
+                // this whole thing is done because of this : https://stackoverflow.com/questions/25821903/change-android-notification-text-dynamically
+                // I need to update the builder with the updated view and then retrigger the notification makings sure the builder has this flag : .setOnlyAlertOnce(true)
+                triggerNotificationRefresh()
+            } else {
+                notificationView.setImageViewResource(
+                        R.id.remote_view_mute,
+                        R.drawable.ic_mute_off_black
+                )
+                this.notificationBuilder.setCustomContentView(notificationView)
+                triggerNotificationRefresh()
+            }
+        }
     }
 
     override fun onDestroy() {
         // also kill activity if used decides to kill service so that everything is recreated on relaunch
         Log.d(TAG, "onDestroy: called")
         EventBus.getDefault().post(EventBusServiceDestroyed())
-        _playingSoundsListLive.removeObserver { playingSoundsObserver }
+        _playingSoundsListLive.removeObserver { textEndingObserver }
         _timerRunning.removeObserver { timerRunningObserver }
         _muted.removeObserver { mutedObserver }
         super.onDestroy()
@@ -283,10 +291,10 @@ class SoundService : Service(), ISoundService {
 
     private fun createNotificationBuilder() {
         this.notificationBuilder = NotificationCompat.Builder(this, MyApplication.CHANNEL_ID)
-            .setContentTitle("SoundPoolService")
-            .setOnlyAlertOnce(true)
-            .setAutoCancel(false)
-                .setSmallIcon(R.drawable.ic_delete)
+                .setContentTitle("SoundPoolService")
+                .setOnlyAlertOnce(true)
+                .setAutoCancel(false)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                 .setCustomContentView(notificationView)
                 .setContentIntent(pendingIntent)
@@ -305,12 +313,12 @@ class SoundService : Service(), ISoundService {
         }
     }
 
-    override fun loadToSoundPool(sounds: ArrayList<Sound>?) {
+    override fun loadToSoundPool(sounds: List<Sound>) {
         Log.d(TAG, "loadToSoundPool: called with sounds: $sounds")
 
-        var processedSounds = mutableListOf<Sound>()
+        val processedSounds = mutableListOf<Sound>()
 
-        sounds?.mapTo(processedSounds, { sound ->
+        sounds.mapTo(processedSounds, { sound ->
             if (sound.soundPoolId == -1) {
                 val soundPoolId = soundPool.load(sound.filePath, 1)
                 Log.d(TAG, "loadToSoundPool in Service: called")
@@ -320,7 +328,7 @@ class SoundService : Service(), ISoundService {
             }
         })
 
-        EventBus.getDefault().post(EventBusLoad(processedSounds as ArrayList<Sound>))
+        EventBus.getDefault().post(EventBusLoad(processedSounds))
     }
 
     private fun loadCustomSound(sound: Sound) {
@@ -365,7 +373,7 @@ class SoundService : Service(), ISoundService {
         playingSoundsList.remove(stopCommand.sound)
                 .also { _playingSoundsListLive.value = playingSoundsList }
 
-        EventBus.getDefault().post(EventBusStop(stopCommand.sound.soundPoolId))
+        EventBus.getDefault().post(EventBusStop(stopCommand.sound))
     }
 
     override fun stopAllSounds() {

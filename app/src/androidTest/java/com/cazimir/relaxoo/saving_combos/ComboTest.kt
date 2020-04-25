@@ -78,8 +78,8 @@ class ComboTest {
         swipeViewPagerLeft(1)
         onView(withId(R.id.favoritesList)).perform(RecyclerViewActions.actionOnItemAtPosition<RecordingAdapter.ViewHolder>(0, clickChildViewWithId(R.id.parent_saved_combo)))
         swipeViewPagerRight(1)
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
-        onData(allOf()).inAdapterView(withId(R.id.gridView)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
         swipeViewPagerLeft(1)
         onView(withId(R.id.favoritesList)).perform(
                 RecyclerViewActions.actionOnItemAtPosition<SavedComboAdapter.ViewHolder>(0, clickChildViewWithId(R.id.deleteCombo)))

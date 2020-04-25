@@ -24,10 +24,8 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.*
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder
 import cafe.adriel.androidaudiorecorder.model.AudioChannel
 import cafe.adriel.androidaudiorecorder.model.AudioSampleRate
@@ -102,7 +100,6 @@ class MainActivity : FragmentActivity(),
         val PINNED_RECORDINGS = "PINNED_RECORDINGS"
     }
 
-    private var fetchRunning: Boolean = false
     private var doubleBackToExitPressedOnce: Boolean = false
     private lateinit var adView: AdView
     private lateinit var adUnitId: String
@@ -176,7 +173,7 @@ class MainActivity : FragmentActivity(),
         }
 
         // TODO: 14-Mar-20 This observer is called 2 times - fix it
-        result.observe(
+        result.observeUntil(
                 this,
                 Observer { preconditionsToStartFetchingData: PreconditionsToStartFetchingData ->
                     Log.d(
@@ -184,14 +181,11 @@ class MainActivity : FragmentActivity(),
                             "onChanged() called with: preconditionsToStartFetchingData: " +
                                     preconditionsToStartFetchingData.toString()))
                     if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted && preconditionsToStartFetchingData.isInternetUp) {
-                        if (!getSoundGridFragment().soundsAlreadyFetched()) {
+                        if (soundGridFragment!!.soundsAlreadyFetched().not()) {
                             Log.d(
                                     TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched())
+                            getSoundGridFragment().fetchSounds()
 
-                            if (!fetchRunning) {
-                                getSoundGridFragment().fetchSounds()
-                                fetchRunning = true
-                            }
                         }
                     }
                 })
@@ -207,11 +201,23 @@ class MainActivity : FragmentActivity(),
         })
     }
 
+    private fun <T> LiveData<T>.observeUntil(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
+        observe(lifecycleOwner, object : Observer<T> {
+            override fun onChanged(t: T?) {
+                val conditions = t as PreconditionsToStartFetchingData
+                if (conditions.areAllConditionsMet()) {
+                    observer.onChanged(t)
+                    removeObserver(this)
+                }
+            }
+        })
+    }
+
     private fun setupRewardVideoAd() {
         this.adUnitId =
-            if (BuildConfig.DEBUG) resources.getString(R.string.reward_ad_test) else resources.getString(
-                R.string.reward_ad_prod
-            )
+                if (BuildConfig.DEBUG) resources.getString(R.string.reward_ad_test) else resources.getString(
+                        R.string.reward_ad_prod
+                )
         MobileAds.initialize(this, adUnitId)
         rewardedVideoAd = MobileAds.getRewardedVideoAdInstance(this)
         rewardedVideoAd.rewardedVideoAdListener = this
@@ -513,8 +519,8 @@ class MainActivity : FragmentActivity(),
 
     override fun soundGridFragmentStarted() {
         Log.d(TAG, "soundGridFragmentStarted() called")
+        if (soundGridFragment == null) soundGridFragment = getSoundGridFragment()
         isSoundGridFragmentStarted.value = true
-        soundGridFragment = getSoundGridFragment()
     }
 
     override fun hideSplashScreen() {
@@ -523,7 +529,6 @@ class MainActivity : FragmentActivity(),
         splash.visibility = GONE
         main_layout.visibility = VISIBLE
         sharedViewModel.splashScreenShown = true
-        fetchRunning = false
         Log.d(TAG, "EspressoIdlingResource.decrement called")
         EspressoIdlingResource.decrement()
     }
@@ -553,6 +558,7 @@ class MainActivity : FragmentActivity(),
 
     override fun renameRecording(recording: Recording, newName: String) {
         createSoundFragment!!.renameRecording(recording, newName)
+        getSoundGridFragment().renameCustomSoundFromDashboardIfThere(recording, newName)
     }
 
     override fun pinToDashBoardActionCalled(sound: Sound) {
@@ -564,9 +570,6 @@ class MainActivity : FragmentActivity(),
             showSnackBar(getString(R.string.sound_already_pinned))
             return
         }
-
-
-//        getSoundGridFragment().addRecordingToSoundPool(sound)
 
         Log.d(TAG, "pinToDashBoardActionCalled: called. Sending command to service: LoadCustomSoundCommand")
         sendCommandToService(SoundService.getCommand(this, LoadCustomSoundCommand(sound)))

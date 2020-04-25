@@ -3,7 +3,7 @@ package com.cazimir.relaxoo.ui.create_sound
 //import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.model.Recording
-import com.cazimir.relaxoo.repository.ISoundRepository
+import com.cazimir.relaxoo.repository.IRecordingRepository
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
@@ -21,7 +21,7 @@ class CreateSoundViewModelTest {
 //    var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val recordingsObserver: Observer<ArrayList<Recording>> = mock()
-    private val mockSoundRepository: ISoundRepository = mock()
+    private val mockSoundRepository: IRecordingRepository = mock()
     private val viewModel = CreateSoundViewModel()
 
     var mockRecording: Recording = Recording.Builder().withFile(File("Test")).withFileName("test.ogg").withPlaying(true).build()

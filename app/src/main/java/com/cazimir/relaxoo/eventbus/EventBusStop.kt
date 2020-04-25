@@ -1,3 +1,5 @@
 package com.cazimir.relaxoo.eventbus
 
-class EventBusStop(val soundPoolId: Int)
+import com.cazimir.relaxoo.model.Sound
+
+class EventBusStop(val sound: Sound)

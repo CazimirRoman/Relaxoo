@@ -23,10 +23,32 @@ data class Sound(
 ) : Serializable {
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || javaClass != other.javaClass) return false
-        val sound = other as Sound
-        return id == sound.id
+        if (javaClass != other?.javaClass) {
+            return false
+        }
+
+        other as Sound
+
+        if (id != other.id) {
+            return false
+        }
+//        if(name != other.name) {
+//            return false
+//        }
+//        if(logoPath != other.logoPath) {
+//            return false
+//        }
+//        if(filePath != other.filePath) {
+//            return false
+//        }
+//        if(pro != other.pro) {
+//            return false
+//        }
+//        if(custom != other.custom) {
+//            return false
+//        }
+
+        return true
     }
 
     override fun hashCode(): Int {

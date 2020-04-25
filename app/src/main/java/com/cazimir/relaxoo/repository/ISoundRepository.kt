@@ -1,10 +1,8 @@
 package com.cazimir.relaxoo.repository
 
-import com.cazimir.relaxoo.model.Recording
-import java.io.File
+import androidx.lifecycle.LiveData
+import com.cazimir.relaxoo.model.Sound
 
 interface ISoundRepository {
-    fun deleteRecording(recording: Recording): Boolean
-    fun editRecording(recording: Recording, newName: String): Boolean
-    fun getRecordings(): Array<File>?
+    fun getSounds(): LiveData<List<Sound>>
 }
