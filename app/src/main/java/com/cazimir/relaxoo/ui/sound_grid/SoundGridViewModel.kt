@@ -7,6 +7,7 @@ import com.cazimir.relaxoo.eventbus.EventBusTimer
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ISoundRepository
 import com.cazimir.relaxoo.repository.SoundRepository
+import com.cazimir.utilitieslibrary.observeOnceListOnEmpty
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -21,6 +22,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         private const val TEST_VALUE = "TestValue"
     }
 
+    // TODO: 26-Apr-20 get rid of redundandt gettter methods for livedata - see example for soundsStorage
     private val _timerRunningFetched = MutableLiveData<Boolean>()
     private val _timerTextFetched = MutableLiveData<Boolean>()
     var currentlyClickedProSound: Sound? = savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND)
@@ -28,6 +30,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     private var _timerText = MutableLiveData<String>()
     private var currentSoundList: List<Sound> = emptyList()
     private var _soundsStorage: MutableLiveData<List<Sound>> = MutableLiveData()
+    val soundsStorage: LiveData<List<Sound>> = _soundsStorage
     val _fetchFinished: MutableLiveData<Boolean> = MutableLiveData(false)
     private var soundsAlreadyFetched = false
     private var _timerRunning = MutableLiveData<Boolean>()
@@ -63,29 +66,12 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
     fun fetchSounds() {
         Log.d(TAG, "fetchSounds: called")
-        soundRepository.getSounds().observeOnce(Observer {
+        soundRepository.getSounds().observeOnceListOnEmpty(Observer {
             Log.d(TAG, "fetchSounds: called with $it")
             triggerLiveDataEmit(it)
             soundsAlreadyFetched = true
             _fetchFinished.value = true
         })
-    }
-
-    private fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
-        observeForever(object : Observer<T> {
-            override fun onChanged(t: T?) {
-                val list = t as List<*>
-                if (list.isNotEmpty()) {
-                    observer.onChanged(t)
-                    removeObserver(this)
-                }
-
-            }
-        })
-    }
-
-    fun allSounds(): LiveData<List<Sound>> {
-        return _soundsStorage
     }
 
     fun playingSounds(): LiveData<ArrayList<Sound>> {

@@ -65,6 +65,6 @@
         android:layout_marginStart="15dp"
         android:layout_marginEnd="15dp"
         android:alpha="0.8"
-        android:background="@color/divider"></View>
+        android:background="@color/divider" />
 
 </LinearLayout>

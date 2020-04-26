@@ -1,9 +1,8 @@
 package com.cazimir.relaxoo.ui.about
 
-import android.content.ActivityNotFoundException
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -19,8 +18,10 @@ import com.cazimir.relaxoo.model.AboutItem
 import com.cazimir.relaxoo.model.MenuItemType
 import com.cazimir.relaxoo.shared.SharedViewModel
 import com.cazimir.relaxoo.ui.privacy_policy.PrivacyPolicyActivity
-import com.cazimir.relaxoo.ui.settings.SettingsActivity
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
+import com.cazimir.utilitieslibrary.shareMyApp
+import com.cazimir.utilitieslibrary.showMyListingInStoreForRating
+import com.cazimir.utilitieslibrary.showMyOtherApplicationsInGooglePlay
 import kotlinx.android.synthetic.main.about_fragment.view.*
 
 class AboutFragment : Fragment() {
@@ -70,13 +71,7 @@ class AboutFragment : Fragment() {
     }
 
     private fun startMoreAppsActivity() {
-        val appPackageName: String = activity!!.packageName// getPackageName() from Context or Activity object
-
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/developer?id=Cazimir+Roman&hl=en")))
-        } catch (e: ActivityNotFoundException) {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$appPackageName")))
-        }
+        showMyOtherApplicationsInGooglePlay(activity as Activity)
     }
 
     private fun startPrivacyPolicyActivity() {
@@ -89,42 +84,15 @@ class AboutFragment : Fragment() {
     }
 
     private fun startRateAppAction() {
-        val uri =
-            Uri.parse("market://details?id=" + context!!.packageName)
-        val goToMarket = Intent(Intent.ACTION_VIEW, uri)
-        // To count with Play market backstack, After pressing back button,
-        // to taken back to our application, we need to add following flags to intent.
-        goToMarket.addFlags(
-            Intent.FLAG_ACTIVITY_NO_HISTORY or
-                Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
-                Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-        )
-        try {
-            startActivity(goToMarket)
-        } catch (e: ActivityNotFoundException) {
-            startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("http://play.google.com/store/apps/details?id=" + context!!.packageName)
-                )
-            )
-        }
+        showMyListingInStoreForRating(activity as Context)
     }
 
     private fun startShareAction() {
-        val sendIntent = Intent()
-        sendIntent.action = Intent.ACTION_SEND
-        sendIntent.putExtra(Intent.EXTRA_TEXT, resources.getString(R.string.share_text))
-        sendIntent.type = "text/plain"
-        startActivity(sendIntent)
-    }
-
-    private fun startSettingsActivity() {
-        startActivity(Intent(activity, SettingsActivity::class.java))
+        shareMyApp(activity as Context, resources.getString(R.string.share_text))
     }
 
     private fun populateAboutItems(adsBought: Boolean?): List<AboutItem> {
-        val aboutItems: MutableList<AboutItem> = ArrayList()
+        val aboutItems = mutableListOf<AboutItem>()
         if (!adsBought!!) {
             aboutItems.add(AboutItem(MenuItemType.REMOVE_ADS, R.drawable.ic_shop_white))
         }

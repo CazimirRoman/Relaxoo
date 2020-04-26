@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import com.cazimir.relaxoo.EspressoIdlingResource
 import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.Sound
+import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferences
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -96,8 +97,8 @@ class SoundRepository : ISoundRepository {
                                         val newList = mutableListOf(fetchedSound)
 
 
-                                        // add custom sounds as well
-                                        val customSounds = ModelPreferencesManager.get<ListOfSavedCustom>("PINNED_RECORDINGS")
+                                        // add custom sounds from SP as well
+                                        val customSounds = loadFromSharedPreferences<ListOfSavedCustom>("PINNED_RECORDINGS")
 
                                         customSounds?.savedCustomList?.let { newList.addAll(it) }
 
@@ -125,7 +126,7 @@ class SoundRepository : ISoundRepository {
                 newList.add(localSound)
             }
 
-            val customSounds = ModelPreferencesManager.get<ListOfSavedCustom>("PINNED_RECORDINGS")
+            val customSounds = loadFromSharedPreferences<ListOfSavedCustom>("PINNED_RECORDINGS")
             customSounds?.savedCustomList?.let { newList.addAll(it) }
             _soundsStorageRepo.value = newList
         }

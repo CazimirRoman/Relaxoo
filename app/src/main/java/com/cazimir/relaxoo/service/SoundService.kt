@@ -20,6 +20,7 @@ import com.cazimir.relaxoo.dialog.timer.TimerDialog
 import com.cazimir.relaxoo.eventbus.*
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.commands.*
+import com.cazimir.utilitieslibrary.pluralize
 import org.greenrobot.eventbus.EventBus
 import java.util.concurrent.TimeUnit
 
@@ -303,14 +304,6 @@ class SoundService : Service(), ISoundService {
     private fun getNotificationText(numberOfPlayingSounds: Int?): String {
         val label = numberOfPlayingSounds?.let { "sound".pluralize(it) }
         return "$numberOfPlayingSounds $label playing..."
-    }
-
-    private fun String.pluralize(count: Int): String? {
-        return if (count > 1) {
-            this + 's'
-        } else {
-            this
-        }
     }
 
     override fun loadToSoundPool(sounds: List<Sound>) {

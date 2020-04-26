@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.ui.sound_grid.OnSoundClickListener
-import com.cazimir.relaxoo.util.inflate
+import com.cazimir.utilitieslibrary.inflate
 import kotlinx.android.synthetic.main.grid_item.view.*
 
 

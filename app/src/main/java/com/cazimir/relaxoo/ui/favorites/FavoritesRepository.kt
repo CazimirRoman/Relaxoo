@@ -1,7 +1,8 @@
 package com.cazimir.relaxoo.ui.favorites
 
 import com.cazimir.relaxoo.model.ListOfSavedCombos
-import com.cazimir.relaxoo.repository.ModelPreferencesManager
+import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferences
+import com.cazimir.utilitieslibrary.SharedPreferencesUtil.saveToSharedPreferences
 
 class FavoritesRepository : IFavoritesRepository {
 
@@ -10,10 +11,10 @@ class FavoritesRepository : IFavoritesRepository {
     }
 
     override fun addUpdatedList(updatedList: ListOfSavedCombos) {
-        ModelPreferencesManager.save(updatedList, COMBO_LIST)
+        saveToSharedPreferences(updatedList, COMBO_LIST)
     }
 
     override fun getFavorites(): ListOfSavedCombos? {
-        return ModelPreferencesManager.get<ListOfSavedCombos>(COMBO_LIST)
+        return loadFromSharedPreferences<ListOfSavedCombos>(COMBO_LIST)
     }
 }

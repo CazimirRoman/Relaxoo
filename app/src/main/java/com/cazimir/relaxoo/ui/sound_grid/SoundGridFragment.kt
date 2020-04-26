@@ -13,8 +13,10 @@ import android.view.ViewGroup
 import android.widget.TimePicker
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.*
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateViewModelFactory
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
@@ -26,10 +28,12 @@ import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
-import com.cazimir.relaxoo.repository.ModelPreferencesManager
 import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.SoundService.Companion.SOUND_POOL_ACTION
 import com.cazimir.relaxoo.service.commands.*
+import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferences
+import com.cazimir.utilitieslibrary.SharedPreferencesUtil.saveToSharedPreferences
+import com.cazimir.utilitieslibrary.observeOnceWithTrue
 import kotlinx.android.synthetic.main.sound_list_fragment.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -115,7 +119,7 @@ class SoundGridFragment() : Fragment() {
         setListenersForButtons()
 
         // region Observers
-        viewModel._fetchFinished.observeOnce(viewLifecycleOwner, Observer { finished: Boolean ->
+        viewModel._fetchFinished.observeOnceWithTrue(viewLifecycleOwner, Observer { finished: Boolean ->
             Log.d(TAG, "_fetchFinished.observeOnce called with: $finished ")
             sendCommandToService(SoundService.getCommand(context, PlayingSoundsCommand()))
             sendCommandToService(SoundService.getCommand(context, TimerTextCommand()))
@@ -125,7 +129,7 @@ class SoundGridFragment() : Fragment() {
         // listen for changes to the sound lists live data object to set the adapter for the gridview
         // along with the callback methods (clicked & volume changed)
         viewModel
-                .allSounds()
+                .soundsStorage
                 .observe( // TODO: 19.12.2019 move in a separate file or inner class
                         viewLifecycleOwner,
                         Observer { sounds: List<Sound> ->
@@ -238,7 +242,7 @@ class SoundGridFragment() : Fragment() {
                         viewLifecycleOwner,
                         Observer { soundsAdded ->
                             Log.d(TAG, "viewModel.soundsLoadedToSoundPool: called with: $soundsAdded")
-                            if (viewModel.allSounds().value?.size != 0) {
+                            if (viewModel.soundsStorage.value?.size != 0) {
                                 if (soundsAdded == 3) {
                                     activityCallback.hideSplashScreen()
                                 }
@@ -316,7 +320,7 @@ class SoundGridFragment() : Fragment() {
                 override fun onChanged(allSoundsStopped: Boolean) {
                     if (allSoundsStopped) {
                         // total number of available sounds can be found in viewmodel in sounds variable
-                        val listAllSounds: List<Sound> = (viewModel.allSounds().value)!!
+                        val listAllSounds: List<Sound> = (viewModel.soundsStorage.value)!!
 
                         val processed = mutableListOf<Sound>()
 
@@ -356,7 +360,7 @@ class SoundGridFragment() : Fragment() {
                     }
                 })
         save_fav_button.setOnClickListener {
-            val atLeastOneIsPlaying = viewModel.allSounds().value?.find { sound -> sound.playing }
+            val atLeastOneIsPlaying = viewModel.soundsStorage.value?.find { sound -> sound.playing }
             if (atLeastOneIsPlaying != null) {
                 activityCallback.showAddToFavoritesDialog(playingSounds)
             } else {
@@ -453,10 +457,6 @@ class SoundGridFragment() : Fragment() {
         )
     }
 
-    fun addRecordingToSoundPool(sound: Sound) {
-        sendCommandToService(SoundService.getCommand(context, LoadCustomSoundCommand(sound)))
-    }
-
     private fun scrollToBottom() {
         sounds_recycler_view!!.smoothScrollToPosition(soundsAdapter!!.itemCount)
     }
@@ -507,7 +507,7 @@ class SoundGridFragment() : Fragment() {
         viewModel.removeSingleSoundFromSounds(eventBusUnload.sound.id)
 
         val newList = mutableListOf<Sound>()
-        val pinnedRecordings = ModelPreferencesManager.get<ListOfSavedCustom>(MainActivity.PINNED_RECORDINGS)
+        val pinnedRecordings = loadFromSharedPreferences<ListOfSavedCustom>(MainActivity.PINNED_RECORDINGS)
         val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
 
         list.filterTo(newList, {
@@ -517,7 +517,7 @@ class SoundGridFragment() : Fragment() {
         Log.d(TAG, "unload called from service. Saving new list to SP: $newList")
 
         val newObject = ListOfSavedCustom(newList)
-        ModelPreferencesManager.save(newObject, MainActivity.PINNED_RECORDINGS)
+        saveToSharedPreferences(newObject, MainActivity.PINNED_RECORDINGS)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
@@ -545,7 +545,7 @@ class SoundGridFragment() : Fragment() {
     fun removeCustomSoundFromDashboardIfThere(recording: Recording) {
         Log.d(TAG, "removeCustomSoundFromDashboardIfThere: called with recording id: ${recording.id}")
         val filtered = mutableListOf<Sound>()
-        viewModel.allSounds().value?.filterTo(filtered, predicate = {
+        viewModel.soundsStorage.value?.filterTo(filtered, predicate = {
             it.id == recording.id
         })
 
@@ -559,7 +559,7 @@ class SoundGridFragment() : Fragment() {
 
     fun renameCustomSoundFromDashboardIfThere(recording: Recording, newName: String) {
         val filtered = mutableListOf<Sound>()
-        viewModel.allSounds().value?.filterTo(filtered, predicate = {
+        viewModel.soundsStorage.value?.filterTo(filtered, predicate = {
             it.id == recording.id
         })
 
@@ -568,7 +568,7 @@ class SoundGridFragment() : Fragment() {
         }
 
         val newList = mutableListOf<Sound>()
-        val pinnedRecordings = ModelPreferencesManager.get<ListOfSavedCustom>(MainActivity.PINNED_RECORDINGS)
+        val pinnedRecordings = loadFromSharedPreferences<ListOfSavedCustom>(MainActivity.PINNED_RECORDINGS)
         val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
 
         list.mapTo(newList, {
@@ -580,20 +580,8 @@ class SoundGridFragment() : Fragment() {
         })
 
         val newObject = ListOfSavedCustom(newList)
-        ModelPreferencesManager.save(newObject, MainActivity.PINNED_RECORDINGS)
+        saveToSharedPreferences(newObject, MainActivity.PINNED_RECORDINGS)
 
-    }
-
-    private fun <T> LiveData<T>.observeOnce(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
-        observe(lifecycleOwner, object : Observer<T> {
-            override fun onChanged(t: T?) {
-                if (t as Boolean) {
-                    observer.onChanged(t)
-                    removeObserver(this)
-                }
-
-            }
-        })
     }
 
     companion object {

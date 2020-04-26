@@ -6,14 +6,9 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ArgbEvaluator
 import android.animation.ObjectAnimator
 import android.app.Activity
-import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
@@ -45,8 +40,6 @@ import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
-import com.cazimir.relaxoo.repository.ModelPreferencesManager
-import com.cazimir.relaxoo.repository.ModelPreferencesManager.save
 import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
 import com.cazimir.relaxoo.shared.SharedViewModel
@@ -57,7 +50,9 @@ import com.cazimir.relaxoo.ui.favorites.FavoritesFragment
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved
 import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment
-import com.cazimir.relaxoo.util.InternetUtil
+import com.cazimir.utilitieslibrary.InternetUtil
+import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferences
+import com.cazimir.utilitieslibrary.SharedPreferencesUtil.saveToSharedPreferences
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -130,7 +125,9 @@ class MainActivity : FragmentActivity(),
         shouldHideSplash()
         setupViewPager()
         setupViewPagerDots()
-        setupNotifications()
+
+        // done already in @MyApplication
+//        setupNotifications()
         startColorChangeAnimation()
         checkPermissions()
         // should also be done in onResume()
@@ -156,13 +153,13 @@ class MainActivity : FragmentActivity(),
 
         result.addSource(
                 areWritePermissionsGranted) { permissionsGranted: Boolean ->
-            Log.d(TAG, "permissions granted: " + permissionsGranted)
+            Log.d(TAG, "permissions granted: $permissionsGranted")
             preconditionsToStartFetchingData = preconditionsToStartFetchingData.copy(arePermissionsGranted = permissionsGranted)
             result.setValue(preconditionsToStartFetchingData)
         }
 
         result.addSource(isSoundGridFragmentStarted) { fragmentStarted: Boolean ->
-            Log.d(TAG, "soundGridFragmentStarted: " + fragmentStarted)
+            Log.d(TAG, "soundGridFragmentStarted: $fragmentStarted")
             preconditionsToStartFetchingData = preconditionsToStartFetchingData.copy(isFragmentStarted = fragmentStarted)
             result.setValue(preconditionsToStartFetchingData)
         }
@@ -201,6 +198,7 @@ class MainActivity : FragmentActivity(),
         })
     }
 
+    // extension function - observe until members on a object are all true then terminate (remove observer)
     private fun <T> LiveData<T>.observeUntil(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
         observe(lifecycleOwner, object : Observer<T> {
             override fun onChanged(t: T?) {
@@ -428,24 +426,6 @@ class MainActivity : FragmentActivity(),
             Color.argb(255, 175, 27, 63)
     )
 
-    private fun setupNotifications() {
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                        notificationManager.getNotificationChannel(CHANNEL_WHATEVER) == null)) {
-            val notificationChannel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationChannel(
-                        CHANNEL_WHATEVER,
-                        "Whatever",
-                        NotificationManager.IMPORTANCE_LOW
-                )
-            } else {
-                TODO("VERSION.SDK_INT < O")
-            }
-            notificationChannel.setSound(null, null)
-            notificationManager.createNotificationChannel(notificationChannel)
-        }
-    }
-
     override fun showAddToFavoritesDialog(playingSounds: List<Sound>) {
         SaveToFavoritesDialog(playingSounds).show(supportFragmentManager, "save")
     }
@@ -563,7 +543,7 @@ class MainActivity : FragmentActivity(),
 
     override fun pinToDashBoardActionCalled(sound: Sound) {
 
-        val pinnedRecordings = ModelPreferencesManager.get<ListOfSavedCustom>(PINNED_RECORDINGS)
+        val pinnedRecordings = loadFromSharedPreferences<ListOfSavedCustom>(PINNED_RECORDINGS)
         val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
 
         if (list.contains(sound)) {
@@ -575,13 +555,13 @@ class MainActivity : FragmentActivity(),
         sendCommandToService(SoundService.getCommand(this, LoadCustomSoundCommand(sound)))
 
         try {
-            val pinnedRecordings = ModelPreferencesManager.get<ListOfSavedCustom>(PINNED_RECORDINGS)
+            val pinnedRecordings = loadFromSharedPreferences<ListOfSavedCustom>(PINNED_RECORDINGS)
             val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
             list.add(sound)
             val newObject = ListOfSavedCustom(list)
-            save(newObject, PINNED_RECORDINGS)
+            saveToSharedPreferences(newObject, PINNED_RECORDINGS)
         } catch (e: JsonSyntaxException) {
-            save(ListOfSavedCustom(mutableListOf(sound)), PINNED_RECORDINGS)
+            saveToSharedPreferences(ListOfSavedCustom(mutableListOf(sound)), PINNED_RECORDINGS)
         }
 
         scrollViewPager()
@@ -595,17 +575,6 @@ class MainActivity : FragmentActivity(),
     override fun playRewardAd() {
         if (rewardedVideoAd.isLoaded) {
             rewardedVideoAd.show()
-        }
-    }
-
-    private fun redirectUserToPlayStore() {
-        val marketUri =
-                Uri.parse("https://play.google.com/store/apps/details?id=com.cazimir.relaxoo")
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW, marketUri))
-        } catch (ex: ActivityNotFoundException) {
-            Toast.makeText(this, "Couldn't find PlayStore on this device", Toast.LENGTH_SHORT)
-                .show()
         }
     }
 
