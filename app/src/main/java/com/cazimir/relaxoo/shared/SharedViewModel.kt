@@ -2,6 +2,7 @@ package com.cazimir.relaxoo.shared
 
 import TimerTaskExtended
 import android.content.Context
+import android.graphics.Color
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -15,7 +16,7 @@ class SharedViewModel : ViewModel() {
 
     private var _adsBought: MutableLiveData<Boolean> = MutableLiveData(false)
     val adsBought: LiveData<Boolean> = _adsBought
-    private var _proBought: MutableLiveData<UnlockProEvent> = MutableLiveData(UnlockProEvent(eventProcessed = false, proBought = false))
+    private var _proBought: MutableLiveData<UnlockProEvent> = MutableLiveData()
     val proBought: LiveData<UnlockProEvent> = _proBought
 
     override fun onCleared() {
@@ -23,10 +24,7 @@ class SharedViewModel : ViewModel() {
         timer.cancel()
     }
 
-    var previousColor: Int? = 0
-        set(value) {
-            field = value
-        }
+    var previousColor: Int? = Color.argb(255, 115, 44, 44)
 
     var nextColor: MutableLiveData<Int> = MutableLiveData(0)
 

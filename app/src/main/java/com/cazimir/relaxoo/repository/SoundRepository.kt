@@ -3,10 +3,14 @@ package com.cazimir.relaxoo.repository
 import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.EspressoIdlingResource
 import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferences
+import com.cazimir.utilitieslibrary.observeOnceWithTrueNoLifecycleOwner
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -24,36 +28,55 @@ class SoundRepository : ISoundRepository {
     private val database = FirebaseDatabase.getInstance()
     private val soundsRef = database.getReference("sounds")
     private val _soundsStorageRepo = MutableLiveData<List<Sound>>()
+    private var mAuth = FirebaseAuth.getInstance()
+    private val authenticationComplete: MutableLiveData<Boolean> = MutableLiveData()
+
+    init {
+        val user: FirebaseUser? = mAuth.currentUser
+        if (user == null) {
+            signInAnonymously()
+        } else {
+            authenticationComplete.value = true
+        }
+    }
+
+    private fun signInAnonymously() {
+        mAuth.signInAnonymously().addOnCompleteListener {
+            if (it.isSuccessful) {
+                authenticationComplete.value = true
+            }
+        }
+    }
 
     override fun getSounds(): MutableLiveData<List<Sound>> {
-        Log.d(TAG, "fetchSounds: called")
-        val soundsInFirebase = mutableListOf<Sound>()
-        // 1. check the Firebase Realtime Database for sounds
 
-        // check database for sounds
-        // Read from the database
-        Log.d(TAG, "EspressoIdlingResource.increment called")
-        EspressoIdlingResource.increment()
-        soundsRef.addListenerForSingleValueEvent(
-                object : ValueEventListener {
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        for (soundsSnapshot in dataSnapshot.children) {
-                            val sound = soundsSnapshot.getValue(Sound::class.java)
-                            if (sound != null) {
-                                soundsInFirebase.add(0, sound)
+        authenticationComplete.observeOnceWithTrueNoLifecycleOwner(Observer {
+            val soundsInFirebase = mutableListOf<Sound>()
+            // 1. check the Firebase Realtime Database for sounds
+
+            // check database for sounds
+            // Read from the database
+            Log.d(TAG, "EspressoIdlingResource.increment called")
+            EspressoIdlingResource.increment()
+            soundsRef.addListenerForSingleValueEvent(
+                    object : ValueEventListener {
+                        override fun onDataChange(dataSnapshot: DataSnapshot) {
+                            for (soundsSnapshot in dataSnapshot.children) {
+                                val sound = soundsSnapshot.getValue(Sound::class.java)
+                                if (sound != null) {
+                                    soundsInFirebase.add(0, sound)
+                                }
+                            }
+                            if (soundsInFirebase.size > 0) {
+                                getAssetsStorage(soundsInFirebase)
                             }
                         }
-                        if (soundsInFirebase.size > 0) {
-                            getAssetsStorage(soundsInFirebase)
+
+                        override fun onCancelled(error: DatabaseError) { // Failed to read value
+                            Log.w(TAG, "Failed to read value.", error.toException())
                         }
-                    }
-
-                    override fun onCancelled(error: DatabaseError) { // Failed to read value
-                        Log.w(TAG, "Failed to read value.", error.toException())
-                    }
-                })
-
-
+                    })
+        })
 
         return _soundsStorageRepo
     }

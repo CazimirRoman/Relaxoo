@@ -41,6 +41,7 @@ import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
+import com.cazimir.relaxoo.service.commands.UnlockProCommand
 import com.cazimir.relaxoo.shared.SharedViewModel
 import com.cazimir.relaxoo.shared.UnlockProEvent
 import com.cazimir.relaxoo.ui.about.AboutFragment
@@ -128,14 +129,11 @@ class MainActivity : FragmentActivity(),
         shouldHideSplash()
         setupViewPager()
         setupViewPagerDots()
-        // done already in @MyApplication
-//        setupNotifications()
         startColorChangeAnimation()
         checkPermissions()
         // should also be done in onResume()
         checkUserPurchases()
         setupRewardVideoAd()
-
     }
 
     private fun subscribeObservers() {
@@ -180,20 +178,21 @@ class MainActivity : FragmentActivity(),
                             "onChanged() called with: preconditionsToStartFetchingData: " +
                                     preconditionsToStartFetchingData.toString()))
                     if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted && preconditionsToStartFetchingData.isInternetUp) {
-                        if (soundGridFragment!!.soundsAlreadyLoaded().not()) {
-                            Log.d(
-                                    TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyLoaded())
-                            getSoundGridFragment().fetchSounds()
 
+                        if (!sharedViewModel.splashScreenShown) {
+                            Log.d(
+                                    TAG, "sounds already fetched: " + getSoundGridFragment().shouldLoadToSoundpool())
+                            getSoundGridFragment().fetchSounds()
                         }
+
+
                     }
                 })
 
         // remove ads logic - listen to observer in viewmodel
         sharedViewModel.adsBought.observe(this, Observer { adsBought: Boolean ->
             if (adsBought) {
-                removeAdsView()
-                getAboutFragment().hideRemoveAdsButton()
+                removeAdsViewAndButtonInAbout()
             } else {
                 loadAds()
             }
@@ -201,11 +200,16 @@ class MainActivity : FragmentActivity(),
 
         sharedViewModel.proBought.observe(this, Observer { event: UnlockProEvent ->
             if (event.proBought && !event.eventProcessed) {
-                removeAdsView()
-                getAboutFragment().hideRemoveAdsButton()
-                //getSoundGridFragment().activateAllProSounds()
+                activateAllProSounds()
+                // TODO: 27.04.2020 create a similar event to UnlockProEvent to not call this method if it has been already called in the above 'observe'
+                removeAdsViewAndButtonInAbout()
             }
         })
+    }
+
+    private fun activateAllProSounds() {
+        sendCommandToService(SoundService.getCommand(this, UnlockProCommand()))
+        sharedViewModel.updateProcessedUnlockProEvent()
     }
 
     // extension function - observe until members on a object are all true then terminate (remove observer)
@@ -386,17 +390,17 @@ class MainActivity : FragmentActivity(),
                         Observer { backgroundColor: Int? ->
                             val duration = 1500
                             val animator: ObjectAnimator = ObjectAnimator.ofObject(
-                                            parent_layout_main,
-                                            "backgroundColor",
-                                            ArgbEvaluator(),
-                                            sharedViewModel.previousColor,
-                                            sharedViewModel.nextColor.getValue())
+                                    parent_layout_main,
+                                    "backgroundColor",
+                                    ArgbEvaluator(),
+                                    sharedViewModel.previousColor,
+                                    sharedViewModel.nextColor.value)
                                     .setDuration(duration.toLong())
                             animator.addListener(
                                     object : AnimatorListenerAdapter() {
                                         override fun onAnimationEnd(animation: Animator) {
                                             Log.d(TAG, "onAnimationEnd: called")
-                                            sharedViewModel.previousColor = sharedViewModel.nextColor.getValue()
+                                            sharedViewModel.previousColor = sharedViewModel.nextColor.value
                                         }
                                     })
                             animator.start()
@@ -460,7 +464,11 @@ class MainActivity : FragmentActivity(),
                 "triggerCombo in MainActivity: called with: " +
                         savedCombo.sounds.toString()))
         getSoundGridFragment().triggerCombo(savedCombo, sharedViewModel.proBought.value?.proBought)
-        showMessageToUser(getString(R.string.playing_except_pro))
+        if (sharedViewModel.proBought.value?.proBought == false) {
+            showMessageToUser(getString(R.string.playing_except_pro))
+        } else {
+            showMessageToUser(getString(R.string.playing_saved_combo))
+        }
     }
 
     override fun showDeleteConfirmationDialog(deleted: OnDeleted) {
@@ -556,7 +564,9 @@ class MainActivity : FragmentActivity(),
         launchFlowToRemoveAds()
     }
 
-    private fun removeAdsView() {
+    override fun removeAdsViewAndButtonInAbout() {
+
+        getAboutFragment().hideRemoveAdsButton()
 
         adView.parent?.let {
             val parent: ViewGroup = it as ViewGroup

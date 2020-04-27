@@ -2,6 +2,7 @@ package com.cazimir.relaxoo.ui.sound_grid
 
 import android.util.Log
 import androidx.lifecycle.*
+import com.cazimir.relaxoo.eventbus.EventBusAllSounds
 import com.cazimir.relaxoo.eventbus.EventBusTimer
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ISoundRepository
@@ -30,7 +31,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     private var _soundsStorage: MutableLiveData<List<Sound>> = MutableLiveData()
     val soundsStorage: LiveData<List<Sound>> = _soundsStorage
     val _initialFetchFinished: MutableLiveData<List<Sound>> = MutableLiveData()
-    var soundsAlreadyLoaded = false
+    var shouldLoadToSoundPool = false
     private var _timerRunning = MutableLiveData<Boolean>()
 
     init {
@@ -46,8 +47,8 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         EventBus.getDefault().unregister(this)
     }
 
-    fun soundsAlreadyLoaded(): Boolean {
-        return soundsAlreadyLoaded
+    fun shouldLoadToSoundpool(): Boolean {
+        return shouldLoadToSoundPool
     }
 
     fun timerText(): MutableLiveData<String> {
@@ -63,7 +64,8 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         soundRepository.getSounds().observeOnceOnListNotEmpty(Observer {
             Log.d(TAG, "fetchSounds: called with $it")
 //            triggerLiveDataEmit(it)
-            soundsAlreadyLoaded = true
+            // fetch is finished -> start loading them to the soundpool
+            shouldLoadToSoundPool = true
             _initialFetchFinished.value = it
         })
     }
@@ -180,6 +182,14 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         _timerRunningFetched.value = true
     }
 
+    /*This is the place where the service sends back the updated list with updates parameters(loaded, playing etc)*/
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun serviceCallbackAllSounds(eventBusPlayingSounds: EventBusAllSounds) {
+        eventBusPlayingSounds.allSoundsFromService.observeForever { allSounds: List<Sound> ->
+            _soundsStorage.value = allSounds
+        }
+    }
+
     fun addSingleSound(sound: Sound) {
 
         val currentSoundList = _soundsStorage.value
@@ -192,17 +202,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     // this emit on the livedata is used to update the Recyclerview adapter with the new data
     fun triggerLiveDataEmit(newList: List<Sound>) {
         Log.d(TAG, "triggerLiveDataEmit: called")
-//        _soundsStorage.value = newList
-    }
-
-    fun activateAllSounds(): List<Sound> {
-
-        val newList = soundsStorage.value?.map {
-            it.copy(pro = false)
-        }
-
-        triggerLiveDataEmit(newList!!)
-
-        return newList
+        _soundsStorage.value = newList
     }
 }

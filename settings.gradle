@@ -1,5 +1,5 @@
 include ':app'
 include ':utilitieslibrary'
-project (':utilitieslibrary').projectDir = new File('c:\\AndroidProjects\\UtilitiesLibrary\\utilitieslibrary\\')
+project (':utilitieslibrary').projectDir = new File('d:\\proiecte\\UtilitiesLibrary\\utilitieslibrary\\')
 
 rootProject.name='Relaxoo'

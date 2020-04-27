@@ -95,19 +95,12 @@ class GridRecyclerViewAdapter(var sounds: ArrayList<Sound>, private val listener
         }
     }
 
-    fun modifyAllSoundsPlayingFalse() {
-
-        val newList = ArrayList<Sound>()
-
-        sounds.mapTo(newList, {
-            it.copy(playing = false)
-        })
-
-
-        sounds = newList
-
+    /*Used when deleting a pinned custom sound on the dashboard*/
+    fun removeSingleSoundInList(sound: Sound) {
+        val index = sounds.indexOf(sound)
+        sounds.remove(sound)
+        notifyItemRemoved(index)
     }
-
 
     class SoundHolder(view: View) : RecyclerView.ViewHolder(view), View.OnClickListener {
 

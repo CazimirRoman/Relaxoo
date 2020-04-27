@@ -29,15 +29,17 @@ public interface OnActivityCallback {
 
     void deleteRecording(@NotNull Recording recording);
 
-    void renameRecording(@NotNull Recording recording, @NotNull String toString);
+  void renameRecording(@NotNull Recording recording, @NotNull String toString);
 
-    void pinToDashBoardActionCalled(@NotNull Sound sound);
+  void pinToDashBoardActionCalled(@NotNull Sound sound);
 
-    void playRewardAd();
+  void playRewardAd();
 
-    void hideProgress();
+  void hideProgress();
 
-    void showMessageToUser(@NotNull String string);
+  void showMessageToUser(@NotNull String string);
 
-    void startBuyingProFlow();
+  void startBuyingProFlow();
+
+  void removeAdsViewAndButtonInAbout();
 }

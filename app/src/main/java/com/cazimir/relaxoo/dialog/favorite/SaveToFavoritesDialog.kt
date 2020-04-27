@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -93,11 +92,6 @@ class SaveToFavoritesDialog(private val playingSoundIds: List<Sound>) : Retainab
     override fun onDismiss(unused: DialogInterface) {
         super.onDismiss(unused)
         Log.d(javaClass.simpleName, "Goodbye!")
-    }
-
-    override fun onCancel(unused: DialogInterface) {
-        super.onCancel(unused)
-        Toast.makeText(activity, "Canceled", Toast.LENGTH_LONG).show()
     }
 
     // TODO: 20-Apr-20 refactor this to another class

@@ -40,8 +40,9 @@ class SoundService : Service(), ISoundService {
         }
     }
 
+    /*this field is being populated from MainActivity after observing if the user purchased PRO*/
+    private var proPurchased: Boolean = false
     private var allSounds: MutableList<Sound> = mutableListOf()
-
     private val _muted: MutableLiveData<Boolean> = MutableLiveData()
     private val _allSoundsLive: MutableLiveData<List<Sound>> = MutableLiveData()
     private val _playingSounds: LiveData<ArrayList<Sound>> = Transformations.map(_allSoundsLive)
@@ -117,12 +118,37 @@ class SoundService : Service(), ISoundService {
             is ToggleMuteCommand -> toggleMute()
             is TogglePlayStopCommand -> togglePlayStopFromNotification()
             is MuteStatusCommand -> sendMuteStatus()
+            is UnlockProCommand -> unlockPro()
+            is GetNumberOfSoundsCommand -> sendNumberOfSounds(event.fetchedSounds)
             else -> { // Note the block
                 print("x is neither 1 nor 2")
             }
         }
 
         return START_STICKY
+    }
+
+    private fun sendNumberOfSounds(fetchedSounds: List<Sound>) {
+        EventBus.getDefault().post(EventBusSendNumberOfSounds(allSounds, fetchedSounds))
+    }
+
+    private fun unlockPro() {
+
+
+        /*when purchasing the first time the UI must update the PRO sounds after the sounds have been loaded therefore simply setting the flag to TRUE does not suffice.
+        I need to manually trigger a UI update*/
+
+        if (!proPurchased) {
+            proPurchased = true
+        }
+
+        val newList = allSounds.map {
+            it.copy(pro = false)
+        }
+
+        allSounds = newList as MutableList<Sound>
+
+        sendUpdatedSoundsBackToViewModel()
     }
 
     private fun sendMuteStatus() {
@@ -157,16 +183,12 @@ class SoundService : Service(), ISoundService {
                 sound.soundPoolId == soundPoolId
             }
 
-            //replace sound in list with loaded = true
-
             for ((index, value) in allSounds.withIndex()) {
                 if (value.id == soundWithSoundPoolId?.id) {
                     allSounds[index] = soundWithSoundPoolId.copy(loaded = true)
                     break
                 }
             }
-
-//            allSounds[allSounds.indexOf(soundWithSoundPoolId)] = soundWithSoundPoolId!!.copy(loaded = true)
 
             _allSoundsLive.value = allSounds
 
@@ -369,11 +391,13 @@ class SoundService : Service(), ISoundService {
         allSounds.clear()
         // add to processed sounds with soundPoolId and loaded
         // soundPool ID is returned but that does not mean that the sound has been loaded yet. we need to wait for the callback
+
+        // populate the PRO field here as well to avoid conflicts and race conditions along the way
         sounds.mapTo(allSounds, { sound ->
             if (sound.soundPoolId == -1) {
                 val soundPoolId = soundPool.load(sound.filePath, 1)
                 Log.d(TAG, "loadToSoundPool in Service: called")
-                sound.copy(soundPoolId = soundPoolId)
+                sound.copy(soundPoolId = soundPoolId, pro = if (proPurchased) false else sound.pro)
             } else {
                 sound
             }
@@ -383,13 +407,28 @@ class SoundService : Service(), ISoundService {
     private fun loadCustomSound(sound: Sound) {
         Log.d(TAG, "loadCustomSound: called")
         val soundWithSoundPoolId = sound.copy(soundPoolId = soundPool.load(sound.filePath, 1))
+
+        allSounds.add(soundWithSoundPoolId)
+        sendUpdatedSoundsBackToViewModel()
+
         EventBus.getDefault().post(EventBusLoadSingle(soundWithSoundPoolId))
     }
 
     override fun unload(sound: Sound) {
         Log.d(TAG, "unload: called with: soundId: $sound.id and soundPoolId: ${sound.soundPoolId}")
-        stop(StopCommand(sound))
+        //stop(StopCommand(sound))
         soundPool.unload(sound.soundPoolId)
+
+        val newList = mutableListOf<Sound>()
+
+        allSounds.filterTo(newList, {
+            it.id != sound.id
+        })
+
+        allSounds = newList
+
+        sendUpdatedSoundsBackToViewModel()
+
         EventBus.getDefault().post(EventBusUnload(sound))
     }
 
@@ -419,23 +458,14 @@ class SoundService : Service(), ISoundService {
             }
         }
 
-
-//        allSounds[allSounds.indexOf(newSoundWithStreamId)] = newSoundWithStreamId
-
-
         _allSoundsLive.value = allSounds
-
-//        playingSoundsList.add(newSoundWithStreamId)
-//                .also { _playingSoundsListLive.value = playingSoundsList }
     }
 
     override fun stop(stopCommand: StopCommand) {
         Log.d(TAG, "stop: called with: ${stopCommand.sound}")
         soundPool.stop(stopCommand.sound.streamId)
 
-
         val newStoppedSound = stopCommand.sound.copy(streamId = -1, playing = false)
-
 
         for ((index, value) in allSounds.withIndex()) {
             if (value.id == newStoppedSound.id) {
@@ -444,14 +474,7 @@ class SoundService : Service(), ISoundService {
             }
         }
 
-//        allSounds[allSounds.indexOf(newStoppedSound)] = newStoppedSound
-
-        _allSoundsLive.value = allSounds
-
-//        playingSoundsList.remove(stopCommand.sound)
-//                .also { _playingSoundsListLive.value = playingSoundsList }
-
-        EventBus.getDefault().post(EventBusStop(stopCommand.sound))
+        sendUpdatedSoundsBackToViewModel()
     }
 
     override fun stopAllSounds() {
@@ -468,18 +491,13 @@ class SoundService : Service(), ISoundService {
         val newList = mutableListOf<Sound>()
 
         allSounds.mapTo(newList, {
-            it.copy(playing = false)
+            it.copy(playing = false, streamId = -1)
         })
 
-
         allSounds = newList
-        _allSoundsLive.value = newList
-
-//        playingSoundsList.clear().also { _playingSoundsListLive.value = allSounds }
+        sendUpdatedSoundsBackToViewModel()
         countDownTimer?.cancel().also { _timerRunning.value = false }
 
-        EventBus.getDefault().post(EventBusStopAll())
-        // subscribe with a method here that receives the stopall event and does not allow the play to be run if observable not in certain state
     }
 
     override fun setVolume(id: String, streamId: Int, leftVolume: Float, rightVolume: Float) {
@@ -494,7 +512,6 @@ class SoundService : Service(), ISoundService {
             }
         }
 
-//        val indexOf = allSounds.indexOf(toBeReplaced)
         val replaceWith = toBeReplaced.copy(volume = leftVolume)
 
         for ((index, value) in allSounds.withIndex()) {
@@ -504,9 +521,10 @@ class SoundService : Service(), ISoundService {
             }
         }
 
-//        allSounds[allSounds.indexOf(replaceWith)] = replaceWith
-//        playingSoundsList = playingSoundsList.toMutableList().apply {
-//            this[indexOf] = replaceWith
-//        } as ArrayList<Sound>
+        sendUpdatedSoundsBackToViewModel()
+    }
+
+    private fun sendUpdatedSoundsBackToViewModel() {
+        _allSoundsLive.value = allSounds
     }
 }

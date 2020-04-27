@@ -13,8 +13,10 @@ import android.view.ViewGroup
 import android.widget.TimePicker
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.*
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateViewModelFactory
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.recyclerview.widget.GridLayoutManager
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
@@ -30,9 +32,9 @@ import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.SoundService.Companion.SOUND_POOL_ACTION
 import com.cazimir.relaxoo.service.commands.*
 import com.cazimir.relaxoo.shared.SharedViewModel
-import com.cazimir.relaxoo.shared.UnlockProEvent
 import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferences
 import com.cazimir.utilitieslibrary.SharedPreferencesUtil.saveToSharedPreferences
+import com.cazimir.utilitieslibrary.observeOnceOnListEmptyWithOwner
 import com.cazimir.utilitieslibrary.observeOnceOnListNotEmptyWithOwner
 import kotlinx.android.synthetic.main.sound_list_fragment.*
 import org.greenrobot.eventbus.EventBus
@@ -40,18 +42,23 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.util.*
 
-class SoundGridFragment() : Fragment() {
+class SoundGridFragment : Fragment() {
 
     private var loadToSoundPoolRunning: Boolean = false
     private lateinit var sharedViewModel: SharedViewModel
-    private val _allSoundsStopped: MutableLiveData<Boolean> = MutableLiveData(false)
     private var timerRunning: Boolean = false
     private var soundsAdapter: GridRecyclerViewAdapter? = null
     private lateinit var viewModel: SoundGridViewModel
-    private lateinit var currentlyPlayingSounds: ArrayList<Sound>
+    private lateinit var currentlyPlayingSounds: List<Sound>
     private lateinit var activityCallback: OnActivityCallback
     private val timerPickerListener =
-            OnTimeSetListener { view: TimePicker?, hours: Int, minutes: Int -> toggleCountdownTimer((hours * 60) + minutes) }
+            OnTimeSetListener { view: TimePicker?, hours: Int, minutes: Int ->
+                if ((hours * 60) + minutes != 0) {
+                    toggleCountdownTimer((hours * 60) + minutes)
+                } else {
+                    activityCallback.showMessageToUser(getString(R.string.custom_timer_zero))
+                }
+            }
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -128,16 +135,12 @@ class SoundGridFragment() : Fragment() {
         viewModel._initialFetchFinished.observeOnceOnListNotEmptyWithOwner(viewLifecycleOwner, Observer { list: List<Sound> ->
             Log.d(TAG, "_fetchFinished.observeOnce called with: $list ")
             //get these observables to sync with the service after an application restart
-            // using this if because of rotation
+            // using this if because of ROTATION
+            // what about when relaunching app from notification and resync is needed
 
-            if (soundsAlreadyLoaded()) {
-                loadListToSoundPool(list)
-                viewModel.soundsAlreadyLoaded = false
-            }
+            //check is number of sounds on service same as fetched number of sounds
+            sendCommandToService(SoundService.getCommand(context, GetNumberOfSoundsCommand(list)))
 
-            sendCommandToService(SoundService.getCommand(context, AllSoundsCommand()))
-            sendCommandToService(SoundService.getCommand(context, TimerTextCommand()))
-            sendCommandToService(SoundService.getCommand(context, MuteStatusCommand()))
         })
 
         // listen for changes to the sound lists live data object to set the adapter for the gridview
@@ -147,119 +150,59 @@ class SoundGridFragment() : Fragment() {
                 .observe( // TODO: 19.12.2019 move in a separate file or inner class
                         viewLifecycleOwner,
                         Observer { sounds: List<Sound> ->
-                            Log.d(
-                                    TAG,
-                                    "Sound list changed: $sounds"
-                            )
 
-                            var activatedSounds: List<Sound> = emptyList()
+                            //                            if(isProBoughtAndEventConsumed()){
+//                                sendCommandToService(SoundService.getCommand(context, UnlockProCommand()))
+//                                sharedViewModel.updateProcessedUnlockProEvent()
+//                            }
 
-                            //check if PRO has been bought and populate above list to return further down instead of the unmodified 'sound' ->
-                            // loadListToSoundPool(if(activatedSounds.isNotEmpty()) activatedSounds else sounds)
-                            if (!sharedViewModel.proBought.value?.eventProcessed!!) {
-                                activatedSounds = activateAllProSounds()
-                            }
+                            val newList = sounds.toList()
+                            updateOrSetupAdapter(newList)
 
+                            // if list same size (only changes on properties like playing, loaded etc)
+                            if (newList.size == soundsAdapter?.sounds?.size) {
+                                val diff = newList.subtract(soundsAdapter?.sounds as List<Sound>)
 
-                            if (soundsAdapter == null) {
-                                soundsAdapter = GridRecyclerViewAdapter(
-                                        sounds as ArrayList<Sound>,
-                                        object : OnSoundClickListener {
-                                            override fun clicked(sound: Sound) {
-                                                if (sound.pro && !sound.playing) {
-                                                    viewModel.setClickedProSound(sound)
-                                                    activityCallback.showBottomDialogForPro()
-                                                } else if (!sound.loaded) {
-                                                    activityCallback.showMessageToUser(getString(R.string.sound_loading))
-                                                } else {
-                                                    playStopSound(sound)
-                                                }
-                                            }
-
-                                            override fun volumeChange(
-                                                    sound: Sound,
-                                                    volume: Int
-                                            ) { // TODO: 18.12.2019 refactor this float to string to double transformation
-                                                val volumeToSet: Float =
-                                                        (volume.toDouble() / 100).toString().toFloat()
-                                                Log.d(
-                                                        TAG,
-                                                        "volumeChange: called with volume: $volumeToSet"
-                                                )
-
-                                                val volumeCommand = SoundService.getCommand(
-                                                        context, VolumeCommand(sound.id,
-                                                        sound.streamId,
-                                                        volumeToSet,
-                                                        volumeToSet
-                                                )
-                                                )
-
-                                                sendCommandToService(volumeCommand)
-                                            }
-
-                                            override fun volumeChangeStopped(
-                                                    sound: Sound,
-                                                    progress: Int
-                                            ) {
-                                                viewModel.updateVolume(
-                                                        sound, (progress.toDouble() / 100).toString().toFloat()
-                                                )
-                                            }
-
-                                            override fun moreOptionsClicked(sound: Sound) {
-                                                BottomCustomDeleteFragment(sound, object : CustomBottomCallback {
-                                                    override fun deletedClicked(sound: Sound) {
-                                                        removeRecordingFromSoundPool(sound)
-                                                    }
-                                                }).show(parentFragmentManager, "deleteCustom")
-                                            }
-                                        })
-
-                                val numberOfColumns = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) 3 else 4
-
-                                val gridLayoutManager = GridLayoutManager(context, numberOfColumns)
-                                sounds_recycler_view.layoutManager = gridLayoutManager
-                                sounds_recycler_view.adapter = soundsAdapter
-
-
-                            } else {
-                                // TODO: 21-Apr-20 this is called so many times!!
-                                if (sounds.isNotEmpty()) {
-                                    Log.d(TAG, "gridArrayAdapter!!.refreshList called with: $sounds ")
-                                    soundsAdapter!!.refreshList(sounds)
+                                //no difference between the lists
+                                if (diff.isNotEmpty()) {
+                                    for ((index, value) in diff.withIndex()) {
+                                        soundsAdapter?.modifySingleSoundInList(diff.elementAt(index))
+                                    }
                                 }
+                            } else if (newList.size < soundsAdapter?.sounds?.size!!) {
 
-                            }
-
-                            // if sound not loaded yet and sounds list not yet populated
-                            if (sounds.isNotEmpty() && atLeastOneSoundWithoutSoundPoolId(sounds) && !loadToSoundPoolRunning) {
-                                // saveListToSharedPreferences(sounds)
-                                // hopefully the service is started by the 'play command'
-                                //this is done for the pro activation logic when activity restarts
-                                loadListToSoundPool(if (activatedSounds.isNotEmpty()) activatedSounds else sounds)
-                                this.loadToSoundPoolRunning = true
+                                soundsAdapter?.sounds?.forEach {
+                                    if (!newList.contains(it)) {
+                                        soundsAdapter?.removeSingleSoundInList(it)
+                                    }
+                                }
+                            } else {
+                                newList.forEach {
+                                    if (!soundsAdapter?.sounds?.contains(it)!!) {
+                                        soundsAdapter?.sounds?.add(it)
+                                    }
+                                }
                             }
                         }
                 )
-        //MOVED to the service callback method serviceCallbackAllSounds()
+
         // listen to the playing sounds live data object to change the play stop getLogoPath icon on top
-//        viewModel
-//                .playingSounds()
-//                .observe(
-//                        viewLifecycleOwner, Observer<List<Sound?>> { playingList ->
-//
-//                    Log.d(TAG, "observer for playingSounds called with: $playingList")
-//
-//                    playingSounds = playingList as ArrayList<Sound>
-//
-//                    if (playingList.isEmpty()) {
-//                        play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_play))
-//                        set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
-//                    } else {
-//                        play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop))
-//                    }
-//                })
+        viewModel
+                .playingSounds()
+                .observe(
+                        viewLifecycleOwner, Observer<List<Sound?>> { playingList ->
+
+                    currentlyPlayingSounds = playingList as List<Sound>
+
+                    Log.d(TAG, "observer for playingSounds called with: $playingList")
+
+                    if (playingList.isEmpty()) {
+                        play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_play))
+                        set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
+                    } else {
+                        play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop))
+                    }
+                })
 
         // TODO: 06-Jan-20 move this to viewmodel
 
@@ -312,7 +255,32 @@ class SoundGridFragment() : Fragment() {
         // endregion
     }
 
-    private fun updateRecycleviewAdapter(allSounds: List<Sound>) {
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun callbackWithNumberOfCurrentSounds(lists: EventBusSendNumberOfSounds) {
+
+        // fetched size same as sounds on service. just synchronize
+        if (lists.fetchedSounds.size == lists.soundOnService.size) {
+            sendCommandToService(SoundService.getCommand(context, AllSoundsCommand()))
+            sendCommandToService(SoundService.getCommand(context, TimerTextCommand()))
+            sendCommandToService(SoundService.getCommand(context, MuteStatusCommand()))
+            //normally you would hide the splash when at least 3 sounds have been loaded to the soundpool. in this case the load happens almost instantaneously. set small delay
+
+            activityCallback.hideSplashScreen()
+
+        } else {
+            if (shouldLoadToSoundpool()) {
+                loadListToSoundPool(lists.fetchedSounds)
+                // because you already did it once per app run
+                viewModel.shouldLoadToSoundPool = false
+            }
+
+            sendCommandToService(SoundService.getCommand(context, AllSoundsCommand()))
+            sendCommandToService(SoundService.getCommand(context, TimerTextCommand()))
+            sendCommandToService(SoundService.getCommand(context, MuteStatusCommand()))
+        }
+    }
+
+    private fun updateOrSetupAdapter(allSounds: List<Sound>) {
         if (soundsAdapter == null) {
             soundsAdapter = GridRecyclerViewAdapter(
                     allSounds as ArrayList<Sound>,
@@ -406,55 +374,31 @@ class SoundGridFragment() : Fragment() {
                 }
             })
         random_button.setOnClickListener {
+            stopAllSounds()
 
-            // observe _allsoundstopped and trigger a random play if all sounds are stopped
+            /*observe playing sounds once to make sure that an empty list is delivered and the observe once and remove observer*/
+            viewModel.playingSounds().observeOnceOnListEmptyWithOwner(viewLifecycleOwner, Observer {
+                // total number of available sounds can be found in viewmodel in sounds variable
+                val listAllSounds: List<Sound> = (viewModel.soundsStorage.value)!!
 
-            // i need to set this to false because for whatever reason it stays on true
-            _allSoundsStopped.value = false
-            // observe once -> wait for above stop to finish
-            _allSoundsStopped.observe(viewLifecycleOwner, object : Observer<Boolean> {
-                override fun onChanged(allSoundsStopped: Boolean) {
-                    if (allSoundsStopped) {
-                        // total number of available sounds can be found in viewmodel in sounds variable
-                        val listAllSounds: List<Sound> = (viewModel.soundsStorage.value)!!
+                val processed = mutableListOf<Sound>()
 
-                        val processed = mutableListOf<Sound>()
-
-                        while (processed.size < calculateLimit(listAllSounds)) {
-                            Log.d(TAG, "while called: with processed size: ${processed.size}")
-                            val randomSound = listAllSounds.random()
-                            if (!randomSound.pro && !randomSound.playing && !processed.contains(randomSound)
-                            ) {
-                                playStopSound(randomSound)
-                                processed.add(randomSound)
-                            }
-                        }
-                        // remove observer after observer emitted 'true'. we need a single emit otherwise this observer
-                        // will trigger each time all the sounds are stopped
-                        _allSoundsStopped.removeObserver(this)
+                while (processed.size < calculateLimit(listAllSounds)) {
+                    Log.d(TAG, "while called: with processed size: ${processed.size}")
+                    val randomSound = listAllSounds.random()
+                    if (randomSound.loaded && !randomSound.pro && !randomSound.playing && !processed.contains(randomSound)
+                    ) {
+                        playStopSound(randomSound)
+                        processed.add(randomSound)
                     }
-                }
-
-                private fun calculateLimit(listSize: List<Sound>): Int {
-
-                    val notPro = listSize.filter { !it.pro }
-                    if (notPro.size < MAX_RANDOM_SOUNDS) {
-                        return notPro.size
-                    }
-
-                    return MAX_RANDOM_SOUNDS
                 }
             })
-            stopAllSounds()
         }
-        play_button.setOnClickListener(
-                object : View.OnClickListener {
-                    override fun onClick(v: View) {
-                        if (currentlyPlayingSounds.size > 0) {
-                            stopAllSounds()
-                        }
-                    }
-                })
+        play_button.setOnClickListener {
+            if (currentlyPlayingSounds.isNotEmpty()) {
+                stopAllSounds()
+            }
+        }
         save_fav_button.setOnClickListener {
             val atLeastOneIsPlaying = viewModel.soundsStorage.value?.find { sound -> sound.playing }
             if (atLeastOneIsPlaying != null) {
@@ -476,6 +420,16 @@ class SoundGridFragment() : Fragment() {
                 activityCallback.showMessageToUser(getString(R.string.play_one_sound))
             }
         }
+    }
+
+    private fun calculateLimit(listSize: List<Sound>): Int {
+
+        val notPro = listSize.filter { !it.pro }
+        if (notPro.size < MAX_RANDOM_SOUNDS) {
+            return notPro.size
+        }
+
+        return MAX_RANDOM_SOUNDS
     }
 
     // endregion
@@ -540,8 +494,8 @@ class SoundGridFragment() : Fragment() {
         activityCallback.soundGridFragmentStarted()
     }
 
-    fun soundsAlreadyLoaded(): Boolean {
-        return viewModel.soundsAlreadyLoaded()
+    fun shouldLoadToSoundpool(): Boolean {
+        return viewModel.shouldLoadToSoundpool()
     }
 
     private fun removeRecordingFromSoundPool(sound: Sound) {
@@ -573,44 +527,13 @@ class SoundGridFragment() : Fragment() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
-    fun serviceCallbackStop(eventBusStop: EventBusStop) {
-        Log.d(TAG, "updateViewModelWithStop: called with: soundPoolId: ${eventBusStop.sound.soundPoolId}")
-        viewModel.updatePlayingSound(eventBusStop.sound)
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun serviceCallbackStopAll(eventBusStopAll: EventBusStopAll) {
-        Log.d(TAG, "serviceCallbackStopAll: called")
-
-        soundsAdapter?.modifyAllSoundsPlayingFalse()
-
-        viewModel.updateViewModelWithPlayingSoundsFalse()
-        _allSoundsStopped.value = true
-        // TODO: 16.04.2020 move this to the observer of playing sounds
-        hideTimerText()
-    }
-
-//    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
-//    fun serviceCallbackSoundPoolLoad(eventBusLoadedToSoundPool: EventBusLoadedToSoundPool) {
-//        Log.d(
-//                TAG,
-//                "updateViewModelSoundsLoadedToSoundPool: called with ${eventBusLoadedToSoundPool.soundPoolId}"
-//        )
-//        viewModel.loadedToSoundPool(eventBusLoadedToSoundPool.soundPoolId)
-//    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun updateViewModelWithLoad(eventBusLoad: EventBusLoad) {
-        soundsAdapter?.modifySingleSoundInList(eventBusLoad.sound)
         viewModel.loadedToSoundPool()
-//        viewModel.addToSounds(eventBusLoad.sounds)
         loadToSoundPoolRunning = false
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun updateViewModelWithUnload(eventBusUnload: EventBusUnload) {
-        viewModel.removeSingleSoundFromSounds(eventBusUnload.sound.id)
-
         val newList = mutableListOf<Sound>()
         val pinnedRecordings = loadFromSharedPreferences<ListOfSavedCustom>(MainActivity.PINNED_RECORDINGS)
         val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
@@ -627,8 +550,6 @@ class SoundGridFragment() : Fragment() {
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun singleSoundLoadedToSoundpoolCallback(eventBusLoad: EventBusLoadSingle) {
-        Log.d(TAG, "singleSoundLoadedToSoundpoolCallback: called")
-        viewModel.addSingleSound(eventBusLoad.sound)
         scrollToBottom()
     }
 
@@ -645,45 +566,6 @@ class SoundGridFragment() : Fragment() {
                 mute_button.tag = getString(R.string.mute_off)
             }
         })
-    }
-
-    /*This callback is used only to sync with the service on playing sounds after an activity restart*/
-    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
-    fun serviceCallbackAllSounds(eventBusPlayingSounds: EventBusAllSounds) {
-        Log.d(TAG, "updatePlayingSoundsInViewModel: called")
-
-        eventBusPlayingSounds.allSoundsFromService.observe(viewLifecycleOwner, { allSounds: List<Sound> ->
-
-            val newList = allSounds.toList()
-            updateRecycleviewAdapter(newList)
-
-            //check what is new in the newlist and update only the affected sound in the adapter
-            val diff = newList.subtract(soundsAdapter?.sounds as List<Sound>)
-
-            if (diff.isNotEmpty()) {
-                for ((index, value) in diff.withIndex()) {
-                    soundsAdapter?.modifySingleSoundInList(diff.elementAt(index))
-                }
-            }
-        })
-
-
-        val _playingSoundsLive: LiveData<ArrayList<Sound>> = Transformations.map(eventBusPlayingSounds.allSoundsFromService)
-        { soundsList ->
-            soundsList.filter { sound -> sound.playing } as ArrayList<Sound>
-        }
-
-        _playingSoundsLive.observe(viewLifecycleOwner, Observer { playingSounds ->
-            currentlyPlayingSounds = playingSounds as ArrayList<Sound>
-
-            if (playingSounds.isEmpty()) {
-                play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_play))
-                set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
-            } else {
-                play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop))
-            }
-        })
-
     }
 
 
@@ -727,24 +609,6 @@ class SoundGridFragment() : Fragment() {
         val newObject = ListOfSavedCustom(newList)
         saveToSharedPreferences(newObject, MainActivity.PINNED_RECORDINGS)
 
-    }
-
-    fun activateAllProSounds(): List<Sound> {
-        val returnedList = viewModel.activateAllSounds()
-        sharedViewModel.updateProcessedUnlockProEvent()
-        return returnedList
-    }
-
-    private fun <T> LiveData<T>.observeOnceWithUnprocessed(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
-        observe(lifecycleOwner, object : Observer<T> {
-            override fun onChanged(t: T?) {
-                val unlockProEvent = t as UnlockProEvent
-                if (!unlockProEvent.eventProcessed) {
-                    observer.onChanged(t)
-                    removeObserver(this)
-                }
-            }
-        })
     }
 
     companion object {

@@ -80,7 +80,9 @@ class AboutFragment : Fragment() {
     }
 
     private fun putAdsBoughExtra(intent: Intent): Intent {
-        return intent.putExtra("ads_bought", sharedViewModel!!.adsBought.value)
+        intent.putExtra("ads_bought", sharedViewModel!!.adsBought.value)
+        intent.putExtra("pro_bought", sharedViewModel!!.proBought.value?.proBought)
+        return intent
     }
 
     private fun startRateAppAction() {
