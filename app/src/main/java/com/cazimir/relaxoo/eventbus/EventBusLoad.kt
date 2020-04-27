@@ -1,1 +1,1 @@
-package com.cazimir.relaxoo.eventbusimport com.cazimir.relaxoo.model.Soundclass EventBusLoad(val sounds: List<Sound>)
+package com.cazimir.relaxoo.eventbusimport com.cazimir.relaxoo.model.Soundclass EventBusLoad(val sound: Sound)

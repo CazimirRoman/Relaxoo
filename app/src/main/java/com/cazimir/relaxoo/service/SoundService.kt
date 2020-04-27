@@ -11,8 +11,10 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.Transformations
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.application.MyApplication
@@ -38,8 +40,14 @@ class SoundService : Service(), ISoundService {
         }
     }
 
+    private var allSounds: MutableList<Sound> = mutableListOf()
+
     private val _muted: MutableLiveData<Boolean> = MutableLiveData()
-    private val _playingSoundsListLive: MutableLiveData<List<Sound>> = MutableLiveData()
+    private val _allSoundsLive: MutableLiveData<List<Sound>> = MutableLiveData()
+    private val _playingSounds: LiveData<ArrayList<Sound>> = Transformations.map(_allSoundsLive)
+    { soundsList ->
+        soundsList.filter { sound -> sound.playing } as ArrayList<Sound>
+    }
     private val _timerRunning: MutableLiveData<Boolean> = MutableLiveData()
     private val _timerText: MutableLiveData<String> = MutableLiveData("")
     private lateinit var notificationBuilder: NotificationCompat.Builder
@@ -50,7 +58,8 @@ class SoundService : Service(), ISoundService {
     private var timerTextEnding = ""
     private lateinit var pendingIntent: PendingIntent
     private lateinit var soundPool: SoundPool
-    private var playingSoundsList: ArrayList<Sound> = ArrayList()
+
+    //    private var playingSoundsList: ArrayList<Sound> = ArrayList()
     private var playingSoundsListCached: ArrayList<Sound> = ArrayList()
 
 
@@ -100,13 +109,13 @@ class SoundService : Service(), ISoundService {
             is StopCommand -> stop(event)
             is StopAllSoundsCommand -> stopAllSounds()
             is ShowNotificationCommand -> setupNotifications()
-            is PlayingSoundsCommand -> sendPlayingSounds()
-            is TriggerComboCommand -> triggerCombo(event.soundList)
+            is AllSoundsCommand -> sendAllSounds()
+            is TriggerComboCommand -> triggerCombo(event.soundList, event.boughtPro)
             is ToggleCountDownTimerCommand -> toggleCountDownTimer(event.minutes)
             is TimerTextCommand -> sendTimerText()
             is LoadCustomSoundCommand -> loadCustomSound(event.sound)
             is ToggleMuteCommand -> toggleMute()
-            is TogglePlayStopCommand -> togglePlayStop()
+            is TogglePlayStopCommand -> togglePlayStopFromNotification()
             is MuteStatusCommand -> sendMuteStatus()
             else -> { // Note the block
                 print("x is neither 1 nor 2")
@@ -120,8 +129,8 @@ class SoundService : Service(), ISoundService {
         EventBus.getDefault().post(EventBusMuteStatus(_muted))
     }
 
-    private fun togglePlayStop() {
-        if (playingSoundsList.size != 0) {
+    private fun togglePlayStopFromNotification() {
+        if (allSounds.any { it.playing }) {
             stopAllSounds()
         } else {
             playingSoundsListCached.forEach { sound -> play(PlayCommand(sound)) }
@@ -143,12 +152,32 @@ class SoundService : Service(), ISoundService {
 
         soundPool.setOnLoadCompleteListener { soundPool: SoundPool?, soundPoolId: Int, status: Int ->
             Log.d(TAG, "onLoadComplete: $soundPoolId")
-            // broadcast to viewModel
-            EventBus.getDefault().post(EventBusLoadedToSoundPool(soundPoolId))
+
+            val soundWithSoundPoolId = allSounds.find { sound ->
+                sound.soundPoolId == soundPoolId
+            }
+
+            //replace sound in list with loaded = true
+
+            for ((index, value) in allSounds.withIndex()) {
+                if (value.id == soundWithSoundPoolId?.id) {
+                    allSounds[index] = soundWithSoundPoolId.copy(loaded = true)
+                    break
+                }
+            }
+
+//            allSounds[allSounds.indexOf(soundWithSoundPoolId)] = soundWithSoundPoolId!!.copy(loaded = true)
+
+            _allSoundsLive.value = allSounds
+
+            EventBus.getDefault().post(EventBusLoad(soundWithSoundPoolId!!.copy(loaded = true)))
         }
 
-        _playingSoundsListLive.observeForever(textEndingObserver)
-        _playingSoundsListLive.observeForever {
+
+        // observe playing sounds to change text endings on timer text
+        _playingSounds.observeForever(textEndingObserver)
+        // observe playing sounds to cancel any running timer
+        _playingSounds.observeForever {
             if (it.isEmpty()) {
                 countDownTimer?.cancel()
                 _timerRunning.value = false
@@ -158,6 +187,25 @@ class SoundService : Service(), ISoundService {
 
         _timerRunning.observeForever(timerRunningObserver)
         _muted.observeForever(mutedObserver)
+    }
+
+    private fun MutableList<Sound>.hasAllSoundsLoaded(): Boolean {
+
+        var allLoaded = true
+
+        forEach {
+            if (!it.loaded) {
+                allLoaded = false
+            }
+        }
+
+        return allLoaded
+    }
+
+    fun <T> List<T>.replace(newValue: T, block: (T) -> Boolean): List<T> {
+        return map {
+            if (block(it)) newValue else it
+        }
     }
 
     private fun toggleCountDownTimer(minutes: Int) {
@@ -188,15 +236,23 @@ class SoundService : Service(), ISoundService {
         EventBus.getDefault().post(EventBusTimer(_timerRunning, _timerText))
     }
 
-    private fun triggerCombo(soundList: List<Sound>) {
+    private fun triggerCombo(soundList: List<Sound>, boughtPro: Boolean) {
         Log.d(TAG, "triggerCombo: called")
         stopAllSounds()
-        soundList.forEach { sound -> play(PlayCommand(sound)) }
+        soundList.forEach { sound ->
+
+            if (boughtPro) {
+                play(PlayCommand(sound))
+            } else if (sound.pro.not()) {
+                play(PlayCommand(sound))
+            }
+
+        }
     }
 
     // TODO: 11-Apr-20 I should bundle these in a single EventBus update
-    private fun sendPlayingSounds() {
-        EventBus.getDefault().post(EventBusPlayingSounds(_playingSoundsListLive))
+    private fun sendAllSounds() {
+        EventBus.getDefault().post(EventBusAllSounds(_allSoundsLive))
     }
 
     private fun sendTimerText() {
@@ -225,7 +281,7 @@ class SoundService : Service(), ISoundService {
 
         createNotificationBuilder()
 
-        _playingSoundsListLive.observeForever { playingSounds ->
+        _playingSounds.observeForever { playingSounds ->
             if (playingSounds.isEmpty()) {
                 // stopForeground(true)
                 notificationView.setImageViewResource(
@@ -280,7 +336,7 @@ class SoundService : Service(), ISoundService {
         // also kill activity if used decides to kill service so that everything is recreated on relaunch
         Log.d(TAG, "onDestroy: called")
         EventBus.getDefault().post(EventBusServiceDestroyed())
-        _playingSoundsListLive.removeObserver { textEndingObserver }
+        _allSoundsLive.removeObserver { textEndingObserver }
         _timerRunning.removeObserver { timerRunningObserver }
         _muted.removeObserver { mutedObserver }
         super.onDestroy()
@@ -306,12 +362,14 @@ class SoundService : Service(), ISoundService {
         return "$numberOfPlayingSounds $label playing..."
     }
 
+    //entry point where the sounds are coming in to the service
     override fun loadToSoundPool(sounds: List<Sound>) {
         Log.d(TAG, "loadToSoundPool: called with sounds: $sounds")
 
-        val processedSounds = mutableListOf<Sound>()
-
-        sounds.mapTo(processedSounds, { sound ->
+        allSounds.clear()
+        // add to processed sounds with soundPoolId and loaded
+        // soundPool ID is returned but that does not mean that the sound has been loaded yet. we need to wait for the callback
+        sounds.mapTo(allSounds, { sound ->
             if (sound.soundPoolId == -1) {
                 val soundPoolId = soundPool.load(sound.filePath, 1)
                 Log.d(TAG, "loadToSoundPool in Service: called")
@@ -320,8 +378,6 @@ class SoundService : Service(), ISoundService {
                 sound
             }
         })
-
-        EventBus.getDefault().post(EventBusLoad(processedSounds))
     }
 
     private fun loadCustomSound(sound: Sound) {
@@ -345,26 +401,55 @@ class SoundService : Service(), ISoundService {
                 playCommand.sound.volume,
                 playCommand.sound.volume,
                 0,
-            -1,
-            1f
+                -1,
+                1f
         )
 
         // if mute is active new playing sounds should also be paused
         if (muted) soundPool.autoPause()
 
-        val newSoundWithStreamId = playCommand.sound.copy(streamId = streamId)
+        val newSoundWithStreamId = playCommand.sound.copy(streamId = streamId, playing = true)
 
         // the playing sounds list sends back an observable that is updated each time playing sounds is beeing updated.
-        playingSoundsList.add(newSoundWithStreamId)
-                .also { _playingSoundsListLive.value = playingSoundsList }
+
+        for ((index, value) in allSounds.withIndex()) {
+            if (value.id == newSoundWithStreamId.id) {
+                allSounds[index] = newSoundWithStreamId
+                break
+            }
+        }
+
+
+//        allSounds[allSounds.indexOf(newSoundWithStreamId)] = newSoundWithStreamId
+
+
+        _allSoundsLive.value = allSounds
+
+//        playingSoundsList.add(newSoundWithStreamId)
+//                .also { _playingSoundsListLive.value = playingSoundsList }
     }
 
     override fun stop(stopCommand: StopCommand) {
         Log.d(TAG, "stop: called with: ${stopCommand.sound}")
         soundPool.stop(stopCommand.sound.streamId)
 
-        playingSoundsList.remove(stopCommand.sound)
-                .also { _playingSoundsListLive.value = playingSoundsList }
+
+        val newStoppedSound = stopCommand.sound.copy(streamId = -1, playing = false)
+
+
+        for ((index, value) in allSounds.withIndex()) {
+            if (value.id == newStoppedSound.id) {
+                allSounds[index] = newStoppedSound
+                break
+            }
+        }
+
+//        allSounds[allSounds.indexOf(newStoppedSound)] = newStoppedSound
+
+        _allSoundsLive.value = allSounds
+
+//        playingSoundsList.remove(stopCommand.sound)
+//                .also { _playingSoundsListLive.value = playingSoundsList }
 
         EventBus.getDefault().post(EventBusStop(stopCommand.sound))
     }
@@ -372,15 +457,25 @@ class SoundService : Service(), ISoundService {
     override fun stopAllSounds() {
         Log.d(TAG, "stopAllSounds in service: called")
 
-        for (playingSound: Sound in playingSoundsList) {
+        for (playingSound: Sound in allSounds.filter { it.playing }) {
             soundPool.stop(playingSound.streamId)
         }
 
         // save current state of playing sounds so by pressing play again the last selected sounds will
         // be played
-        playingSoundsListCached = playingSoundsList.toMutableList() as ArrayList<Sound>
+        playingSoundsListCached = allSounds.filter { it.playing }.toMutableList() as ArrayList<Sound>
 
-        playingSoundsList.clear().also { _playingSoundsListLive.value = playingSoundsList }
+        val newList = mutableListOf<Sound>()
+
+        allSounds.mapTo(newList, {
+            it.copy(playing = false)
+        })
+
+
+        allSounds = newList
+        _allSoundsLive.value = newList
+
+//        playingSoundsList.clear().also { _playingSoundsListLive.value = allSounds }
         countDownTimer?.cancel().also { _timerRunning.value = false }
 
         EventBus.getDefault().post(EventBusStopAll())
@@ -390,12 +485,28 @@ class SoundService : Service(), ISoundService {
     override fun setVolume(id: String, streamId: Int, leftVolume: Float, rightVolume: Float) {
         Log.d(TAG, "setVolume: called")
         soundPool.setVolume(streamId, leftVolume, rightVolume)
-        val toBeReplaced = playingSoundsList.first { playingSound -> playingSound.id == id }
-        val indexOf = playingSoundsList.indexOf(toBeReplaced)
+        val toBeReplaced = allSounds.first { playingSound -> playingSound.id == id }
+
+        for ((index, value) in allSounds.withIndex()) {
+            if (value.id == toBeReplaced.id) {
+                allSounds[index] = toBeReplaced
+                break
+            }
+        }
+
+//        val indexOf = allSounds.indexOf(toBeReplaced)
         val replaceWith = toBeReplaced.copy(volume = leftVolume)
 
-        playingSoundsList = playingSoundsList.toMutableList().apply {
-            this[indexOf] = replaceWith
-        } as ArrayList<Sound>
+        for ((index, value) in allSounds.withIndex()) {
+            if (value.id == replaceWith.id) {
+                allSounds[index] = replaceWith
+                break
+            }
+        }
+
+//        allSounds[allSounds.indexOf(replaceWith)] = replaceWith
+//        playingSoundsList = playingSoundsList.toMutableList().apply {
+//            this[indexOf] = replaceWith
+//        } as ArrayList<Sound>
     }
 }

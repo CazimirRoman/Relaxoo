@@ -45,4 +45,5 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="buy_pro">Buy PRO</string>
+    <string name="playing_except_pro">Playing combo excepting the PRO sounds</string>
 </resources>

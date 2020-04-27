@@ -16,7 +16,7 @@ import com.cazimir.utilitieslibrary.inflate
 import kotlinx.android.synthetic.main.grid_item.view.*
 
 
-class GridRecyclerViewAdapter(private var sounds: List<Sound>, private val listener: OnSoundClickListener) : RecyclerView.Adapter<GridRecyclerViewAdapter.SoundHolder>() {
+class GridRecyclerViewAdapter(var sounds: ArrayList<Sound>, private val listener: OnSoundClickListener) : RecyclerView.Adapter<GridRecyclerViewAdapter.SoundHolder>() {
 
     companion object {
         private const val TAG = "StaggeredRecyclerViewAd"
@@ -74,8 +74,38 @@ class GridRecyclerViewAdapter(private var sounds: List<Sound>, private val liste
     }
 
     fun refreshList(newSounds: List<Sound>) {
-        sounds = newSounds
-        notifyDataSetChanged()
+        if (sounds.isNotEmpty()) {
+            for (sound: Sound in newSounds) {
+                modifySingleSoundInList(sound)
+            }
+        } else {
+            sounds = newSounds as ArrayList<Sound>
+            notifyDataSetChanged()
+        }
+    }
+
+    fun modifySingleSoundInList(sound: Sound) {
+        // cannot use indexOf because of substract method previously. nned to override equals
+        for ((index, value) in sounds.withIndex()) {
+            if (value.id == sound.id) {
+                sounds[index] = sound
+                notifyItemChanged(index)
+                break
+            }
+        }
+    }
+
+    fun modifyAllSoundsPlayingFalse() {
+
+        val newList = ArrayList<Sound>()
+
+        sounds.mapTo(newList, {
+            it.copy(playing = false)
+        })
+
+
+        sounds = newList
+
     }
 
 

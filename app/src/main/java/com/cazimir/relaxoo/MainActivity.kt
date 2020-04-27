@@ -17,7 +17,6 @@ import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
@@ -31,7 +30,7 @@ import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog
 import com.cazimir.relaxoo.dialog.OnDeleted
 import com.cazimir.relaxoo.dialog.favorite.FavoriteDeleted
 import com.cazimir.relaxoo.dialog.favorite.SaveToFavoritesDialog
-import com.cazimir.relaxoo.dialog.pro.ProBottomDialogFragment
+import com.cazimir.relaxoo.dialog.pro.BottomProDialogFragment
 import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
@@ -43,6 +42,7 @@ import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
 import com.cazimir.relaxoo.shared.SharedViewModel
+import com.cazimir.relaxoo.shared.UnlockProEvent
 import com.cazimir.relaxoo.ui.about.AboutFragment
 import com.cazimir.relaxoo.ui.create_sound.CreateSoundFragment
 import com.cazimir.relaxoo.ui.create_sound.OnRecordingStarted
@@ -53,6 +53,7 @@ import com.cazimir.relaxoo.ui.sound_grid.SoundGridFragment
 import com.cazimir.utilitieslibrary.InternetUtil
 import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferences
 import com.cazimir.utilitieslibrary.SharedPreferencesUtil.saveToSharedPreferences
+import com.cazimir.utilitieslibrary.showSnackbar
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -60,7 +61,6 @@ import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.reward.RewardItem
 import com.google.android.gms.ads.reward.RewardedVideoAd
 import com.google.android.gms.ads.reward.RewardedVideoAdListener
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.gson.JsonSyntaxException
 import com.karumi.dexter.Dexter
@@ -93,6 +93,8 @@ class MainActivity : FragmentActivity(),
         private val CHANNEL_WHATEVER = "" + ""
         private val RECORDING_REQ_CODE = 0
         val PINNED_RECORDINGS = "PINNED_RECORDINGS"
+        private const val REMOVE_ADS = "remove_ads"
+        private const val BUY_PRO = "buy_pro"
     }
 
     private var doubleBackToExitPressedOnce: Boolean = false
@@ -110,7 +112,8 @@ class MainActivity : FragmentActivity(),
 
     private var preconditionsToStartFetchingData: PreconditionsToStartFetchingData = PreconditionsToStartFetchingData()
 
-    private val skuList = listOf("remove_ads")
+    private val skuListAds = listOf(REMOVE_ADS)
+    private val skuListPro = listOf(BUY_PRO)
 
     private var timerDialog: TimerDialog? = null
     private var soundGridFragment: SoundGridFragment? = null
@@ -120,20 +123,19 @@ class MainActivity : FragmentActivity(),
         setContentView(R.layout.main_activity)
         EventBus.getDefault().register(this)
         sharedViewModel = ViewModelProvider(this).get(SharedViewModel::class.java)
-
+        subscribeObservers()
         //using this because the splash will be shown again if the user rotates the screen
         shouldHideSplash()
         setupViewPager()
         setupViewPagerDots()
-
         // done already in @MyApplication
 //        setupNotifications()
         startColorChangeAnimation()
         checkPermissions()
         // should also be done in onResume()
-        setupBillingClient()
+        checkUserPurchases()
         setupRewardVideoAd()
-        subscribeObservers()
+
     }
 
     private fun subscribeObservers() {
@@ -178,9 +180,9 @@ class MainActivity : FragmentActivity(),
                             "onChanged() called with: preconditionsToStartFetchingData: " +
                                     preconditionsToStartFetchingData.toString()))
                     if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted && preconditionsToStartFetchingData.isInternetUp) {
-                        if (soundGridFragment!!.soundsAlreadyFetched().not()) {
+                        if (soundGridFragment!!.soundsAlreadyLoaded().not()) {
                             Log.d(
-                                    TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyFetched())
+                                    TAG, "sounds already fetched: " + getSoundGridFragment().soundsAlreadyLoaded())
                             getSoundGridFragment().fetchSounds()
 
                         }
@@ -194,6 +196,14 @@ class MainActivity : FragmentActivity(),
                 getAboutFragment().hideRemoveAdsButton()
             } else {
                 loadAds()
+            }
+        })
+
+        sharedViewModel.proBought.observe(this, Observer { event: UnlockProEvent ->
+            if (event.proBought && !event.eventProcessed) {
+                removeAdsView()
+                getAboutFragment().hideRemoveAdsButton()
+                //getSoundGridFragment().activateAllProSounds()
             }
         })
     }
@@ -264,7 +274,7 @@ class MainActivity : FragmentActivity(),
         }
         doubleBackToExitPressedOnce = true
 
-        showSnackBar(getString(R.string.back_exit))
+        showMessageToUser(getString(R.string.back_exit))
 
         Handler().postDelayed({ doubleBackToExitPressedOnce = false }, 2000)
     }
@@ -275,7 +285,7 @@ class MainActivity : FragmentActivity(),
         }
     }
 
-    private fun setupBillingClient() {
+    private fun checkUserPurchases() {
         billingClient =
                 BillingClient.newBuilder(this).enablePendingPurchases().setListener(this).build()
         billingClient.startConnection(
@@ -284,8 +294,12 @@ class MainActivity : FragmentActivity(),
                         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                             Log.d(TAG, "onBillingSetupFinished() called with: success!")
                             val purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP)
-                            if (purchasesResult.purchasesList.size != 0 && (purchasesResult.purchasesList[0].sku == "remove_ads")) {
-                                sharedViewModel.adsBought(true)
+                            if (purchasesResult.purchasesList.size != 0) {
+                                if (purchasesResult.purchasesList[0].sku == BUY_PRO) {
+                                    sharedViewModel.updateBoughtPro()
+                                } else if (purchasesResult.purchasesList[0].sku == REMOVE_ADS) {
+                                    sharedViewModel.updateBoughtAds()
+                                }
                             }
                         }
                     }
@@ -301,7 +315,7 @@ class MainActivity : FragmentActivity(),
     private fun launchFlowToRemoveAds() {
         if (billingClient.isReady) {
             val skuDetailsParams = SkuDetailsParams.newBuilder()
-                    .setSkusList(skuList)
+                    .setSkusList(skuListAds)
                     .setType(BillingClient.SkuType.INAPP)
                     .build()
             billingClient.querySkuDetailsAsync(
@@ -312,7 +326,6 @@ class MainActivity : FragmentActivity(),
                     for (skuDetail: SkuDetails in skuDetailsList) {
                         val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
                         billingClient.launchBillingFlow(this, flowParams)
-                        showSnackBar(skuDetail.description)
                     }
                 } else {
                     Log.d(TAG, "loadAllSKUs() called with: skuDetailsList is empty")
@@ -430,10 +443,6 @@ class MainActivity : FragmentActivity(),
         SaveToFavoritesDialog(playingSounds).show(supportFragmentManager, "save")
     }
 
-    override fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
     override fun showTimerDialog() {
         if (timerDialog == null) {
             timerDialog = TimerDialog(this)
@@ -450,7 +459,8 @@ class MainActivity : FragmentActivity(),
                 TAG, (
                 "triggerCombo in MainActivity: called with: " +
                         savedCombo.sounds.toString()))
-        getSoundGridFragment().triggerCombo(savedCombo)
+        getSoundGridFragment().triggerCombo(savedCombo, sharedViewModel.proBought.value?.proBought)
+        showMessageToUser(getString(R.string.playing_except_pro))
     }
 
     override fun showDeleteConfirmationDialog(deleted: OnDeleted) {
@@ -463,7 +473,7 @@ class MainActivity : FragmentActivity(),
     override fun saved(savedCombo: SavedCombo) {
         Log.d(TAG, "saved: called")
         favoriteFragment!!.updateList(savedCombo)
-        showSnackBar(getString(R.string.saved_combo))
+        showMessageToUser(getString(R.string.saved_combo))
     }
 
     private val favoriteFragment: FavoritesFragment?
@@ -494,7 +504,7 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun showBottomDialogForPro() {
-        ProBottomDialogFragment(this).show(supportFragmentManager, "pro")
+        BottomProDialogFragment(this).show(supportFragmentManager, "pro")
     }
 
     override fun soundGridFragmentStarted() {
@@ -511,6 +521,35 @@ class MainActivity : FragmentActivity(),
         sharedViewModel.splashScreenShown = true
         Log.d(TAG, "EspressoIdlingResource.decrement called")
         EspressoIdlingResource.decrement()
+    }
+
+    override fun startBuyingProFlow() {
+
+        if (billingClient.isReady) {
+            val skuDetailsParams = SkuDetailsParams.newBuilder()
+                    .setSkusList(skuListPro)
+                    .setType(BillingClient.SkuType.INAPP)
+                    .build()
+            billingClient.querySkuDetailsAsync(
+                    skuDetailsParams
+            ) { billingResult: BillingResult, skuDetailsList: List<SkuDetails> ->
+                if ((billingResult.responseCode == BillingClient.BillingResponseCode.OK &&
+                                !skuDetailsList.isEmpty())) {
+                    for (skuDetail: SkuDetails in skuDetailsList) {
+                        val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
+                        billingClient.launchBillingFlow(this, flowParams)
+                    }
+                } else {
+                    Log.d(TAG, "loadAllSKUs() called with: skuDetailsList is empty")
+                }
+            }
+        } else {
+            Log.d(TAG, "loadAllSKUs() called with: billingClient is not ready")
+        }
+
+
+        // this should happen after purchase confirmation
+//        getSoundGridFragment().activateAllProSounds()
     }
 
     override fun removeAds() {
@@ -532,8 +571,8 @@ class MainActivity : FragmentActivity(),
         getSoundGridFragment().removeCustomSoundFromDashboardIfThere(recording)
     }
 
-    override fun showSnackBar(string: String) {
-        Snackbar.make(coordinator, string, Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).show()
+    override fun showMessageToUser(messageToShow: String) {
+        showSnackbar(coordinator, messageToShow)
     }
 
     override fun renameRecording(recording: Recording, newName: String) {
@@ -547,7 +586,7 @@ class MainActivity : FragmentActivity(),
         val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
 
         if (list.contains(sound)) {
-            showSnackBar(getString(R.string.sound_already_pinned))
+            showMessageToUser(getString(R.string.sound_already_pinned))
             return
         }
 
@@ -601,7 +640,7 @@ class MainActivity : FragmentActivity(),
                             }
 
                             override fun onPermissionDenied(response: PermissionDeniedResponse) {
-                                showSnackBar(getString(R.string.recording_permission_denied))
+                                showMessageToUser(getString(R.string.recording_permission_denied))
                             }
 
                             override fun onPermissionRationaleShouldBeShown(
@@ -617,11 +656,11 @@ class MainActivity : FragmentActivity(),
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 0) {
             if (resultCode == Activity.RESULT_OK) {
-                showSnackBar(getString(R.string.sound_saved))
+                showMessageToUser(getString(R.string.sound_saved))
                 createSoundFragment!!.updateList()
                 // Great! User has recorded and saved the audio file
             } else if (resultCode == Activity.RESULT_CANCELED) {
-                showSnackBar(getString(R.string.canceled))
+                showMessageToUser(getString(R.string.canceled))
             }
         }
     }
@@ -650,12 +689,21 @@ class MainActivity : FragmentActivity(),
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
         Log.d(TAG, "onPurchasesUpdated: called with: $billingResult")
         val responseCode = billingResult.responseCode
+
         if (responseCode == BillingClient.BillingResponseCode.OK || responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+
             Log.d(
-                TAG,
-                "onPurchasesUpdated: called with: " + "Purchase successfull or Item already purchased"
+                    TAG,
+                    "onPurchasesUpdated: called with: Purchase succesfull or Item already purchased: $purchases[0]!!.sku"
             )
-            sharedViewModel.adsBought(true)
+
+            // pro includes also remove ads
+            if (purchases?.get(0)?.sku == BUY_PRO) {
+                sharedViewModel.updateBoughtPro()
+            } else if (purchases?.get(0)?.sku == REMOVE_ADS) {
+                sharedViewModel.updateBoughtAds()
+            }
+
         }
     }
 

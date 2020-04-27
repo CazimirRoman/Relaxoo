@@ -13,8 +13,6 @@ public interface OnActivityCallback {
 
   void showAddToFavoritesDialog(List<Sound> sounds);
 
-  void showToast(String message);
-
   void showTimerDialog();
 
   void triggerCombo(SavedCombo savedCombo);
@@ -29,15 +27,17 @@ public interface OnActivityCallback {
 
   void removeAds();
 
-  void deleteRecording(@NotNull Recording recording);
+    void deleteRecording(@NotNull Recording recording);
 
-  void renameRecording(@NotNull Recording recording, @NotNull String toString);
+    void renameRecording(@NotNull Recording recording, @NotNull String toString);
 
-  void pinToDashBoardActionCalled(@NotNull Sound sound);
+    void pinToDashBoardActionCalled(@NotNull Sound sound);
 
-  void playRewardAd();
+    void playRewardAd();
 
-  void hideProgress();
+    void hideProgress();
 
-  void showSnackBar(@NotNull String string);
+    void showMessageToUser(@NotNull String string);
+
+    void startBuyingProFlow();
 }

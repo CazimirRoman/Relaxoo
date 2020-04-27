@@ -32,21 +32,39 @@ data class Sound(
         if (id != other.id) {
             return false
         }
-//        if(name != other.name) {
-//            return false
-//        }
-//        if(logoPath != other.logoPath) {
-//            return false
-//        }
-//        if(filePath != other.filePath) {
-//            return false
-//        }
-//        if(pro != other.pro) {
-//            return false
-//        }
-//        if(custom != other.custom) {
-//            return false
-//        }
+
+        if (soundPoolId != other.soundPoolId) {
+            return false
+        }
+
+        if (streamId != other.streamId) {
+            return false
+        }
+
+        if (name != other.name) {
+            return false
+        }
+        if (logoPath != other.logoPath) {
+            return false
+        }
+        if (filePath != other.filePath) {
+            return false
+        }
+
+        if (playing != other.playing) {
+            return false
+        }
+
+        if (pro != other.pro) {
+            return false
+        }
+        if (custom != other.custom) {
+            return false
+        }
+
+        if (loaded != other.loaded) {
+            return false
+        }
 
         return true
     }

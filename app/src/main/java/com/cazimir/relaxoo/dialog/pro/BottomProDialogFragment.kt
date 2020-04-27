@@ -9,12 +9,12 @@ import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.synthetic.main.dialog_bottom_unlock_pro.view.*
 
-class ProBottomDialogFragment(val callback: OnActivityCallback) : BottomSheetDialogFragment() {
+class BottomProDialogFragment(val callback: OnActivityCallback) : BottomSheetDialogFragment() {
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
 
         val view = layoutInflater.inflate(R.layout.dialog_bottom_unlock_pro, null)
@@ -22,6 +22,11 @@ class ProBottomDialogFragment(val callback: OnActivityCallback) : BottomSheetDia
         view.viewAds.setOnClickListener {
             dismiss()
             callback.playRewardAd()
+        }
+
+        view.buyPro.setOnClickListener {
+            dismiss()
+            callback.startBuyingProFlow()
         }
 
         return view

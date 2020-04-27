@@ -38,6 +38,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:id="@+id/buyPro"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
