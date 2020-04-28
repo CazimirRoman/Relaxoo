@@ -3,6 +3,7 @@ package com.cazimir.relaxoo.ui.privacy_policy
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.WebSettings
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
 import com.cazimir.relaxoo.BuildConfig
@@ -11,6 +12,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import kotlinx.android.synthetic.main.activity_privacy_policy.*
+
 
 class PrivacyPolicyActivity : AppCompatActivity() {
     private lateinit var adView: AdView
@@ -21,6 +23,7 @@ class PrivacyPolicyActivity : AppCompatActivity() {
 
         initializeAdView()
 
+        // TODO: 28.04.2020 refactor this - create single object
         val adsBought = intent?.getBooleanExtra("ads_bought", false)
         val proBought = intent?.getBooleanExtra("pro_bought", false)
 
@@ -41,10 +44,12 @@ class PrivacyPolicyActivity : AppCompatActivity() {
         }
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setTitle("Privacy Policy")
+        supportActionBar?.title = getString(R.string.privacy_policy_title)
 
         webView.webViewClient = WebViewClient()
-        webView.loadUrl("file:///assets/privacy_policy.html")
+        val webSettings: WebSettings = webView.getSettings()
+        webSettings.javaScriptEnabled = true
+        webView.loadUrl("file:///android_asset/privacy_policy.html")
 
 
     }

@@ -49,4 +49,5 @@
     <string name="playing_except_loading">Some sounds are still loading. Playing already loaded sounds</string>
     <string name="custom_timer_zero">Please select an amount of time</string>
     <string name="playing_saved_combo">Playing selected combo</string>
+    <string name="privacy_policy_title">Privacy policy</string>
 </resources>
