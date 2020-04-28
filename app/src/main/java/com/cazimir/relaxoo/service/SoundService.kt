@@ -303,6 +303,10 @@ class SoundService : Service(), ISoundService {
 
         createNotificationBuilder()
 
+        notificationView.setOnClickPendingIntent(R.id.remote_view_play_stop, togglePlayStopIntent)
+        notificationView.setOnClickPendingIntent(R.id.remote_view_mute, mutePendingIntent)
+        notificationView.setOnClickPendingIntent(R.id.remote_view_close, closePendingIntent)
+
         _playingSounds.observeForever { playingSounds ->
             if (playingSounds.isEmpty()) {
                 // stopForeground(true)
@@ -322,13 +326,6 @@ class SoundService : Service(), ISoundService {
                         R.id.remote_view_play_stop,
                         R.drawable.ic_stop_black
                 )
-                notificationView.setOnClickPendingIntent(
-                        R.id.remote_view_play_stop,
-                        togglePlayStopIntent
-                )
-                notificationView.setOnClickPendingIntent(R.id.remote_view_mute, mutePendingIntent)
-                notificationView.setOnClickPendingIntent(R.id.remote_view_close, closePendingIntent)
-
                 val notification = this.notificationBuilder
                         .build()
 
