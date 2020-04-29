@@ -151,11 +151,6 @@ class SoundGridFragment : Fragment() {
                         viewLifecycleOwner,
                         Observer { sounds: List<Sound> ->
 
-                            //                            if(isProBoughtAndEventConsumed()){
-//                                sendCommandToService(SoundService.getCommand(context, UnlockProCommand()))
-//                                sharedViewModel.updateProcessedUnlockProEvent()
-//                            }
-
                             val newList = sounds.toList()
                             updateOrSetupAdapter(newList)
 
@@ -169,13 +164,15 @@ class SoundGridFragment : Fragment() {
                                         soundsAdapter?.modifySingleSoundInList(diff.elementAt(index))
                                     }
                                 }
+                                // if new list size smaller than what is currently in the adapter remove the 'in plus' item from the adapter
                             } else if (newList.size < soundsAdapter?.sounds?.size!!) {
 
-                                soundsAdapter?.sounds?.forEach {
-                                    if (!newList.contains(it)) {
-                                        soundsAdapter?.removeSingleSoundInList(it)
-                                    }
+                                val toDelete = soundsAdapter?.sounds?.find {
+                                    !newList.contains(it)
                                 }
+
+                                soundsAdapter?.removeSingleSoundInList(toDelete!!)
+
                             } else {
                                 newList.forEach {
                                     if (!soundsAdapter?.sounds?.contains(it)!!) {
@@ -198,9 +195,12 @@ class SoundGridFragment : Fragment() {
 
                     if (playingList.isEmpty()) {
                         play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_play))
+                        play_button.tag = getString(R.string.play_button_tag)
                         set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
                     } else {
                         play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop))
+                        play_button.tag = getString(R.string.stop_button_tag)
+
                     }
                 })
 
@@ -559,11 +559,11 @@ class SoundGridFragment : Fragment() {
             if (it) {
                 mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_on))
                 // used for espresso
-                mute_button.tag = getString(R.string.mute_on)
+                mute_button.tag = getString(R.string.mute_on_tag)
             } else {
                 mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off))
                 // used for espresso
-                mute_button.tag = getString(R.string.mute_off)
+                mute_button.tag = getString(R.string.mute_off_tag)
             }
         })
     }

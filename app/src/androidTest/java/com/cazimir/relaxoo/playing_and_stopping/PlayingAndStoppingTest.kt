@@ -1,19 +1,20 @@
 package com.cazimir.relaxoo
 
 import android.util.Log
-import androidx.test.espresso.Espresso.onData
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.UiDevice
+import com.cazimir.relaxoo.util.TestUtil
 import com.cazimir.relaxoo.util.TestUtil.Companion.checkIfVolumeSliderIsDisplayed
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnPlayStopButton
 import com.cazimir.relaxoo.util.TestUtil.Companion.clickOnSounds
+import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.not
 import org.junit.After
@@ -34,6 +35,7 @@ class PlayingAndStoppingTest {
     @JvmField
     val grantPermissionRule2: GrantPermissionRule = GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE)
 
+    // this is used to start the activity (no need to call startActivity)
     @get:Rule
     var activityRule: ActivityTestRule<MainActivity> = ActivityTestRule(MainActivity::class.java)
 
@@ -67,22 +69,39 @@ class PlayingAndStoppingTest {
     @Test
     fun stop_all_sounds() {
         clickOnSounds(2)
-        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
-        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(isDisplayed()))
+
+        onView(withId(R.id.sounds_recycler_view))
+                .check(matches(TestUtil.withViewAtPosition(0, hasDescendant(allOf(withId(R.id.sound_volume), isDisplayed())))))
+        onView(withId(R.id.sounds_recycler_view))
+                .check(matches(TestUtil.withViewAtPosition(1, hasDescendant(allOf(withId(R.id.sound_volume), isDisplayed())))));
 
         clickOnPlayStopButton()
-        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
-        onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2).onChildView(withId(R.id.sound_volume)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.sounds_recycler_view))
+                .check(matches(TestUtil.withViewAtPosition(0, hasDescendant(allOf(withId(R.id.sound_volume), not(isDisplayed()))))))
+        onView(withId(R.id.sounds_recycler_view))
+                .check(matches(TestUtil.withViewAtPosition(1, hasDescendant(allOf(withId(R.id.sound_volume), not(isDisplayed()))))));
+    }
+
+    @Test
+    fun stop_single_sound() {
+        clickOnSounds(1)
+        onView(withId(R.id.sounds_recycler_view))
+                .check(matches(TestUtil.withViewAtPosition(0, hasDescendant(allOf(withId(R.id.sound_volume), isDisplayed())))))
+        //check if global play/stop icon changed
+        onView(withId(R.id.play_button)).check(matches(withTagValue(CoreMatchers.equalTo("stop_button"))))
+
+        clickOnSounds(1)
+        onView(withId(R.id.sounds_recycler_view))
+                .check(matches(TestUtil.withViewAtPosition(0, hasDescendant(allOf(withId(R.id.sound_volume), not(isDisplayed()))))))
+
+        //check if global play/stop icon changed
+        onView(withId(R.id.play_button)).check(matches(withTagValue(CoreMatchers.equalTo("play_button"))))
+
 
     }
 
-//    @Test
-//    fun stop_single_sound() {
-//        TODO("Not yet implemented")
-//    }
-//
-//    @Test
-//    fun volume_change_on_single_sound() {
-//        TODO("Not yet implemented")
-//    }
+    @Test
+    fun volume_change_on_single_sound() {
+        TODO("Not yet implemented")
+    }
 }
