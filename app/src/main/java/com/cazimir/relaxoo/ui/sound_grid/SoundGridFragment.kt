@@ -44,7 +44,6 @@ import java.util.*
 
 class SoundGridFragment : Fragment() {
 
-    private var loadToSoundPoolRunning: Boolean = false
     private lateinit var sharedViewModel: SharedViewModel
     private var timerRunning: Boolean = false
     private var soundsAdapter: GridRecyclerViewAdapter? = null
@@ -529,7 +528,6 @@ class SoundGridFragment : Fragment() {
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun updateViewModelWithLoad(eventBusLoad: EventBusLoad) {
         viewModel.loadedToSoundPool()
-        loadToSoundPoolRunning = false
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
