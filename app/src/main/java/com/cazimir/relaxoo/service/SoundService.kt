@@ -228,25 +228,6 @@ class SoundService : Service(), ISoundService {
         soundPool = SoundPool(MAX_SOUNDS, AudioManager.STREAM_MUSIC, 0)
     }
 
-    private fun MutableList<Sound>.hasAllSoundsLoaded(): Boolean {
-
-        var allLoaded = true
-
-        forEach {
-            if (!it.loaded) {
-                allLoaded = false
-            }
-        }
-
-        return allLoaded
-    }
-
-    fun <T> List<T>.replace(newValue: T, block: (T) -> Boolean): List<T> {
-        return map {
-            if (block(it)) newValue else it
-        }
-    }
-
     private fun toggleCountDownTimer(minutes: Int) {
         Log.d(TAG, "toggleCountDownTimer: called")
         if (timerRunning) {
