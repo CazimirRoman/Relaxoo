@@ -65,7 +65,6 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.firebase:firebase-storage:19.1.1'
     implementation 'com.google.firebase:firebase-auth:19.3.0'
-    implementation 'com.karumi:dexter:6.0.1'
     implementation 'com.google.firebase:firebase-database:19.2.1'
     implementation 'com.github.CazimirRoman:AndroidAudioRecorder:0.3.2'
     implementation 'commons-io:commons-io:2.6'

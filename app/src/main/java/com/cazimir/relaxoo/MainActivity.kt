@@ -7,15 +7,22 @@ import android.animation.ArgbEvaluator
 import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
@@ -29,6 +36,8 @@ import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog
 import com.cazimir.relaxoo.dialog.OnDeleted
 import com.cazimir.relaxoo.dialog.favorite.FavoriteDeleted
 import com.cazimir.relaxoo.dialog.favorite.SaveToFavoritesDialog
+import com.cazimir.relaxoo.dialog.permission.OnStoragePermissionCallback
+import com.cazimir.relaxoo.dialog.permission.PermissionNeededDialog
 import com.cazimir.relaxoo.dialog.pro.BottomProDialogFragment
 import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
@@ -63,14 +72,6 @@ import com.google.android.gms.ads.reward.RewardedVideoAd
 import com.google.android.gms.ads.reward.RewardedVideoAdListener
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.gson.JsonSyntaxException
-import com.karumi.dexter.Dexter
-import com.karumi.dexter.MultiplePermissionsReport
-import com.karumi.dexter.PermissionToken
-import com.karumi.dexter.listener.PermissionDeniedResponse
-import com.karumi.dexter.listener.PermissionGrantedResponse
-import com.karumi.dexter.listener.PermissionRequest
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener
-import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.main_activity.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -88,11 +89,12 @@ class MainActivity : FragmentActivity(),
     RewardedVideoAdListener {
 
     companion object {
-        private val TAG = "MainActivity"
-        private val LIFECYCLE = "Lifecycle"
-        private val CHANNEL_WHATEVER = "" + ""
-        private val RECORDING_REQ_CODE = 0
-        val PINNED_RECORDINGS = "PINNED_RECORDINGS"
+        private const val TAG = "MainActivity"
+        private const val LIFECYCLE = "Lifecycle"
+        private const val RECORDING_REQ_CODE = 6788
+        private const val STORAGE_PERMISSIONS_REQ_CODE = 123
+        private const val RECORDING_PERMISSIONS_REQ_CODE = 321
+        const val PINNED_RECORDINGS = "PINNED_RECORDINGS"
         private const val REMOVE_ADS = "remove_ads"
         private const val BUY_PRO = "buy_pro"
     }
@@ -355,29 +357,124 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun checkPermissions() {
-        Dexter.withActivity(this)
-                .withPermissions(
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
-                .withListener(
-                        object : MultiplePermissionsListener {
-                            override fun onPermissionsChecked(report: MultiplePermissionsReport) {
-                                Log.d(
-                                        TAG,
-                                        "onPermissionsChecked: " + report.grantedPermissionResponses.toString())
-                                if (report.areAllPermissionsGranted()) {
-                                    areWritePermissionsGranted.value = true
-                                }
-                            }
+        val writePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        val readPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (writePermission == PackageManager.PERMISSION_GRANTED && readPermission == PackageManager.PERMISSION_GRANTED) {
+            areWritePermissionsGranted.value = true
+        } else {
+            PermissionNeededDialog(object : OnStoragePermissionCallback {
+                override fun okClicked() {
+                    requestStoragePermissions()
+                }
+            }, getString(R.string.permission_storage_denied_message), getString(R.string.permission_storage_denied_title)).show(supportFragmentManager, "storagePermission")
+        }
 
-                            override fun onPermissionRationaleShouldBeShown(
-                                    permissions: List<PermissionRequest>,
-                                    token: PermissionToken
-                            ) {
-                                Log.d(TAG, "onPermissionRationaleShouldBeShown: called")
-                                /* ... */
-                            }
-                        })
-                .check()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+
+        when (requestCode) {
+            STORAGE_PERMISSIONS_REQ_CODE -> {
+                handleStoragePermissionResult(permissions, grantResults)
+            }
+
+            RECORDING_PERMISSIONS_REQ_CODE -> {
+                handleRecordingPermissionResult(permissions, grantResults)
+            }
+
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+
+    private fun handleStoragePermissionResult(permissions: Array<out String>, grantResults: IntArray) {
+        // clear any left over dialog // the retainInstance thingie creates a new dialog on each rotation, therefore this hack is needed to dismiss all created dialogs
+        val dialogFragmentList: List<DialogFragment>? = supportFragmentManager.fragments.filter { it.tag == "storagePermission" } as List<DialogFragment>
+        dialogFragmentList?.forEach {
+            it.dismiss()
+        }
+
+        val denied = grantResults.indices.filter { grantResults[it] != PackageManager.PERMISSION_GRANTED }
+
+        // all permission granted
+        if (denied.isEmpty()) {
+            areWritePermissionsGranted.value = true
+        } else {
+            permissions.forEach {
+                val showRationale = ActivityCompat.shouldShowRequestPermissionRationale(this, it)
+                // will it show again?
+                if (!showRationale) {
+                    PermissionNeededDialog(object : OnStoragePermissionCallback {
+                        override fun okClicked() {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            val uri: Uri = Uri.fromParts("package", packageName, null)
+                            intent.data = uri
+                            startActivity(intent)
+                            finish()
+                        }
+                    }, getString(R.string.permission_storage_denied_do_not_show_message), getString(R.string.permission_storage_denied_title)).show(supportFragmentManager, "storagePermission")
+
+                } else {
+                    PermissionNeededDialog(object : OnStoragePermissionCallback {
+                        override fun okClicked() {
+                            requestStoragePermissions()
+                        }
+                    }, getString(R.string.permission_storage_denied_message), getString(R.string.permission_storage_denied_title)).show(supportFragmentManager, "storagePermission")
+
+                }
+            }
+        }
+    }
+
+    private fun handleRecordingPermissionResult(permissions: Array<out String>, grantResults: IntArray) {
+        // clear any left over dialog  // the retainInstance thingie creates a new dialog on each rotation, therefore this hack is needed to dismiss all created dialogs
+        val dialogFragmentList: List<DialogFragment>? = supportFragmentManager.fragments.filter { it.tag == "storagePermission" } as List<DialogFragment>
+        dialogFragmentList?.forEach {
+            it.dismiss()
+        }
+
+        val denied = grantResults.indices.filter { grantResults[it] != PackageManager.PERMISSION_GRANTED }
+
+        // all permission granted
+        if (denied.isEmpty()) {
+            startRecordingActivity()
+        } else {
+            permissions.forEach {
+                val showRationale = ActivityCompat.shouldShowRequestPermissionRationale(this, it)
+                // will it show again?
+                if (!showRationale) {
+                    PermissionNeededDialog(object : OnStoragePermissionCallback {
+                        override fun okClicked() {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            val uri: Uri = Uri.fromParts("package", packageName, null)
+                            intent.data = uri
+                            startActivity(intent)
+                        }
+                    }, getString(R.string.permission_recording_denied_do_not_show), getString(R.string.permission_recording_denied_title)).show(supportFragmentManager, "storagePermission")
+
+                } else {
+                    PermissionNeededDialog(object : OnStoragePermissionCallback {
+                        override fun okClicked() {
+                            requestStoragePermissions()
+                        }
+                    }, getString(R.string.permission_recording_denied), getString(R.string.permission_recording_denied_title)).show(supportFragmentManager, "storagePermission")
+
+                }
+            }
+        }
+    }
+
+    private fun requestStoragePermissions() {
+        requestPermissionsGeneric(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE), STORAGE_PERMISSIONS_REQ_CODE)
+    }
+
+    private fun requestRecordingPermissions() {
+        requestPermissionsGeneric(arrayOf(Manifest.permission.RECORD_AUDIO), RECORDING_PERMISSIONS_REQ_CODE)
+    }
+
+    private fun requestPermissionsGeneric(permissions: Array<String>, requestCode: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(permissions, requestCode)
+        }
     }
 
     private fun startColorChangeAnimation() {
@@ -388,7 +485,7 @@ class MainActivity : FragmentActivity(),
                         Observer { backgroundColor: Int? ->
                             val duration = 1500
                             val animator: ObjectAnimator = ObjectAnimator.ofObject(
-                                    parent_layout_main,
+                                            parent_layout_main,
                                     "backgroundColor",
                                     ArgbEvaluator(),
                                     sharedViewModel.previousColor,
@@ -639,25 +736,14 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun checkRecordingPermission() {
-        Dexter.withActivity(this)
-                .withPermission(Manifest.permission.RECORD_AUDIO)
-                .withListener(
-                        object : PermissionListener {
-                            override fun onPermissionGranted(response: PermissionGrantedResponse) {
-                                startRecordingActivity()
-                            }
 
-                            override fun onPermissionDenied(response: PermissionDeniedResponse) {
-                                showMessageToUser(getString(R.string.recording_permission_denied))
-                            }
+        val recordingPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
 
-                            override fun onPermissionRationaleShouldBeShown(
-                                    permission: PermissionRequest,
-                                    token: PermissionToken
-                            ) { /* ... */
-                            }
-                        })
-                .check()
+        if (recordingPermission == PackageManager.PERMISSION_GRANTED) {
+            startRecordingActivity()
+        } else {
+            requestRecordingPermissions()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -682,6 +768,7 @@ class MainActivity : FragmentActivity(),
         val filePath = Environment.getExternalStorageDirectory().toString() + "/Relaxoo/own_sounds/" + fileName
         val color = resources.getColor(R.color.colorPrimaryDark)
         val requestCode = RECORDING_REQ_CODE
+
         AndroidAudioRecorder.with(this) // Required
                 .setFilePath(filePath)
                 .setColor(color)

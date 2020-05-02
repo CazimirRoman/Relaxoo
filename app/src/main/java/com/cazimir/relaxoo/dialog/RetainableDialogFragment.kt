@@ -10,7 +10,7 @@ open class RetainableDialogFragment() : DialogFragment() {
 
     override fun onDestroyView() {
 
-        val dialog = getDialog()
+        val dialog = dialog
         if (dialog != null && retainInstance) {
             dialog.setDismissMessage(null)
         }

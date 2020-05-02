@@ -281,7 +281,7 @@ class SoundGridFragment : Fragment() {
 
     private fun updateOrSetupAdapter(allSounds: List<Sound>) {
         if (soundsAdapter == null) {
-            soundsAdapter = GridRecyclerViewAdapter(
+            soundsAdapter = GridRecyclerViewAdapter(context!!,
                     allSounds as ArrayList<Sound>,
                     object : OnSoundClickListener {
                         override fun clicked(sound: Sound) {
