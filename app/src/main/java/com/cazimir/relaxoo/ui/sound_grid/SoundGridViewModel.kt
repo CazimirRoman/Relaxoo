@@ -23,16 +23,26 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     }
 
     // TODO: 26-Apr-20 get rid of redundandt gettter methods for livedata - see example for soundsStorage
+    // ---- Internal live data ------//
     private val _timerRunningFetched = MutableLiveData<Boolean>()
     private val _timerTextFetched = MutableLiveData<Boolean>()
-    var currentlyClickedProSound: Sound? = savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND)
-    var soundsLoadedToSoundPool = MutableLiveData(0)
     private var _timerText = MutableLiveData<String>()
     private var _soundsStorage: MutableLiveData<List<Sound>> = MutableLiveData()
-    val soundsStorage: LiveData<List<Sound>> = _soundsStorage
-    val _initialFetchFinished: MutableLiveData<List<Sound>> = MutableLiveData()
-    var shouldLoadToSoundPool = false
+    private val _initialFetchFinished: MutableLiveData<List<Sound>> = MutableLiveData()
+    private var _soundsLoadedToSoundPool = MutableLiveData(0)
     private var _timerRunning = MutableLiveData<Boolean>()
+
+    var currentlyClickedProSound: Sound? = savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND)
+    var shouldLoadToSoundPool = false
+
+    //--------- Public live data ----------//
+    val soundsStorage: LiveData<List<Sound>> = _soundsStorage
+    val timerRunningFetched: LiveData<Boolean> = _timerRunningFetched
+    val timerTextFetched: LiveData<Boolean> = _timerTextFetched
+    val timerText: LiveData<String> = _timerText
+    val initialFetchFinished: LiveData<List<Sound>> = _initialFetchFinished
+    val soundsLoadedToSoundPool: LiveData<Int> = _soundsLoadedToSoundPool
+    val timerRunning: LiveData<Boolean> = _timerRunning
 
     init {
         if (!EventBus.getDefault().isRegistered(this)) {
@@ -47,23 +57,10 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         EventBus.getDefault().unregister(this)
     }
 
-    fun shouldLoadToSoundpool(): Boolean {
-        return shouldLoadToSoundPool
-    }
-
-    fun timerText(): MutableLiveData<String> {
-        return _timerText
-    }
-
-    fun timerRunning(): MutableLiveData<Boolean> {
-        return _timerRunning
-    }
-
     fun fetchSounds() {
         Log.d(TAG, "fetchSounds: called")
         soundRepository.getSounds().observeOnceOnListNotEmpty(Observer {
             Log.d(TAG, "fetchSounds: called with $it")
-//            triggerLiveDataEmit(it)
             // fetch is finished -> start loading them to the soundpool
             shouldLoadToSoundPool = true
             _initialFetchFinished.value = it
@@ -74,31 +71,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         return Transformations.map(_soundsStorage) { soundsList ->
             soundsList.filter { sound -> sound.playing } as ArrayList<Sound>
         }
-    }
-
-    fun addToSounds(sounds: List<Sound>) {
-        triggerLiveDataEmit(sounds)
-    }
-
-    fun removeSingleSoundFromSounds(id: String) {
-        val newList = _soundsStorage.value?.filter { sound ->
-            sound.id != id
-        }
-
-        triggerLiveDataEmit(newList!!)
-    }
-
-    // TODO: 20-Apr-20 refactor this -> make generic update single anything, not only soundPoolId, streamId etc
-    fun updatePlayingSound(sound: Sound) {
-        val newList = _soundsStorage.value?.map {
-            if (it.id == sound.id) {
-                it.copy(soundPoolId = sound.soundPoolId, streamId = -1, playing = !it.playing)
-            } else {
-                it
-            }
-        }
-
-        triggerLiveDataEmit(newList!!)
     }
 
     fun updateNameOnSound(sound: Sound, newName: String) {
@@ -113,33 +85,9 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         triggerLiveDataEmit(newList!!)
     }
 
-    fun updateViewModelWithPlayingSoundsFalse() {
-
-        val newList = _soundsStorage.value?.map {
-            it.copy(playing = false)
-        }
-
-        triggerLiveDataEmit(newList!!)
-    }
-
     // just used to hide splash after 3 sounds loaded
     fun loadedToSoundPool() {
-        soundsLoadedToSoundPool.value = soundsLoadedToSoundPool.value!! + 1
-    }
-
-    private fun updateLoaded(soundPoolId: Int) {
-        val newList = _soundsStorage.value?.map {
-            if (it.soundPoolId == soundPoolId) {
-                it.copy(loaded = true)
-            } else {
-                it
-            }
-        }
-
-        //Trigger an emit only after all sounds have been updated with the loaded status
-        if (soundsLoadedToSoundPool.value == _soundsStorage.value?.size) {
-            triggerLiveDataEmit(newList!!)
-        }
+        _soundsLoadedToSoundPool.value = _soundsLoadedToSoundPool.value!! + 1
     }
 
     fun updateVolume(sound: Sound, volume: Float) {
@@ -163,14 +111,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         currentlyClickedProSound = sound
     }
 
-    fun timerTextLiveFetched(): LiveData<Boolean> {
-        return _timerTextFetched
-    }
-
-    fun timerRunningFetched(): LiveData<Boolean> {
-        return _timerRunningFetched
-    }
-
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun updateTimerLiveDataInViewModel(eventBusTimerStarted: EventBusTimer) {
         Log.d(TAG, "updateTimerLiveDataInViewModel: called")
@@ -190,17 +130,8 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         }
     }
 
-    fun addSingleSound(sound: Sound) {
-
-        val currentSoundList = _soundsStorage.value
-
-        val newList = currentSoundList as ArrayList<Sound>
-        newList.add(sound)
-        triggerLiveDataEmit(newList)
-    }
-
     // this emit on the livedata is used to update the Recyclerview adapter with the new data
-    fun triggerLiveDataEmit(newList: List<Sound>) {
+    private fun triggerLiveDataEmit(newList: List<Sound>) {
         Log.d(TAG, "triggerLiveDataEmit: called")
         _soundsStorage.value = newList
     }

@@ -132,7 +132,7 @@ class SoundGridFragment : Fragment() {
 
         // region Observers
 
-        viewModel._initialFetchFinished.observeOnceOnListNotEmptyWithOwner(viewLifecycleOwner, Observer { list: List<Sound> ->
+        viewModel.initialFetchFinished.observeOnceOnListNotEmptyWithOwner(viewLifecycleOwner, Observer { list: List<Sound> ->
             Log.d(TAG, "_fetchFinished.observeOnce called with: $list ")
             //get these observables to sync with the service after an application restart
             // using this if because of ROTATION
@@ -204,8 +204,6 @@ class SoundGridFragment : Fragment() {
                     }
                 })
 
-        // TODO: 06-Jan-20 move this to viewmodel
-
         viewModel.soundsLoadedToSoundPool
                 .observe(
                         viewLifecycleOwner,
@@ -220,10 +218,10 @@ class SoundGridFragment : Fragment() {
 
         // first find out when the timer text observable from the service has arrived and after that start observing the timerText
         viewModel
-                .timerTextLiveFetched()
+                .timerTextFetched
                 .observe(viewLifecycleOwner, Observer {
                     viewModel
-                            .timerText()
+                            .timerText
                             .observe(
                                     viewLifecycleOwner,
                                     Observer { timerText: String ->
@@ -234,13 +232,15 @@ class SoundGridFragment : Fragment() {
 
                 )
 
+        // TODO: 02-May-20 Why do we need to observe another live data aobject again after observing the first one??
+
         viewModel
-                .timerRunningFetched()
+                .timerRunningFetched
                 .observe(
                         viewLifecycleOwner,
                         Observer {
                             Log.d(TAG, "timerRunningFetched: called")
-                            viewModel.timerRunning().observe(viewLifecycleOwner, Observer { running ->
+                            viewModel.timerRunning.observe(viewLifecycleOwner, Observer { running ->
                                 if (running) {
                                     timerRunning = true
                                     showTimerText()
@@ -495,7 +495,7 @@ class SoundGridFragment : Fragment() {
     }
 
     fun shouldLoadToSoundpool(): Boolean {
-        return viewModel.shouldLoadToSoundpool()
+        return viewModel.shouldLoadToSoundPool
     }
 
     private fun removeRecordingFromSoundPool(sound: Sound) {

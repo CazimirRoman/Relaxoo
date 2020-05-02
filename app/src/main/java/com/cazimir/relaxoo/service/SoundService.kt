@@ -43,6 +43,7 @@ class SoundService : Service(), ISoundService {
         }
     }
 
+    // TODO: 02-May-20 separate private from public live data like in soundgridviewmodel
     /*this field is being populated from MainActivity after observing if the user purchased PRO*/
     private var proPurchased: Boolean = false
     private var allSounds: MutableList<Sound> = mutableListOf()
@@ -206,6 +207,8 @@ class SoundService : Service(), ISoundService {
             if (it.isEmpty()) {
                 countDownTimer?.cancel()
                 _timerRunning.value = false
+                //no need to keep mute on when NO sound is playing.
+                _muted.value = false
             }
         }
 
@@ -425,6 +428,7 @@ class SoundService : Service(), ISoundService {
 
     override fun play(playCommand: PlayCommand) {
         Log.d(TAG, "play: called with: ${playCommand.sound}")
+
         val streamId = soundPool.play(
                 playCommand.sound.soundPoolId,
                 playCommand.sound.volume,
@@ -433,9 +437,6 @@ class SoundService : Service(), ISoundService {
                 -1,
                 1f
         )
-
-        // if mute is active new playing sounds should also be paused
-        if (muted) soundPool.autoPause()
 
         val newSoundWithStreamId = playCommand.sound.copy(streamId = streamId, playing = true)
 

@@ -123,7 +123,6 @@ class SoundRepository : ISoundRepository {
 
                                         customSounds?.savedCustomList?.let { newList.addAll(it) }
 
-                                        // TODO: 14-Mar-20 Add custom sounds here
                                         if (_soundsStorageRepo.value?.size == sounds.size) {
                                             _soundsStorageRepo.value = newList
                                         }
@@ -147,6 +146,7 @@ class SoundRepository : ISoundRepository {
                 newList.add(localSound)
             }
 
+            //adding custom sounds as well
             val customSounds = loadFromSharedPreferences<ListOfSavedCustom>("PINNED_RECORDINGS")
             customSounds?.savedCustomList?.let { newList.addAll(it) }
             _soundsStorageRepo.value = newList

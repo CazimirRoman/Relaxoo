@@ -3,8 +3,6 @@ package com.cazimir.relaxoo.dialog.favorite
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -20,6 +18,7 @@ import com.cazimir.relaxoo.dialog.RetainableDialogFragment
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.ui.sound_grid.OnFavoriteSaved
+import com.cazimir.utilitieslibrary.onChange
 import kotlinx.android.synthetic.main.favorites_dialog.view.*
 
 class SaveToFavoritesDialog(private val playingSoundIds: List<Sound>) : RetainableDialogFragment(), DialogInterface.OnClickListener {
@@ -92,18 +91,6 @@ class SaveToFavoritesDialog(private val playingSoundIds: List<Sound>) : Retainab
     override fun onDismiss(unused: DialogInterface) {
         super.onDismiss(unused)
         Log.d(javaClass.simpleName, "Goodbye!")
-    }
-
-    // TODO: 20-Apr-20 refactor this to another class
-    private fun EditText.onChange(cb: (String) -> Unit) {
-        this.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                cb(s.toString())
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
     }
 
     companion object {

@@ -145,26 +145,20 @@ class MainActivity : FragmentActivity(),
             isInternetAvailable.value = internetUp
             when {
                 internetUp -> {
-
                     if (splash.visibility == VISIBLE) {
                         no_internet_text.visibility = GONE
 
                     } else {
-                        showMessageToUser(getString(R.string.internet_back_up), Snackbar.LENGTH_SHORT)
+                        showSnackbar?.dismiss()
                     }
-
-
                 }
                 else -> {
-
-
                     if (splash.visibility == VISIBLE) {
                         no_internet_text.visibility = VISIBLE
 
                     } else {
                         showMessageToUser(getString(R.string.no_internet), Snackbar.LENGTH_INDEFINITE)
                     }
-
                 }
             }
         })
@@ -695,7 +689,7 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun showMessageToUser(messageToShow: String, length: Int) {
-        this.showSnackbar = showSnackbar(coordinator, messageToShow, length)
+        showSnackbar = showSnackbar(coordinator, messageToShow, length)
 
     }
 
