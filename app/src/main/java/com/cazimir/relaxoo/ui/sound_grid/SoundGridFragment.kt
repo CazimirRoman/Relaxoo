@@ -36,6 +36,7 @@ import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferen
 import com.cazimir.utilitieslibrary.SharedPreferencesUtil.saveToSharedPreferences
 import com.cazimir.utilitieslibrary.observeOnceOnListEmptyWithOwner
 import com.cazimir.utilitieslibrary.observeOnceOnListNotEmptyWithOwner
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.sound_list_fragment.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -55,7 +56,7 @@ class SoundGridFragment : Fragment() {
                 if ((hours * 60) + minutes != 0) {
                     toggleCountdownTimer((hours * 60) + minutes)
                 } else {
-                    activityCallback.showMessageToUser(getString(R.string.custom_timer_zero))
+                    activityCallback.showMessageToUser(getString(R.string.custom_timer_zero), Snackbar.LENGTH_SHORT)
                 }
             }
 
@@ -289,7 +290,7 @@ class SoundGridFragment : Fragment() {
                                 viewModel.setClickedProSound(sound)
                                 activityCallback.showBottomDialogForPro()
                             } else if (!sound.loaded) {
-                                activityCallback.showMessageToUser(getString(R.string.sound_loading))
+                                activityCallback.showMessageToUser(getString(R.string.sound_loading), Snackbar.LENGTH_SHORT)
                             } else {
                                 playStopSound(sound)
                             }
@@ -403,7 +404,7 @@ class SoundGridFragment : Fragment() {
             if (atLeastOneIsPlaying != null) {
                 activityCallback.showAddToFavoritesDialog(currentlyPlayingSounds)
             } else {
-                activityCallback.showMessageToUser(getString(R.string.play_one_sound))
+                activityCallback.showMessageToUser(getString(R.string.play_one_sound), Snackbar.LENGTH_SHORT)
             }
         }
 
@@ -416,7 +417,7 @@ class SoundGridFragment : Fragment() {
                     activityCallback.showTimerDialog()
                 }
             } else {
-                activityCallback.showMessageToUser(getString(R.string.play_one_sound))
+                activityCallback.showMessageToUser(getString(R.string.play_one_sound), Snackbar.LENGTH_SHORT)
             }
         }
     }

@@ -70,6 +70,7 @@ import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.reward.RewardItem
 import com.google.android.gms.ads.reward.RewardedVideoAd
 import com.google.android.gms.ads.reward.RewardedVideoAdListener
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.gson.JsonSyntaxException
 import kotlinx.android.synthetic.main.main_activity.*
@@ -99,6 +100,7 @@ class MainActivity : FragmentActivity(),
         private const val BUY_PRO = "buy_pro"
     }
 
+    private var showSnackbar: Snackbar? = null
     private var doubleBackToExitPressedOnce: Boolean = false
     private lateinit var adView: AdView
     private lateinit var adUnitId: String
@@ -143,10 +145,26 @@ class MainActivity : FragmentActivity(),
             isInternetAvailable.value = internetUp
             when {
                 internetUp -> {
-                    no_internet_text.visibility = GONE
+
+                    if (splash.visibility == VISIBLE) {
+                        no_internet_text.visibility = GONE
+
+                    } else {
+                        showMessageToUser(getString(R.string.internet_back_up), Snackbar.LENGTH_SHORT)
+                    }
+
+
                 }
                 else -> {
-                    no_internet_text.visibility = VISIBLE
+
+
+                    if (splash.visibility == VISIBLE) {
+                        no_internet_text.visibility = VISIBLE
+
+                    } else {
+                        showMessageToUser(getString(R.string.no_internet), Snackbar.LENGTH_INDEFINITE)
+                    }
+
                 }
             }
         })
@@ -278,7 +296,7 @@ class MainActivity : FragmentActivity(),
         }
         doubleBackToExitPressedOnce = true
 
-        showMessageToUser(getString(R.string.back_exit))
+        showMessageToUser(getString(R.string.back_exit), Snackbar.LENGTH_SHORT)
 
         Handler().postDelayed({ doubleBackToExitPressedOnce = false }, 2000)
     }
@@ -560,9 +578,9 @@ class MainActivity : FragmentActivity(),
                         savedCombo.sounds.toString()))
         getSoundGridFragment().triggerCombo(savedCombo, sharedViewModel.proBought.value?.proBought)
         if (sharedViewModel.proBought.value?.proBought == false) {
-            showMessageToUser(getString(R.string.playing_except_pro))
+            showMessageToUser(getString(R.string.playing_except_pro), Snackbar.LENGTH_SHORT)
         } else {
-            showMessageToUser(getString(R.string.playing_saved_combo))
+            showMessageToUser(getString(R.string.playing_saved_combo), Snackbar.LENGTH_SHORT)
         }
     }
 
@@ -576,7 +594,7 @@ class MainActivity : FragmentActivity(),
     override fun saved(savedCombo: SavedCombo) {
         Log.d(TAG, "saved: called")
         favoriteFragment!!.updateList(savedCombo)
-        showMessageToUser(getString(R.string.saved_combo))
+        showMessageToUser(getString(R.string.saved_combo), Snackbar.LENGTH_SHORT)
     }
 
     private val favoriteFragment: FavoritesFragment?
@@ -676,8 +694,9 @@ class MainActivity : FragmentActivity(),
         getSoundGridFragment().removeCustomSoundFromDashboardIfThere(recording)
     }
 
-    override fun showMessageToUser(messageToShow: String) {
-        showSnackbar(coordinator, messageToShow)
+    override fun showMessageToUser(messageToShow: String, length: Int) {
+        this.showSnackbar = showSnackbar(coordinator, messageToShow, length)
+
     }
 
     override fun renameRecording(recording: Recording, newName: String) {
@@ -691,7 +710,7 @@ class MainActivity : FragmentActivity(),
         val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
 
         if (list.contains(sound)) {
-            showMessageToUser(getString(R.string.sound_already_pinned))
+            showMessageToUser(getString(R.string.sound_already_pinned), Snackbar.LENGTH_SHORT)
             return
         }
 
@@ -750,11 +769,11 @@ class MainActivity : FragmentActivity(),
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 0) {
             if (resultCode == Activity.RESULT_OK) {
-                showMessageToUser(getString(R.string.sound_saved))
+                showMessageToUser(getString(R.string.sound_saved), Snackbar.LENGTH_SHORT)
                 createSoundFragment!!.updateList()
                 // Great! User has recorded and saved the audio file
             } else if (resultCode == Activity.RESULT_CANCELED) {
-                showMessageToUser(getString(R.string.canceled))
+                showMessageToUser(getString(R.string.canceled), Snackbar.LENGTH_SHORT)
             }
         }
     }

@@ -60,4 +60,5 @@
     <string name="permission_recording_denied">You need to grant recording permissions to record your own sound</string>
     <string name="permission_recording_denied_title">Recording permission needed</string>
     <string name="permission_recording_denied_do_not_show">You need to go to Setting and enable the permissions there</string>
+    <string name="internet_back_up">You are back online</string>
 </resources>

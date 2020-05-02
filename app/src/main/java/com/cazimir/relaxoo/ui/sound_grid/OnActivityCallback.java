@@ -37,7 +37,7 @@ public interface OnActivityCallback {
 
   void hideProgress();
 
-  void showMessageToUser(@NotNull String string);
+  void showMessageToUser(@NotNull String string, Integer duration);
 
   void startBuyingProFlow();
 
