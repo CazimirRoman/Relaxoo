@@ -52,10 +52,6 @@ class SoundRepository : ISoundRepository {
 
         authenticationComplete.observeOnceWithTrueNoLifecycleOwner(Observer {
             val soundsInFirebase = mutableListOf<Sound>()
-            // 1. check the Firebase Realtime Database for sounds
-
-            // check database for sounds
-            // Read from the database
             Log.d(TAG, "EspressoIdlingResource.increment called")
             EspressoIdlingResource.increment()
             soundsRef.addListenerForSingleValueEvent(
@@ -68,7 +64,8 @@ class SoundRepository : ISoundRepository {
                                 }
                             }
                             if (soundsInFirebase.size > 0) {
-                                getAssetsStorage(soundsInFirebase)
+                                //we need to see the regular sounds on top and the pro sounds on the bottom
+                                getAssetsStorage(soundsInFirebase.reversed())
                             }
                         }
 
@@ -91,16 +88,18 @@ class SoundRepository : ISoundRepository {
         // check locally to see how many files there are
         val soundsDirectory = File(soundsFolder.absolutePath)
         val files = soundsDirectory.listFiles()
-        // there are some sounds missing locally
+        // no files downloaded locally
         if (files == null || files.size < sounds.size) {
             Log.d(TAG, "getAssetsStorage: loading assets from firebase")
             // get sounds
             for (sound in sounds) {
                 val soundReference = FirebaseStorage.getInstance().reference.child("sounds").child(sound.filePath)
                 val imageReference = FirebaseStorage.getInstance().reference.child("logos").child(sound.logoPath)
+
                 if (!logosFolder.exists()) {
                     logosFolder.mkdirs()
                 }
+
                 val soundFile = File(soundsFolder, sound.filePath)
                 Log.d(TAG, "getAssetsFromFirebaseStorage: soundFile: $soundFile")
                 val logoFile = File(logosFolder, sound.logoPath)
@@ -118,7 +117,6 @@ class SoundRepository : ISoundRepository {
                                         val fetchedSound = sound.copy(logoPath = logoFile.path, filePath = soundFile.path)
 
                                         val newList = mutableListOf(fetchedSound)
-
 
                                         // add custom sounds from SP as well
                                         val customSounds = loadFromSharedPreferences<ListOfSavedCustom>("PINNED_RECORDINGS")

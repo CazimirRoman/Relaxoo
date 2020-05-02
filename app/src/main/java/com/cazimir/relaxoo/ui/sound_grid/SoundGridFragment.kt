@@ -151,11 +151,6 @@ class SoundGridFragment : Fragment() {
                         viewLifecycleOwner,
                         Observer { sounds: List<Sound> ->
 
-                            //                            if(isProBoughtAndEventConsumed()){
-//                                sendCommandToService(SoundService.getCommand(context, UnlockProCommand()))
-//                                sharedViewModel.updateProcessedUnlockProEvent()
-//                            }
-
                             val newList = sounds.toList()
                             updateOrSetupAdapter(newList)
 
@@ -171,7 +166,8 @@ class SoundGridFragment : Fragment() {
                                 }
                             } else if (newList.size < soundsAdapter?.sounds?.size!!) {
 
-                                soundsAdapter?.sounds?.forEach {
+                                val soundInAdapter = soundsAdapter?.sounds?.toList()
+                                soundInAdapter?.forEach {
                                     if (!newList.contains(it)) {
                                         soundsAdapter?.removeSingleSoundInList(it)
                                     }
@@ -282,11 +278,11 @@ class SoundGridFragment : Fragment() {
 
     private fun updateOrSetupAdapter(allSounds: List<Sound>) {
         if (soundsAdapter == null) {
-            soundsAdapter = GridRecyclerViewAdapter(
+            soundsAdapter = GridRecyclerViewAdapter(context!!,
                     allSounds as ArrayList<Sound>,
                     object : OnSoundClickListener {
                         override fun clicked(sound: Sound) {
-                            if (sound.pro && !sound.playing) {
+                            if (sound.pro && !sound.playing && sound.loaded) {
                                 viewModel.setClickedProSound(sound)
                                 activityCallback.showBottomDialogForPro()
                             } else if (!sound.loaded) {

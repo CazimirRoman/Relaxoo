@@ -1,5 +1,6 @@
 package com.cazimir.relaxoo.adapter
 
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -14,9 +15,10 @@ import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.ui.sound_grid.OnSoundClickListener
 import com.cazimir.utilitieslibrary.inflate
 import kotlinx.android.synthetic.main.grid_item.view.*
+import kotlin.math.roundToInt
 
 
-class GridRecyclerViewAdapter(var sounds: ArrayList<Sound>, private val listener: OnSoundClickListener) : RecyclerView.Adapter<GridRecyclerViewAdapter.SoundHolder>() {
+class GridRecyclerViewAdapter(val context: Context, var sounds: ArrayList<Sound>, private val listener: OnSoundClickListener) : RecyclerView.Adapter<GridRecyclerViewAdapter.SoundHolder>() {
 
     companion object {
         private const val TAG = "StaggeredRecyclerViewAd"
@@ -35,10 +37,14 @@ class GridRecyclerViewAdapter(var sounds: ArrayList<Sound>, private val listener
         val sound = sounds[position]
 
         holder.itemView.sound_name.text = sound.name
-        holder.itemView.sound_volume.progress = Math.round(sound.volume * 100)
+        holder.itemView.sound_volume.progress = (sound.volume * 100).roundToInt()
         holder.itemView.sound_volume.visibility = if (sound.playing) View.VISIBLE else View.INVISIBLE
         holder.itemView.more_options.visibility = if (sound.custom) View.VISIBLE else View.INVISIBLE
-        holder.itemView.sound_image.setImageBitmap(BitmapFactory.decodeFile(sound.logoPath))
+
+        val logo = if (sound.custom) BitmapFactory.decodeResource(context.resources,
+                R.drawable.custom) else BitmapFactory.decodeFile(sound.logoPath)
+
+        holder.itemView.sound_image.setImageBitmap(logo)
 
         // hide progressbar once sound loaded to soundpool
         holder.itemView.grid_item_loading.visibility = if (!sound.loaded) View.VISIBLE else View.GONE

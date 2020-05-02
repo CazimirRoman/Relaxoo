@@ -1,11 +1,14 @@
 package com.cazimir.relaxoo.service
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.SoundPool
+import android.os.Build
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.util.Log
@@ -30,7 +33,7 @@ class SoundService : Service(), ISoundService {
 
     companion object {
         private const val TAG = "SoundPoolService"
-        private const val MAX_SOUNDS = 999
+        private const val MAX_SOUNDS = 100
         const val SOUND_POOL_ACTION = "sound_pool_action"
 
         fun getCommand(context: Context?, command: ISoundServiceCommand): Intent {
@@ -59,8 +62,6 @@ class SoundService : Service(), ISoundService {
     private var timerTextEnding = ""
     private lateinit var pendingIntent: PendingIntent
     private lateinit var soundPool: SoundPool
-
-    //    private var playingSoundsList: ArrayList<Sound> = ArrayList()
     private var playingSoundsListCached: ArrayList<Sound> = ArrayList()
 
 
@@ -133,8 +134,6 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun unlockPro() {
-
-
         /*when purchasing the first time the UI must update the PRO sounds after the sounds have been loaded therefore simply setting the flag to TRUE does not suffice.
         I need to manually trigger a UI update*/
 
@@ -174,7 +173,11 @@ class SoundService : Service(), ISoundService {
 
         setupNotifications()
 
-        soundPool = SoundPool(MAX_SOUNDS, AudioManager.STREAM_MUSIC, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            createSoundPoolWithBuilder();
+        } else {
+            createSoundPoolWithConstructor();
+        }
 
         soundPool.setOnLoadCompleteListener { soundPool: SoundPool?, soundPoolId: Int, status: Int ->
             Log.d(TAG, "onLoadComplete: $soundPoolId")
@@ -209,6 +212,20 @@ class SoundService : Service(), ISoundService {
 
         _timerRunning.observeForever(timerRunningObserver)
         _muted.observeForever(mutedObserver)
+    }
+
+    @SuppressLint("NewApi")
+    private fun createSoundPoolWithBuilder() {
+        val attributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+
+        soundPool = SoundPool.Builder().setAudioAttributes(attributes).setMaxStreams(MAX_SOUNDS).build()
+    }
+
+    protected fun createSoundPoolWithConstructor() {
+        soundPool = SoundPool(MAX_SOUNDS, AudioManager.STREAM_MUSIC, 0)
     }
 
     private fun MutableList<Sound>.hasAllSoundsLoaded(): Boolean {
@@ -304,15 +321,14 @@ class SoundService : Service(), ISoundService {
         createNotificationBuilder()
 
         _playingSounds.observeForever { playingSounds ->
+            Log.d(TAG, "_playingSounds.observeForever: called")
             if (playingSounds.isEmpty()) {
-                // stopForeground(true)
                 notificationView.setImageViewResource(
                         R.id.remote_view_play_stop,
                         R.drawable.ic_play_black
                 )
                 notificationView.setTextViewText(R.id.remote_view_playing_txt, "No sound playing")
                 this.notificationBuilder.setCustomContentView(notificationView)
-                triggerNotificationRefresh()
             } else {
                 notificationView.setTextViewText(
                         R.id.remote_view_playing_txt,
@@ -326,14 +342,12 @@ class SoundService : Service(), ISoundService {
                         R.id.remote_view_play_stop,
                         togglePlayStopIntent
                 )
-                notificationView.setOnClickPendingIntent(R.id.remote_view_mute, mutePendingIntent)
-                notificationView.setOnClickPendingIntent(R.id.remote_view_close, closePendingIntent)
-
-                val notification = this.notificationBuilder
-                        .build()
-
-                startForeground(1, notification)
             }
+
+            notificationView.setOnClickPendingIntent(R.id.remote_view_mute, mutePendingIntent)
+            notificationView.setOnClickPendingIntent(R.id.remote_view_close, closePendingIntent)
+
+            triggerNotificationRefresh()
         }
 
         _muted.observeForever {
@@ -393,15 +407,11 @@ class SoundService : Service(), ISoundService {
         // soundPool ID is returned but that does not mean that the sound has been loaded yet. we need to wait for the callback
 
         // populate the PRO field here as well to avoid conflicts and race conditions along the way
-        sounds.mapTo(allSounds, { sound ->
-            if (sound.soundPoolId == -1) {
-                val soundPoolId = soundPool.load(sound.filePath, 1)
-                Log.d(TAG, "loadToSoundPool in Service: called")
-                sound.copy(soundPoolId = soundPoolId, pro = if (proPurchased) false else sound.pro)
-            } else {
-                sound
-            }
-        })
+
+        for (sound: Sound in sounds) {
+            val soundPoolId = soundPool.load(sound.filePath, 1)
+            allSounds.add(sound.copy(soundPoolId = soundPoolId, pro = if (proPurchased) false else sound.pro))
+        }
     }
 
     private fun loadCustomSound(sound: Sound) {
@@ -432,7 +442,6 @@ class SoundService : Service(), ISoundService {
         EventBus.getDefault().post(EventBusUnload(sound))
     }
 
-    // TODO: 28-Mar-20 take whole sound object for play command
     override fun play(playCommand: PlayCommand) {
         Log.d(TAG, "play: called with: ${playCommand.sound}")
         val streamId = soundPool.play(
