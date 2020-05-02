@@ -9,12 +9,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
+import com.cazimir.relaxoo.ScrollListenerRecycleView
 import com.cazimir.relaxoo.adapter.RecordingAdapter
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.repository.RecordingRepository
@@ -102,6 +105,20 @@ class CreateSoundFragment : Fragment() {
                         })
         mediaPlayer = MediaPlayer()
         mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+
+        recording_list.addOnScrollListener(object : ScrollListenerRecycleView(recording_list.layoutManager as LinearLayoutManager) {
+            override fun onScrollFinished() {
+            }
+
+            override fun show() {
+                add_recording.animate().translationX(0f).setInterpolator(DecelerateInterpolator(2f)).start()
+            }
+
+            override fun hide() {
+                add_recording.animate().translationX(add_recording.width.toFloat() + 50f).setInterpolator(AccelerateInterpolator(2f)).start()
+
+            }
+        })
     }
 
     private fun onAddRecordingClicked() {

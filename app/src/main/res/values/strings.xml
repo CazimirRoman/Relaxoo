@@ -23,8 +23,6 @@
     <string name="hello_blank_fragment">Hello F1</string>
     <string name="saved_combo">Saved combo</string>
     <string name="empty_field">Please enter a value</string>
-    <string name="mute_off">mute_off</string>
-    <string name="mute_on">mute_on</string>
     <string name="no_recording_text">Please enter a new name</string>
     <string name="no_combo_text">Please a name for your combo</string>
     <string name="no_internet">No internet available…Please connect</string>
@@ -49,4 +47,11 @@
     <string name="playing_except_loading">Some sounds are still loading. Playing already loaded sounds</string>
     <string name="custom_timer_zero">Please select an amount of time</string>
     <string name="playing_saved_combo">Playing selected combo</string>
+    <string name="privacy_policy_title">Privacy policy</string>
+
+    <!--    do not translate-->
+    <string name="mute_off_tag">mute_off</string>
+    <string name="mute_on_tag">mute_on</string>
+    <string name="play_button_tag">play_button</string>
+    <string name="stop_button_tag">stop_button</string>
 </resources>

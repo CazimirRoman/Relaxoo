@@ -6,7 +6,6 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ArgbEvaluator
 import android.animation.ObjectAnimator
 import android.app.Activity
-import android.app.NotificationManager
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -101,7 +100,6 @@ class MainActivity : FragmentActivity(),
     private var doubleBackToExitPressedOnce: Boolean = false
     private lateinit var adView: AdView
     private lateinit var adUnitId: String
-    private lateinit var notificationManager: NotificationManager
     private lateinit var sharedViewModel: SharedViewModel
     private lateinit var billingClient: BillingClient
 

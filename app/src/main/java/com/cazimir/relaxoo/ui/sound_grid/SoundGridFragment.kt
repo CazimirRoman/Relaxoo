@@ -44,7 +44,6 @@ import java.util.*
 
 class SoundGridFragment : Fragment() {
 
-    private var loadToSoundPoolRunning: Boolean = false
     private lateinit var sharedViewModel: SharedViewModel
     private var timerRunning: Boolean = false
     private var soundsAdapter: GridRecyclerViewAdapter? = null
@@ -164,14 +163,15 @@ class SoundGridFragment : Fragment() {
                                         soundsAdapter?.modifySingleSoundInList(diff.elementAt(index))
                                     }
                                 }
+                                // if new list size smaller than what is currently in the adapter remove the 'in plus' item from the adapter
                             } else if (newList.size < soundsAdapter?.sounds?.size!!) {
 
-                                val soundInAdapter = soundsAdapter?.sounds?.toList()
-                                soundInAdapter?.forEach {
-                                    if (!newList.contains(it)) {
-                                        soundsAdapter?.removeSingleSoundInList(it)
-                                    }
+                                val toDelete = soundsAdapter?.sounds?.find {
+                                    !newList.contains(it)
                                 }
+
+                                soundsAdapter?.removeSingleSoundInList(toDelete!!)
+
                             } else {
                                 newList.forEach {
                                     if (!soundsAdapter?.sounds?.contains(it)!!) {
@@ -194,9 +194,12 @@ class SoundGridFragment : Fragment() {
 
                     if (playingList.isEmpty()) {
                         play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_play))
+                        play_button.tag = getString(R.string.play_button_tag)
                         set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
                     } else {
                         play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop))
+                        play_button.tag = getString(R.string.stop_button_tag)
+
                     }
                 })
 
@@ -278,11 +281,11 @@ class SoundGridFragment : Fragment() {
 
     private fun updateOrSetupAdapter(allSounds: List<Sound>) {
         if (soundsAdapter == null) {
-            soundsAdapter = GridRecyclerViewAdapter(context!!,
+            soundsAdapter = GridRecyclerViewAdapter(
                     allSounds as ArrayList<Sound>,
                     object : OnSoundClickListener {
                         override fun clicked(sound: Sound) {
-                            if (sound.pro && !sound.playing && sound.loaded) {
+                            if (sound.pro && !sound.playing) {
                                 viewModel.setClickedProSound(sound)
                                 activityCallback.showBottomDialogForPro()
                             } else if (!sound.loaded) {
@@ -525,7 +528,6 @@ class SoundGridFragment : Fragment() {
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun updateViewModelWithLoad(eventBusLoad: EventBusLoad) {
         viewModel.loadedToSoundPool()
-        loadToSoundPoolRunning = false
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
@@ -555,11 +557,11 @@ class SoundGridFragment : Fragment() {
             if (it) {
                 mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_on))
                 // used for espresso
-                mute_button.tag = getString(R.string.mute_on)
+                mute_button.tag = getString(R.string.mute_on_tag)
             } else {
                 mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off))
                 // used for espresso
-                mute_button.tag = getString(R.string.mute_off)
+                mute_button.tag = getString(R.string.mute_off_tag)
             }
         })
     }

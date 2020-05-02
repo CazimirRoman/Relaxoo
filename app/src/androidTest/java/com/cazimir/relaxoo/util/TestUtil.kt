@@ -14,10 +14,13 @@ import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.cazimir.relaxoo.R
+import com.cazimir.relaxoo.adapter.RecordingAdapter
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Description
@@ -40,10 +43,10 @@ class TestUtil {
 
         fun clickOnSounds(howMany: Int) {
             when (howMany) {
-                1 -> onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0).perform(click())
+                1 -> onView(withId(R.id.sounds_recycler_view)).perform(RecyclerViewActions.actionOnItemAtPosition<RecordingAdapter.ViewHolder>(0, clickChildViewWithId(R.id.sound_image)))
                 2 -> {
-                    onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(0).perform(click())
-                    onData(allOf()).inAdapterView(withId(R.id.sounds_recycler_view)).atPosition(2).perform(click())
+                    onView(withId(R.id.sounds_recycler_view)).perform(RecyclerViewActions.actionOnItemAtPosition<RecordingAdapter.ViewHolder>(0, clickChildViewWithId(R.id.sound_image)))
+                    onView(withId(R.id.sounds_recycler_view)).perform(RecyclerViewActions.actionOnItemAtPosition<RecordingAdapter.ViewHolder>(1, clickChildViewWithId(R.id.sound_image)))
                 }
             }
         }
@@ -125,6 +128,23 @@ class TestUtil {
         fun withRecyclerView(recyclerViewId: Int): RecyclerViewMatcher? {
             return RecyclerViewMatcher(recyclerViewId)
         }
+
+        // Check if child on recyclerview has a specific item which is visible
+        //usage : onView(withId(R.id.recyclerview_tag_list))
+        //            .check(matches(withViewAtPosition(1, hasDescendant(allOf(withId(R.id.imageview_tag), isDisplayed())))));
+
+        fun withViewAtPosition(position: Int, itemMatcher: Matcher<View?>): Matcher<View?>? {
+            return object : BoundedMatcher<View?, RecyclerView?>(RecyclerView::class.java) {
+                override fun describeTo(description: Description) {
+                    itemMatcher.describeTo(description)
+                }
+
+                override fun matchesSafely(recyclerView: RecyclerView?): Boolean {
+                    val viewHolder = recyclerView?.findViewHolderForAdapterPosition(position)
+                    return viewHolder != null && itemMatcher.matches(viewHolder.itemView)
+                }
+            }
+        }
     }
 
     class RecyclerViewMatcher(private val recyclerViewId: Int) {
@@ -182,4 +202,3 @@ class TestUtil {
 
     }
 }
-
