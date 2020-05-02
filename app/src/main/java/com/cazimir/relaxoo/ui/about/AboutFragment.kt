@@ -3,6 +3,7 @@ package com.cazimir.relaxoo.ui.about
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -51,14 +52,29 @@ class AboutFragment : Fragment() {
                 aboutItems,
                 Interactor { item: AboutItem ->
                     when (item.name) {
+                        MenuItemType.SEND_FEEDBACK -> startSendFeedbackAction(listOf("cazimir.developer@gmail.com").toTypedArray(), "Feedback for Relaxoo", "Your feedback helps a lot." +
+                                "\n \n What can we do to make the product better for you?\n\nYour message here:\n")
                         MenuItemType.REMOVE_ADS -> startRemoveAdsAction()
                         MenuItemType.SHARE -> startShareAction()
                         MenuItemType.PRIVACY_POLICY -> startPrivacyPolicyActivity()
                         MenuItemType.RATE_APP -> startRateAppAction()
                         MenuItemType.MORE_APPS -> startMoreAppsActivity()
                     }
-            }
+                }
         )
+    }
+
+    private fun startSendFeedbackAction(
+            addresses: Array<String>, subject: String, text: String) {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:")
+            putExtra(Intent.EXTRA_EMAIL, addresses)
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        if (intent.resolveActivity(activity?.packageManager!!) != null) {
+            startActivity(intent)
+        }
     }
 
     private fun startRemoveAdsAction() {
@@ -95,6 +111,9 @@ class AboutFragment : Fragment() {
 
     private fun populateAboutItems(adsBought: Boolean?): List<AboutItem> {
         val aboutItems = mutableListOf<AboutItem>()
+
+        aboutItems.add(AboutItem(MenuItemType.SEND_FEEDBACK, R.drawable.ic_feedback))
+
         if (!adsBought!!) {
             aboutItems.add(AboutItem(MenuItemType.REMOVE_ADS, R.drawable.ic_shop_white))
         }
