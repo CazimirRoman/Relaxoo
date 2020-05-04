@@ -761,7 +761,7 @@ class MainActivity : FragmentActivity(),
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 0) {
+        if (requestCode == RECORDING_REQ_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 showMessageToUser(getString(R.string.sound_saved), Snackbar.LENGTH_SHORT)
                 createSoundFragment!!.updateList()

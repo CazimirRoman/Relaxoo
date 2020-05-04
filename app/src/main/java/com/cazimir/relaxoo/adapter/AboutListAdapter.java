@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cazimir.relaxoo.R;
 import com.cazimir.relaxoo.model.AboutItem;
+import com.cazimir.relaxoo.model.MenuItemType;
 
 import java.util.List;
 
@@ -67,8 +68,19 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
     }
 
     public void removeRemoveAds() {
-        data.remove(0);
-        notifyItemRemoved(0);
+
+        AboutItem itemToBeDeleted = null;
+
+        for (AboutItem aboutItem : data) {
+            if (aboutItem.getName() == MenuItemType.REMOVE_ADS) {
+                itemToBeDeleted = aboutItem;
+                break;
+            }
+        }
+
+        int index = data.indexOf(itemToBeDeleted);
+        data.remove(index);
+        notifyItemRemoved(index);
     }
 
     public interface Interactor {

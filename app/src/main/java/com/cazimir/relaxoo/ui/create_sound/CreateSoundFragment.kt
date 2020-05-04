@@ -97,7 +97,7 @@ class CreateSoundFragment : Fragment() {
                 .recordingsLive
                 .observe(
                         viewLifecycleOwner,
-                        Observer<ArrayList<Recording>> { files: ArrayList<Recording> ->
+                        Observer { files: ArrayList<Recording> ->
                             Log.d(TAG, "onChanged() called with: files[]$files")
                             val adapter = createSoundView.recording_list.adapter as RecordingAdapter
                             adapter.setList(files)
