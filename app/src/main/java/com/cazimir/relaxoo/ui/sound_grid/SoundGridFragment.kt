@@ -362,17 +362,19 @@ class SoundGridFragment : Fragment() {
     // region Listeners for buttons on top
     private fun setListenersForButtons() {
         Log.d(TAG, "setListenersForButtons: called")
-        mute_button.setOnClickListener(
-            object : View.OnClickListener {
-                override fun onClick(v: View) {
-                    sendCommandToService(
+        mute_button.setOnClickListener {
+            //if no sound is playing do not allow user to mute
+            if (currentlyPlayingSounds.isNotEmpty()) {
+                sendCommandToService(
                         SoundService.getCommand(
-                            context,
-                            ToggleMuteCommand()
+                                context,
+                                ToggleMuteCommand()
                         )
-                    )
-                }
-            })
+                )
+            } else {
+                activityCallback.showMessageToUser(getString(R.string.play_one_sound), Snackbar.LENGTH_SHORT)
+            }
+        }
         random_button.setOnClickListener {
             stopAllSounds()
 
@@ -443,8 +445,6 @@ class SoundGridFragment : Fragment() {
                         LoadSoundsCommand(sounds)
                 )
         )
-
-
     }
 
     private fun showTimerText() {
