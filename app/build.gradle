@@ -22,7 +22,7 @@ android {
 
         javaCompileOptions {
             annotationProcessorOptions {
-                arguments = [ eventBusIndex : 'com.cazimir.relaxoo.MyEventBusIndex' ]
+                arguments = [eventBusIndex: 'com.cazimir.relaxoo.MyEventBusIndex']
             }
         }
     }
@@ -77,6 +77,7 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.2.0'
     implementation "org.greenrobot:eventbus:$eventbus_version"
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    implementation 'com.google.firebase:firebase-messaging:20.1.6'
     annotationProcessor "org.greenrobot:eventbus-annotation-processor:$eventbus_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.2.0"
 
