@@ -5,4 +5,5 @@ import com.cazimir.relaxoo.model.Sound
 
 interface ISoundRepository {
     fun getSounds(): LiveData<List<Sound>>
+    fun getSoundsOffline(): LiveData<List<Sound>>
 }

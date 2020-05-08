@@ -67,6 +67,16 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         })
     }
 
+    fun fetchSoundsOffline() {
+        Log.d(TAG, "fetchSoundsOffline: called")
+        soundRepository.getSoundsOffline().observeOnceOnListNotEmpty(Observer {
+            Log.d(TAG, "fetchSounds: called with $it")
+            // fetch is finished -> start loading them to the soundpool
+            shouldLoadToSoundPool = true
+            _initialFetchFinished.value = it
+        })
+    }
+
     fun playingSounds(): LiveData<ArrayList<Sound>> {
         return Transformations.map(_soundsStorage) { soundsList ->
             soundsList.filter { sound -> sound.playing } as ArrayList<Sound>

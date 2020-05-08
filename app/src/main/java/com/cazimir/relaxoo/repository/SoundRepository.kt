@@ -2,11 +2,14 @@ package com.cazimir.relaxoo.repository
 
 import android.os.Environment
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.EspressoIdlingResource
 import com.cazimir.relaxoo.model.ListOfSavedCustom
+import com.cazimir.relaxoo.model.ListOfSounds
 import com.cazimir.relaxoo.model.Sound
+import com.cazimir.utilitieslibrary.SharedPreferencesUtil
 import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferences
 import com.cazimir.utilitieslibrary.observeOnceWithTrueNoLifecycleOwner
 import com.google.firebase.auth.FirebaseAuth
@@ -23,6 +26,7 @@ class SoundRepository : ISoundRepository {
 
     companion object {
         private const val TAG = "SoundRepository"
+        const val ALL_SOUNDS = "ALL_SOUNDS"
     }
 
     private val database = FirebaseDatabase.getInstance()
@@ -49,7 +53,6 @@ class SoundRepository : ISoundRepository {
     }
 
     override fun getSounds(): MutableLiveData<List<Sound>> {
-
         authenticationComplete.observeOnceWithTrueNoLifecycleOwner(Observer {
             val soundsInFirebase = mutableListOf<Sound>()
             Log.d(TAG, "EspressoIdlingResource.increment called")
@@ -63,9 +66,12 @@ class SoundRepository : ISoundRepository {
                                     soundsInFirebase.add(0, sound)
                                 }
                             }
+
                             if (soundsInFirebase.size > 0) {
                                 //we need to see the regular sounds on top and the pro sounds on the bottom
-                                getAssetsStorage(soundsInFirebase.reversed())
+                                getSoundAndLogo(soundsInFirebase.reversed())
+                                //save to shared preferences in order to load offline if no internet available
+                                SharedPreferencesUtil.saveToSharedPreferences(ListOfSounds(soundsInFirebase as List<Sound>), ALL_SOUNDS)
                             }
                         }
 
@@ -78,7 +84,43 @@ class SoundRepository : ISoundRepository {
         return _soundsStorageRepo
     }
 
-    private fun getAssetsStorage(sounds: List<Sound>) {
+    override fun getSoundsOffline(): LiveData<List<Sound>> {
+        Log.d(TAG, "getAssetsStorage: loading assets from local storage")
+        val soundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/sounds")
+        val logosFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/logos")
+
+        val soundsDirectory = File(soundsFolder.absolutePath)
+        val logosDirectory = File(logosFolder.absolutePath)
+
+        val newList = mutableListOf<Sound>()
+
+        val localFiles = soundsFolder.listFiles()
+
+        //get list of sounds from shared preferences
+        val allSounds = loadFromSharedPreferences<ListOfSounds>(ALL_SOUNDS)?.sounds
+
+        //check if local files are there
+        localFiles?.let { file ->
+            //check if sounds fetched from local storage
+            allSounds?.let { sounds ->
+                for (sound in sounds) {
+                    // missing information about pro. need to save this to shared preferences on first download
+//                    val localSound = Sound(id = allSounds.find { it.name == file.name }?.id, streamId = -1, soundPoolId = -1, name = file.name, pro = allSounds.find { it.name == file.name }?.pro)
+
+                    val localSound = sound.copy(logoPath = logosDirectory.toString() + "/" + sound.logoPath, filePath = soundsDirectory.toString() + "/" + sound.filePath)
+                    newList.add(localSound)
+                }
+            }
+        }
+
+        //adding custom sounds as well
+        val customSounds = loadFromSharedPreferences<ListOfSavedCustom>("PINNED_RECORDINGS")
+        customSounds?.savedCustomList?.let { newList.addAll(it) }
+        _soundsStorageRepo.value = newList.reversed()
+        return _soundsStorageRepo
+    }
+
+    private fun getSoundAndLogo(sounds: List<Sound>) {
         // check if files already downloaded locally
         val soundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/sounds")
         val logosFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/logos")
@@ -101,6 +143,7 @@ class SoundRepository : ISoundRepository {
                 }
 
                 val soundFile = File(soundsFolder, sound.filePath)
+
                 Log.d(TAG, "getAssetsFromFirebaseStorage: soundFile: $soundFile")
                 val logoFile = File(logosFolder, sound.logoPath)
                 // download sound from Firebase

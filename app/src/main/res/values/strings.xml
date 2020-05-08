@@ -25,7 +25,8 @@
     <string name="empty_field">Please enter a value</string>
     <string name="no_recording_text">Please enter a new name</string>
     <string name="no_combo_text">Please a name for your combo</string>
-    <string name="no_internet">No internet available…Please connect</string>
+    <string name="no_internet">You are offline. Loading local sounds</string>
+    <string name="no_internet_initial_load">You are offline. \nPlease connect to download your sounds locally.</string>
     <string name="sound_loading">Please wait. Sound is still loading</string>
     <string name="back_exit">Please click BACK again to exit</string>
     <string name="sound_already_pinned">Sound already on dashboard</string>

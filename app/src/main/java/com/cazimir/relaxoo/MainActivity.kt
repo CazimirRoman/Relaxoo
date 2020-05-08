@@ -43,10 +43,8 @@ import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
 import com.cazimir.relaxoo.eventbus.EventBusServiceDestroyed
-import com.cazimir.relaxoo.model.ListOfSavedCustom
-import com.cazimir.relaxoo.model.Recording
-import com.cazimir.relaxoo.model.SavedCombo
-import com.cazimir.relaxoo.model.Sound
+import com.cazimir.relaxoo.model.*
+import com.cazimir.relaxoo.repository.SoundRepository
 import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.commands.LoadCustomSoundCommand
 import com.cazimir.relaxoo.service.commands.UnlockProCommand
@@ -143,24 +141,6 @@ class MainActivity : FragmentActivity(),
         InternetUtil.init(application)
         InternetUtil.observe(this, Observer { internetUp ->
             isInternetAvailable.value = internetUp
-            when {
-                internetUp -> {
-                    if (splash.visibility == VISIBLE) {
-                        no_internet_text.visibility = GONE
-
-                    } else {
-                        showSnackbar?.dismiss()
-                    }
-                }
-                else -> {
-                    if (splash.visibility == VISIBLE) {
-                        no_internet_text.visibility = VISIBLE
-
-                    } else {
-                        showMessageToUser(getString(R.string.no_internet), Snackbar.LENGTH_INDEFINITE)
-                    }
-                }
-            }
         })
 
         result.addSource(
@@ -176,28 +156,59 @@ class MainActivity : FragmentActivity(),
             result.setValue(preconditionsToStartFetchingData)
         }
 
+        isInternetAvailable.observe(this, Observer { internetUp ->
+            when (internetUp) {
+                true -> {
+                    no_internet_text.visibility = GONE
+                }
+                false -> {
+                    if (splash.visibility == VISIBLE) {
+                        no_internet_text.visibility = VISIBLE
+                    } else {
+                        no_internet_text.visibility = GONE
+                    }
+                }
+            }
+        })
+
         result.addSource(isInternetAvailable) { internetUp ->
             preconditionsToStartFetchingData = preconditionsToStartFetchingData.copy(isInternetUp = internetUp)
             result.setValue(preconditionsToStartFetchingData)
         }
 
         // TODO: 14-Mar-20 This observer is called 2 times - fix it
-        result.observeUntil(
+        result.observe(
                 this,
                 Observer { preconditionsToStartFetchingData: PreconditionsToStartFetchingData ->
                     Log.d(
                             TAG, (
                             "onChanged() called with: preconditionsToStartFetchingData: " +
                                     preconditionsToStartFetchingData.toString()))
-                    if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted && preconditionsToStartFetchingData.isInternetUp) {
+
+                    //if saved to shared preferences that means that initial fetch has been done and sounds are available locally
+                    val allSounds = loadFromSharedPreferences<ListOfSounds>(SoundRepository.ALL_SOUNDS)?.sounds
+
+                    if (allSounds == null) {
+                        no_internet_text.text = getString(R.string.no_internet_initial_load)
+                    } else {
+                        no_internet_text.text = getString(R.string.no_internet)
+                    }
+
+                    if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted) {
 
                         if (!sharedViewModel.splashScreenShown) {
                             Log.d(
                                     TAG, "sounds already fetched: " + getSoundGridFragment().shouldLoadToSoundpool())
-                            getSoundGridFragment().fetchSounds()
+                            //if any snackbar is showing, dismiss it
+                            showSnackbar?.dismiss()
+                            if (InternetUtil.isNetworkAvailable(this@MainActivity)) {
+                                getSoundGridFragment().fetchSoundsOnline()
+                            } else {
+                                if (allSounds != null) {
+                                    getSoundGridFragment().fetchSoundsOffline()
+                                }
+                            }
                         }
-
-
                     }
                 })
 
@@ -633,6 +644,7 @@ class MainActivity : FragmentActivity(),
         hideProgress()
         splash.visibility = GONE
         main_layout.visibility = VISIBLE
+        no_internet_text.visibility = GONE
         sharedViewModel.splashScreenShown = true
         Log.d(TAG, "EspressoIdlingResource.decrement called")
         EspressoIdlingResource.decrement()

@@ -73,12 +73,12 @@
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/no_internet_text"
             android:layout_width="wrap_content"
+            android:gravity="center"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center"
             android:layout_marginBottom="50dp"
             android:text="@string/no_internet"
-            android:textColor="@android:color/white"
-            android:visibility="gone">
+            android:textColor="@android:color/white">
 
         </androidx.appcompat.widget.AppCompatTextView>
 

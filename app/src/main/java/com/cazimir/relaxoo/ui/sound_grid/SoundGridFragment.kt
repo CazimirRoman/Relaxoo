@@ -481,8 +481,12 @@ class SoundGridFragment : Fragment() {
         sendCommandToService(SoundService.getCommand(context, TriggerComboCommand(savedCombo.sounds, boughtPro ?: false)))
     }
 
-    fun fetchSounds() {
+    fun fetchSoundsOnline() {
         viewModel.fetchSounds()
+    }
+
+    fun fetchSoundsOffline() {
+        viewModel.fetchSoundsOffline()
     }
 
     override fun onResume() {
