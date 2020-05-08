@@ -367,7 +367,7 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun createNotificationBuilder() {
-        this.notificationBuilder = NotificationCompat.Builder(this, MyApplication.CHANNEL_ID)
+        this.notificationBuilder = NotificationCompat.Builder(this, MyApplication.FOREGROUND_SERVICE_CHANNEL)
                 .setContentTitle("SoundPoolService")
                 .setOnlyAlertOnce(true)
                 .setAutoCancel(false)

@@ -9,7 +9,8 @@ import com.cazimir.utilitieslibrary.SharedPreferencesUtil
 class MyApplication : Application() {
 
     companion object {
-        const val CHANNEL_ID = "exampleServiceChannel"
+        const val FOREGROUND_SERVICE_CHANNEL = "FOREGROUND_SERVICE_CHANNEL"
+        const val NOTIFICATION_CHANNEL = "NOTIFICATION_CHANNEL"
     }
 
     override fun onCreate() {
@@ -21,16 +22,23 @@ class MyApplication : Application() {
     private fun createNotificationChannel() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(
-                CHANNEL_ID,
-                "Example Service Channel",
-                NotificationManager.IMPORTANCE_DEFAULT
+            val foregroundServiceChannel = NotificationChannel(
+                    FOREGROUND_SERVICE_CHANNEL,
+                    "Foreground service channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
             )
 
-            notificationChannel.importance = NotificationManager.IMPORTANCE_LOW
+            val notificationChannel = NotificationChannel(
+                    NOTIFICATION_CHANNEL,
+                    "Notification channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            )
+
+            foregroundServiceChannel.importance = NotificationManager.IMPORTANCE_LOW
+            notificationChannel.importance = NotificationManager.IMPORTANCE_HIGH
 
             val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(notificationChannel)
+            manager.createNotificationChannels(listOf(notificationChannel, foregroundServiceChannel))
         }
     }
 }
