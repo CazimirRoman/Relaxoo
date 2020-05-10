@@ -66,7 +66,17 @@ class GridRecyclerViewAdapter(val context: Context, var sounds: ArrayList<Sound>
                 object : OnSeekBarChangeListener {
                     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                         Log.d(TAG, "onProgressChanged: current value: $progress")
-                        listener.volumeChange(sound, progress)
+
+                        if (fromUser) {
+                            val soundWithNewVolume = sounds.find { foundSound -> sound.id == foundSound.id }?.copy(volume = (progress.toDouble() / 100).toString().toFloat())
+
+                            //update the sounds list here as well
+                            soundWithNewVolume?.let {
+                                sounds[sounds.indexOf(soundWithNewVolume)] = soundWithNewVolume
+                            }
+
+                            listener.volumeChange(sound, progress)
+                        }
                     }
 
                     override fun onStartTrackingTouch(seekBar: SeekBar) {}

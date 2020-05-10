@@ -136,6 +136,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun serviceCallbackAllSounds(eventBusPlayingSounds: EventBusAllSounds) {
         eventBusPlayingSounds.allSoundsFromService.observeForever { allSounds: List<Sound> ->
+            Log.d(TAG, "serviceCallbackAllSounds: with allSounds: $allSounds")
             _soundsStorage.value = allSounds
         }
     }

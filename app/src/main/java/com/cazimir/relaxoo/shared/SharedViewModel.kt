@@ -16,7 +16,7 @@ class SharedViewModel : ViewModel() {
 
     private var _adsBought: MutableLiveData<Boolean> = MutableLiveData(false)
     val adsBought: LiveData<Boolean> = _adsBought
-    private var _proBought: MutableLiveData<UnlockProEvent> = MutableLiveData()
+    private var _proBought: MutableLiveData<UnlockProEvent> = MutableLiveData(UnlockProEvent(eventProcessed = false, proBought = false))
     val proBought: LiveData<UnlockProEvent> = _proBought
 
     override fun onCleared() {

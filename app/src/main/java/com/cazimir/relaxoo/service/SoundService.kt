@@ -33,7 +33,7 @@ class SoundService : Service(), ISoundService {
 
     companion object {
         private const val TAG = "SoundPoolService"
-        private const val MAX_SOUNDS = 100
+        private const val MAX_SOUNDS = 5
         const val SOUND_POOL_ACTION = "sound_pool_action"
 
         fun getCommand(context: Context?, command: ISoundServiceCommand): Intent {
@@ -215,13 +215,17 @@ class SoundService : Service(), ISoundService {
 
         _timerRunning.observeForever(timerRunningObserver)
         _muted.observeForever(mutedObserver)
+
+        _allSoundsLive.observeForever { allSoundsList ->
+            allSounds = allSoundsList as MutableList<Sound>
+        }
     }
 
     @SuppressLint("NewApi")
     private fun createSoundPoolWithBuilder() {
         val attributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_GAME)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build()
 
         soundPool = SoundPool.Builder().setAudioAttributes(attributes).setMaxStreams(MAX_SOUNDS).build()
@@ -263,11 +267,16 @@ class SoundService : Service(), ISoundService {
         Log.d(TAG, "triggerCombo: called")
         stopAllSounds()
         soundList.forEach { sound ->
-
             if (boughtPro) {
+
                 play(PlayCommand(sound))
-            } else if (sound.pro.not()) {
-                play(PlayCommand(sound))
+            } else {
+                // find the sound and check if pro and do not play if it is
+                allSounds.find { foundSound ->
+                    foundSound.id == sound.id && !foundSound.pro
+                }?.let {
+                    play(PlayCommand(it))
+                }
             }
 
         }
@@ -356,9 +365,10 @@ class SoundService : Service(), ISoundService {
         // also kill activity if used decides to kill service so that everything is recreated on relaunch
         Log.d(TAG, "onDestroy: called")
         EventBus.getDefault().post(EventBusServiceDestroyed())
-        _allSoundsLive.removeObserver { textEndingObserver }
+        _playingSounds.removeObserver { textEndingObserver }
         _timerRunning.removeObserver { timerRunningObserver }
         _muted.removeObserver { mutedObserver }
+        soundPool.release()
         super.onDestroy()
     }
 
@@ -396,6 +406,7 @@ class SoundService : Service(), ISoundService {
 
         for (sound: Sound in sounds) {
             val soundPoolId = soundPool.load(sound.filePath, 1)
+            Log.d(TAG, "loadToSoundPool: load called with: $soundPoolId")
             allSounds.add(sound.copy(soundPoolId = soundPoolId, pro = if (proPurchased) false else sound.pro))
         }
     }
@@ -494,7 +505,7 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun setVolume(id: String, streamId: Int, leftVolume: Float, rightVolume: Float) {
-        Log.d(TAG, "setVolume: called")
+        Log.d(TAG, "setVolume: called with $leftVolume")
         soundPool.setVolume(streamId, leftVolume, rightVolume)
         val toBeReplaced = allSounds.first { playingSound -> playingSound.id == id }
 
@@ -518,6 +529,7 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun sendUpdatedSoundsBackToViewModel() {
+        Log.d(TAG, "sendUpdatedSoundsBackToViewModel: called with: $allSounds")
         _allSoundsLive.value = allSounds
     }
 }

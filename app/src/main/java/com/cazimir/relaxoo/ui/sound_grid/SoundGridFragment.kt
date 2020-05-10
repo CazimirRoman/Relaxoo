@@ -80,13 +80,17 @@ class SoundGridFragment : Fragment() {
                     )
             )
         } else {
-            Log.d(TAG, "playing sound")
-            sendCommandToService(
-                    SoundService.getCommand(
-                            context,
-                        PlayCommand(sound)
-                    )
-            )
+            if (sound.loaded) {
+                Log.d(TAG, "playing sound")
+                sendCommandToService(
+                        SoundService.getCommand(
+                                context,
+                                PlayCommand(sound)
+                        )
+                )
+            } else {
+                activityCallback.showMessageToUser(getString(R.string.playing_except_loading), Snackbar.LENGTH_SHORT)
+            }
         }
     }
 
@@ -150,7 +154,7 @@ class SoundGridFragment : Fragment() {
                 .observe( // TODO: 19.12.2019 move in a separate file or inner class
                         viewLifecycleOwner,
                         Observer { sounds: List<Sound> ->
-
+                            Log.d(TAG, "soundsStorage in SoundGridFragment with sounds: $sounds")
                             val newList = sounds.toList()
                             updateOrSetupAdapter(newList)
 
@@ -286,11 +290,11 @@ class SoundGridFragment : Fragment() {
                     allSounds as ArrayList<Sound>,
                     object : OnSoundClickListener {
                         override fun clicked(sound: Sound) {
-                            if (sound.pro && !sound.playing) {
+                            if (!sound.loaded) {
+                                activityCallback.showMessageToUser(getString(R.string.sound_loading), Snackbar.LENGTH_SHORT)
+                            } else if (sound.pro && !sound.playing) {
                                 viewModel.setClickedProSound(sound)
                                 activityCallback.showBottomDialogForPro()
-                            } else if (!sound.loaded) {
-                                activityCallback.showMessageToUser(getString(R.string.sound_loading), Snackbar.LENGTH_SHORT)
                             } else {
                                 playStopSound(sound)
                             }
