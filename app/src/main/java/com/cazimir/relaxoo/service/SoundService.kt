@@ -266,19 +266,20 @@ class SoundService : Service(), ISoundService {
     private fun triggerCombo(soundList: List<Sound>, boughtPro: Boolean) {
         Log.d(TAG, "triggerCombo: called")
         stopAllSounds()
+        // just ignore the play commands if conditions not fulfilled (pro or sound loaded)
         soundList.forEach { sound ->
             if (boughtPro) {
-
-                play(PlayCommand(sound))
+                if (sound.loaded) {
+                    play(PlayCommand(sound))
+                }
             } else {
-                // find the sound and check if pro and do not play if it is
+                // find the sound and check if pro and if loaded and do not play if it is
                 allSounds.find { foundSound ->
-                    foundSound.id == sound.id && !foundSound.pro
+                    foundSound.id == sound.id && !foundSound.pro && foundSound.loaded
                 }?.let {
                     play(PlayCommand(it))
                 }
             }
-
         }
     }
 

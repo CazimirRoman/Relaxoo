@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.GridRecyclerViewAdapter
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.soundClicked
 import com.cazimir.relaxoo.dialog.custom.BottomCustomDeleteFragment
 import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
 import com.cazimir.relaxoo.eventbus.*
@@ -290,6 +291,9 @@ class SoundGridFragment : Fragment() {
                     allSounds as ArrayList<Sound>,
                     object : OnSoundClickListener {
                         override fun clicked(sound: Sound) {
+
+                            activityCallback.logAnalyticsEvent(eventName = soundClicked(sound).first, bundle = soundClicked(sound).second)
+
                             if (!sound.loaded) {
                                 activityCallback.showMessageToUser(getString(R.string.sound_loading), Snackbar.LENGTH_SHORT)
                             } else if (sound.pro && !sound.playing) {
@@ -415,7 +419,7 @@ class SoundGridFragment : Fragment() {
         }
 
         set_timer_button.setOnClickListener {
-            val atLeastOneIsPlaying = currentlyPlayingSounds.size > 0
+            val atLeastOneIsPlaying = currentlyPlayingSounds.isNotEmpty()
             if (atLeastOneIsPlaying) {
                 if (timerRunning) {
                     stopAllSounds()
@@ -616,6 +620,17 @@ class SoundGridFragment : Fragment() {
         val newObject = ListOfSavedCustom(newList)
         saveToSharedPreferences(newObject, MainActivity.PINNED_RECORDINGS)
 
+    }
+
+    fun areSoundsStillLoading(): Boolean {
+
+        var areLoading = false
+
+        if (viewModel.soundsStorage.value?.find { sound -> !sound.loaded } != null) {
+            areLoading = true
+        }
+
+        return areLoading
     }
 
     companion object {

@@ -70,6 +70,7 @@ import com.google.android.gms.ads.reward.RewardedVideoAd
 import com.google.android.gms.ads.reward.RewardedVideoAdListener
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.gson.JsonSyntaxException
 import kotlinx.android.synthetic.main.main_activity.*
 import org.greenrobot.eventbus.EventBus
@@ -119,9 +120,12 @@ class MainActivity : FragmentActivity(),
     private var timerDialog: TimerDialog? = null
     private var soundGridFragment: SoundGridFragment? = null
 
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this)
         EventBus.getDefault().register(this)
         sharedViewModel = ViewModelProvider(this).get(SharedViewModel::class.java)
         subscribeObservers()
@@ -583,9 +587,18 @@ class MainActivity : FragmentActivity(),
                         savedCombo.sounds.toString()))
         getSoundGridFragment().triggerCombo(savedCombo, sharedViewModel.proBought.value?.proBought)
         if (sharedViewModel.proBought.value?.proBought == false) {
-            showMessageToUser(getString(R.string.playing_except_pro), Snackbar.LENGTH_SHORT)
+            if (getSoundGridFragment().areSoundsStillLoading()) {
+                showMessageToUser(getString(R.string.playing_except_loading), Snackbar.LENGTH_SHORT)
+            } else {
+                showMessageToUser(getString(R.string.playing_except_pro), Snackbar.LENGTH_SHORT)
+            }
+
         } else {
-            showMessageToUser(getString(R.string.playing_saved_combo), Snackbar.LENGTH_SHORT)
+            if (getSoundGridFragment().areSoundsStillLoading()) {
+                showMessageToUser(getString(R.string.playing_except_loading), Snackbar.LENGTH_SHORT)
+            } else {
+                showMessageToUser(getString(R.string.playing_saved_combo), Snackbar.LENGTH_SHORT)
+            }
         }
     }
 
@@ -708,6 +721,10 @@ class MainActivity : FragmentActivity(),
     override fun renameRecording(recording: Recording, newName: String) {
         createSoundFragment!!.renameRecording(recording, newName)
         getSoundGridFragment().renameCustomSoundFromDashboardIfThere(recording, newName)
+    }
+
+    override fun logAnalyticsEvent(eventName: String, bundle: Bundle) {
+        firebaseAnalytics.logEvent(eventName, bundle)
     }
 
     override fun pinToDashBoardActionCalled(sound: Sound) {

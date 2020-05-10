@@ -44,7 +44,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="buy_pro">Buy PRO</string>
-    <string name="playing_except_pro">Playing combo excepting the PRO sounds</string>
+    <string name="playing_except_pro">Playing sounds except the PRO ones</string>
     <string name="playing_except_loading">Some sounds are still loading. Playing already loaded sounds</string>
     <string name="custom_timer_zero">Please select an amount of time</string>
     <string name="playing_saved_combo">Playing selected combo</string>
