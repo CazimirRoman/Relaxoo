@@ -309,7 +309,7 @@ class SoundService : Service(), ISoundService {
             if (playingSounds.isEmpty()) {
                 notificationView.setImageViewResource(
                         R.id.remote_view_play_stop,
-                        R.drawable.ic_play_black
+                        R.drawable.ic_play_white
                 )
                 notificationView.setTextViewText(R.id.remote_view_playing_txt, "No sound playing")
                 this.notificationBuilder.setCustomContentView(notificationView)
@@ -320,7 +320,7 @@ class SoundService : Service(), ISoundService {
                 )
                 notificationView.setImageViewResource(
                         R.id.remote_view_play_stop,
-                        R.drawable.ic_stop_black
+                        R.drawable.ic_stop_white
                 )
                 notificationView.setOnClickPendingIntent(
                         R.id.remote_view_play_stop,
@@ -336,7 +336,7 @@ class SoundService : Service(), ISoundService {
 
         _muted.observeForever {
             if (it) {
-                notificationView.setImageViewResource(R.id.remote_view_mute, R.drawable.ic_mute_on_black)
+                notificationView.setImageViewResource(R.id.remote_view_mute, R.drawable.ic_mute_on_white)
                 this.notificationBuilder.setCustomContentView(notificationView)
                 // this whole thing is done because of this : https://stackoverflow.com/questions/25821903/change-android-notification-text-dynamically
                 // I need to update the builder with the updated view and then retrigger the notification makings sure the builder has this flag : .setOnlyAlertOnce(true)
@@ -344,7 +344,7 @@ class SoundService : Service(), ISoundService {
             } else {
                 notificationView.setImageViewResource(
                         R.id.remote_view_mute,
-                        R.drawable.ic_mute_off_black
+                        R.drawable.ic_mute_off_white
                 )
                 this.notificationBuilder.setCustomContentView(notificationView)
                 triggerNotificationRefresh()
@@ -372,7 +372,9 @@ class SoundService : Service(), ISoundService {
                 .setOnlyAlertOnce(true)
                 .setAutoCancel(false)
                 .setSmallIcon(R.drawable.ic_notification)
-                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                .setColor(resources.getColor(R.color.colorPrimary))
+                .setColorized(true)
+                .setStyle(androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle())
                 .setCustomContentView(notificationView)
                 .setContentIntent(pendingIntent)
     }

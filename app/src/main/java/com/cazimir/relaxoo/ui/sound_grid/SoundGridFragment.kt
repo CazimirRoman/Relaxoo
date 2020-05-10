@@ -198,7 +198,7 @@ class SoundGridFragment : Fragment() {
                         play_button.tag = getString(R.string.play_button_tag)
                         set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
                     } else {
-                        play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop))
+                        play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_white))
                         play_button.tag = getString(R.string.stop_button_tag)
 
                     }
@@ -564,7 +564,7 @@ class SoundGridFragment : Fragment() {
                 // used for espresso
                 mute_button.tag = getString(R.string.mute_on_tag)
             } else {
-                mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off))
+                mute_button.setImageDrawable(resources.getDrawable(R.drawable.ic_mute_off_white))
                 // used for espresso
                 mute_button.tag = getString(R.string.mute_off_tag)
             }

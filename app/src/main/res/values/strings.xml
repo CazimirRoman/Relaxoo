@@ -57,7 +57,7 @@
     <string name="stop_button_tag">stop_button</string>
     <string name="permission_storage_denied_message">In order to bring you the freshest relaxation sounds to your phone, we need to save them locally for offline use. For that we need access to your storage. \n \nThank you for your understanding.</string>
     <string name="permission_storage_denied_title">Storage permission needed</string>
-    <string name="permission_storage_denied_do_not_show_message">You need to go to Setting and enable the permissions there</string>
+    <string name="permission_storage_denied_do_not_show_message">You need to go to Setting and enable the denied permissions there</string>
     <string name="permission_recording_denied">You need to grant recording permissions to record your own sound</string>
     <string name="permission_recording_denied_title">Recording permission needed</string>
     <string name="permission_recording_denied_do_not_show">You need to go to Setting and enable the permissions there</string>

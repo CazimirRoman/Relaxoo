@@ -95,7 +95,7 @@ class RecordingAdapter(
                     }
                 })
         holder.playRecording.setImageDrawable(
-                if (item.isPlaying) context?.resources?.getDrawable(R.drawable.ic_stop) else context?.resources?.getDrawable(R.drawable.ic_play))
+                if (item.isPlaying) context?.resources?.getDrawable(R.drawable.ic_stop_white) else context?.resources?.getDrawable(R.drawable.ic_play))
         holder.optionsRecording.setOnClickListener(
                 View.OnClickListener {
                     listener.onOptionsClicked(list[position])

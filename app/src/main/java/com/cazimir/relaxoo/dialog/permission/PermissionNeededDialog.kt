@@ -9,12 +9,11 @@ import com.cazimir.relaxoo.dialog.RetainableDialogFragment
 
 class PermissionNeededDialog(private val callback: OnStoragePermissionCallback, private val message: String, private val title: String) : RetainableDialogFragment(), DialogInterface.OnClickListener {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val form = activity!!.layoutInflater.inflate(R.layout.dialog_storage_permission, null)
         val builder = AlertDialog.Builder(activity!!)
         builder.setPositiveButton(getString(R.string.ok), this)
         builder.setMessage(message)
         builder.setIcon(R.mipmap.ic_launcher)
-        return builder.setTitle(title).setView(form).create()
+        return builder.setTitle(title).create()
     }
 
     override fun onClick(dialog: DialogInterface, which: Int) {

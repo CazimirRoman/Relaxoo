@@ -47,7 +47,7 @@ class PrivacyPolicyActivity : AppCompatActivity() {
         supportActionBar?.title = getString(R.string.privacy_policy_title)
 
         webView.webViewClient = WebViewClient()
-        val webSettings: WebSettings = webView.getSettings()
+        val webSettings: WebSettings = webView.settings
         webSettings.javaScriptEnabled = true
         webView.loadUrl("file:///android_asset/privacy_policy.html")
 
