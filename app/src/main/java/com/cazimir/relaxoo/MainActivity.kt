@@ -99,7 +99,7 @@ class MainActivity : FragmentActivity(),
         private const val BUY_PRO = "buy_pro"
     }
 
-    private var showSnackbar: Snackbar? = null
+    private var snackBar: Snackbar? = null
     private var doubleBackToExitPressedOnce: Boolean = false
     private lateinit var adView: AdView
     private lateinit var adUnitId: String
@@ -204,7 +204,7 @@ class MainActivity : FragmentActivity(),
                             Log.d(
                                     TAG, "sounds already fetched: " + getSoundGridFragment().shouldLoadToSoundpool())
                             //if any snackbar is showing, dismiss it
-                            showSnackbar?.dismiss()
+                            snackBar?.dismiss()
                             if (InternetUtil.isNetworkAvailable(this@MainActivity)) {
                                 getSoundGridFragment().fetchSoundsOnline()
                             } else {
@@ -714,8 +714,7 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun showMessageToUser(messageToShow: String, length: Int) {
-        showSnackbar = showSnackbar(coordinator, messageToShow, length)
-
+        snackBar = showSnackbar(coordinator, messageToShow, length)
     }
 
     override fun renameRecording(recording: Recording, newName: String) {

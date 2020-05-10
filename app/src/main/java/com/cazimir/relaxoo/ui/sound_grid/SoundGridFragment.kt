@@ -205,7 +205,6 @@ class SoundGridFragment : Fragment() {
                     } else {
                         play_button.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_white))
                         play_button.tag = getString(R.string.stop_button_tag)
-
                     }
                 })
 
@@ -385,6 +384,8 @@ class SoundGridFragment : Fragment() {
         }
         random_button.setOnClickListener {
             stopAllSounds()
+
+            activityCallback.showMessageToUser(getString(R.string.playing_random), Snackbar.LENGTH_SHORT)
 
             /*observe playing sounds once to make sure that an empty list is delivered and the observe once and remove observer*/
             viewModel.playingSounds().observeOnceOnListEmptyWithOwner(viewLifecycleOwner, Observer {
