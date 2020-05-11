@@ -208,7 +208,8 @@ class SoundService : Service(), ISoundService {
                 countDownTimer?.cancel()
                 _timerRunning.value = false
                 //no need to keep mute on when NO sound is playing.
-                _muted.value = false
+                muted = false
+                _muted.value = muted
             }
         }
 
@@ -451,6 +452,8 @@ class SoundService : Service(), ISoundService {
                 -1,
                 1f
         )
+
+        _muted.value = false
 
         val newSoundWithStreamId = playCommand.sound.copy(streamId = streamId, playing = true)
 
