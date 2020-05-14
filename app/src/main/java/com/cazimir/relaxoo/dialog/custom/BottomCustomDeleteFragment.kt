@@ -31,16 +31,6 @@ class BottomCustomDeleteFragment(val sound: Sound, val callback: CustomBottomCal
             }
         })
 
-        // view.delete_recording.setOnClickListener(View.OnClickListener {
-        // dismiss()
-        // context?.let { context ->
-        // callback.showDeleteConfirmationDialog(object : RecordingDeleted {
-        // override fun deleted() {
-        // callback.deleteRecording(recording)
-        // }
-        // })
-        // }
-        // })
         return view
     }
 }

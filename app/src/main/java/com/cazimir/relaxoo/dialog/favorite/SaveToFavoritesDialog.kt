@@ -3,7 +3,6 @@ package com.cazimir.relaxoo.dialog.favorite
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -90,7 +89,6 @@ class SaveToFavoritesDialog(private val playingSoundIds: List<Sound>) : Retainab
 
     override fun onDismiss(unused: DialogInterface) {
         super.onDismiss(unused)
-        Log.d(javaClass.simpleName, "Goodbye!")
     }
 
     companion object {

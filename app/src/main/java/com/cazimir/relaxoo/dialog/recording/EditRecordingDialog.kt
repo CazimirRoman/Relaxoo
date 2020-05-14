@@ -5,7 +5,6 @@ import android.content.DialogInterface
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,7 +25,7 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
 
     private lateinit var layout: View
     private lateinit var positiveButton: Button
-    val editTextString: MutableLiveData<String> = MutableLiveData()
+    private val editTextString: MutableLiveData<String> = MutableLiveData()
 
     override fun onStart() {
         super.onStart()
@@ -47,7 +46,6 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
         layout = activity!!.layoutInflater.inflate(R.layout.edit_recording, null)
 
         layout.new_recording_name.onChange {
-            Log.d(TAG, "new_recording_name: changed: $it")
             editTextString.value = it
         }
 
@@ -63,8 +61,7 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
 
         val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(activity!!)
 
-        layout?.let {
-
+        layout.let {
             // set prompts.xml to alertdialog builder
             alertDialogBuilder.setView(layout)
 
@@ -74,7 +71,7 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
                     .setTitle("Rename created sound")
                     .setCancelable(false)
                     .setPositiveButton(
-                    "OK",
+                            "OK",
                     object : DialogInterface.OnClickListener {
                         override fun onClick(dialog: DialogInterface?, which: Int) {
 

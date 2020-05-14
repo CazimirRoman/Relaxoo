@@ -15,7 +15,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -151,13 +150,11 @@ class MainActivity : FragmentActivity(),
 
         result.addSource(
                 areWritePermissionsGranted) { permissionsGranted: Boolean ->
-            Log.d(TAG, "permissions granted: $permissionsGranted")
             preconditionsToStartFetchingData = preconditionsToStartFetchingData.copy(arePermissionsGranted = permissionsGranted)
             result.setValue(preconditionsToStartFetchingData)
         }
 
         result.addSource(isSoundGridFragmentStarted) { fragmentStarted: Boolean ->
-            Log.d(TAG, "soundGridFragmentStarted: $fragmentStarted")
             preconditionsToStartFetchingData = preconditionsToStartFetchingData.copy(isFragmentStarted = fragmentStarted)
             result.setValue(preconditionsToStartFetchingData)
         }
@@ -186,11 +183,6 @@ class MainActivity : FragmentActivity(),
         result.observe(
                 this,
                 Observer { preconditionsToStartFetchingData: PreconditionsToStartFetchingData ->
-                    Log.d(
-                            TAG, (
-                            "onChanged() called with: preconditionsToStartFetchingData: " +
-                                    preconditionsToStartFetchingData.toString()))
-
                     //if saved to shared preferences that means that initial fetch has been done and sounds are available locally
                     val allSounds = loadFromSharedPreferences<ListOfSounds>(SoundRepository.ALL_SOUNDS)?.sounds
 
@@ -203,8 +195,6 @@ class MainActivity : FragmentActivity(),
                     if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted) {
 
                         if (!sharedViewModel.splashScreenShown) {
-                            Log.d(
-                                    TAG, "sounds already fetched: " + getSoundGridFragment().shouldLoadToSoundpool())
                             //if any snackbar is showing, dismiss it
                             snackBar?.dismiss()
                             if (InternetUtil.isNetworkAvailable(this@MainActivity)) {
@@ -276,20 +266,16 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun onPause() {
-        Log.d(LIFECYCLE, "onPause: called")
         super.onPause()
         rewardedVideoAd.pause(this)
     }
 
     override fun onResume() {
-        Log.d(LIFECYCLE, "onResume: called")
         super.onResume()
         rewardedVideoAd.resume(this)
     }
 
     override fun onDestroy() {
-        Log.d(LIFECYCLE, "onDestroy: called")
-
 //        //find a way to determine if onDestroy is called because user swiped app away or because rotation happened
 //        if (!isChangingConfigurations) {
 //            startService(SoundPoolService.getCommand(this, StopServiceCommand()))
@@ -326,7 +312,6 @@ class MainActivity : FragmentActivity(),
                 object : BillingClientStateListener {
                     override fun onBillingSetupFinished(billingResult: BillingResult) {
                         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                            Log.d(TAG, "onBillingSetupFinished() called with: success!")
                             val purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP)
                             if (purchasesResult.purchasesList.size != 0) {
                                 if (purchasesResult.purchasesList[0].sku == BUY_PRO) {
@@ -339,7 +324,6 @@ class MainActivity : FragmentActivity(),
                     }
 
                     override fun onBillingServiceDisconnected() {
-                        Log.d(TAG, "onBillingServiceDisconnected() called with: failed")
                         // Try to restart the connection on the next request to
                         // Google Play by calling the startConnection() method.
                     }
@@ -361,12 +345,8 @@ class MainActivity : FragmentActivity(),
                         val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
                         billingClient.launchBillingFlow(this, flowParams)
                     }
-                } else {
-                    Log.d(TAG, "loadAllSKUs() called with: skuDetailsList is empty")
                 }
             }
-        } else {
-            Log.d(TAG, "loadAllSKUs() called with: billingClient is not ready")
         }
     }
 
@@ -524,7 +504,6 @@ class MainActivity : FragmentActivity(),
                             animator.addListener(
                                     object : AnimatorListenerAdapter() {
                                         override fun onAnimationEnd(animation: Animator) {
-                                            Log.d(TAG, "onAnimationEnd: called")
                                             sharedViewModel.previousColor = sharedViewModel.nextColor.value
                                         }
                                     })
@@ -537,10 +516,6 @@ class MainActivity : FragmentActivity(),
                         override fun run() {
                             runOnUiThread {
                                 sharedViewModel.nextColor.value = randomColor
-                                Log.d(
-                                        TAG, String.format(
-                                        "run: called. previousColor: %s and nextColor: %s",
-                                        sharedViewModel.previousColor, sharedViewModel.nextColor.value))
                             }
                         }
                     })
@@ -584,10 +559,6 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun triggerCombo(savedCombo: SavedCombo) {
-        Log.d(
-                TAG, (
-                "triggerCombo in MainActivity: called with: " +
-                        savedCombo.sounds.toString()))
         getSoundGridFragment().triggerCombo(savedCombo, sharedViewModel.proBought.value?.proBought)
         if (sharedViewModel.proBought.value?.proBought == false) {
             if (getSoundGridFragment().areSoundsStillLoading()) {
@@ -613,7 +584,6 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun saved(savedCombo: SavedCombo) {
-        Log.d(TAG, "saved: called")
         favoriteFragment!!.updateList(savedCombo)
         FirebaseAnalytics.getInstance(this).logEvent(saveComboClicked(savedCombo.name()).first, saveComboClicked(savedCombo.name()).second)
         showMessageToUser(getString(R.string.saved_combo), Snackbar.LENGTH_SHORT)
@@ -651,19 +621,16 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun soundGridFragmentStarted() {
-        Log.d(TAG, "soundGridFragmentStarted() called")
         if (soundGridFragment == null) soundGridFragment = getSoundGridFragment()
         isSoundGridFragmentStarted.value = true
     }
 
     override fun hideSplashScreen() {
-        Log.d(TAG, "hideSplash: called")
         hideProgress()
         splash.visibility = GONE
         main_layout.visibility = VISIBLE
         no_internet_text.visibility = GONE
         sharedViewModel.splashScreenShown = true
-        Log.d(TAG, "EspressoIdlingResource.decrement called")
         EspressoIdlingResource.decrement()
     }
 
@@ -683,17 +650,9 @@ class MainActivity : FragmentActivity(),
                         val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
                         billingClient.launchBillingFlow(this, flowParams)
                     }
-                } else {
-                    Log.d(TAG, "loadAllSKUs() called with: skuDetailsList is empty")
                 }
             }
-        } else {
-            Log.d(TAG, "loadAllSKUs() called with: billingClient is not ready")
         }
-
-
-        // this should happen after purchase confirmation
-//        getSoundGridFragment().activateAllProSounds()
     }
 
     override fun removeAds() {
@@ -737,7 +696,6 @@ class MainActivity : FragmentActivity(),
             return
         }
 
-        Log.d(TAG, "pinToDashBoardActionCalled: called. Sending command to service: LoadCustomSoundCommand")
         sendCommandToService(SoundService.getCommand(this, LoadCustomSoundCommand(sound)))
 
         try {
@@ -754,7 +712,6 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun sendCommandToService(intent: Intent) {
-        Log.d(TAG, "sendCommandToService: called with command: ${intent.getSerializableExtra(SoundService.SOUND_POOL_ACTION)}")
         startService(intent)
     }
 
@@ -824,16 +781,9 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
-        Log.d(TAG, "onPurchasesUpdated: called with: $billingResult")
         val responseCode = billingResult.responseCode
 
         if (responseCode == BillingClient.BillingResponseCode.OK || responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
-
-            Log.d(
-                    TAG,
-                    "onPurchasesUpdated: called with: Purchase succesfull or Item already purchased: $purchases[0]!!.sku"
-            )
-
             // pro includes also remove ads
             if (purchases?.get(0)?.sku == BUY_PRO) {
                 FirebaseAnalytics.getInstance(this).logEvent(AnalyticsEvents.boughtPro().first, AnalyticsEvents.boughtPro().second)
@@ -863,7 +813,6 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun onRewardedVideoCompleted() {
-        Log.d(TAG, "onRewardedVideoCompleted: called")
         getSoundGridFragment().rewardUserByPlayingProSound()
         loadRewardedVideoAd()
     }
@@ -889,7 +838,6 @@ class MainActivity : FragmentActivity(),
         // the reason for this is that if the service gets destroyed, which holds all the logic for the soundpool
         // and timer, the activity needs to restart to recreate the service. Therefore forcing a finish on the applications
         // i am thinking that the user does not want to use the service and the application anymore if he presses 'X'
-        Log.d(TAG, "serviceDestroyed: called")
         this.finish()
     }
 }

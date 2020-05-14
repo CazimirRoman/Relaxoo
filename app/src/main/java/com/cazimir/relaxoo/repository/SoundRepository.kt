@@ -55,7 +55,6 @@ class SoundRepository : ISoundRepository {
     override fun getSounds(): MutableLiveData<List<Sound>> {
         authenticationComplete.observeOnceWithTrueNoLifecycleOwner(Observer {
             val soundsInFirebase = mutableListOf<Sound>()
-            Log.d(TAG, "EspressoIdlingResource.increment called")
             EspressoIdlingResource.increment()
             soundsRef.addListenerForSingleValueEvent(
                     object : ValueEventListener {
@@ -85,7 +84,6 @@ class SoundRepository : ISoundRepository {
     }
 
     override fun getSoundsOffline(): LiveData<List<Sound>> {
-        Log.d(TAG, "getAssetsStorage: loading assets from local storage")
         val soundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/sounds")
         val logosFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/logos")
 
@@ -132,7 +130,6 @@ class SoundRepository : ISoundRepository {
         val files = soundsDirectory.listFiles()
         // no files downloaded locally
         if (files == null || files.size < sounds.size) {
-            Log.d(TAG, "getAssetsStorage: loading assets from firebase")
             // get sounds
             for (sound in sounds) {
                 val soundReference = FirebaseStorage.getInstance().reference.child("sounds").child(sound.filePath)
@@ -144,18 +141,15 @@ class SoundRepository : ISoundRepository {
 
                 val soundFile = File(soundsFolder, sound.filePath)
 
-                Log.d(TAG, "getAssetsFromFirebaseStorage: soundFile: $soundFile")
                 val logoFile = File(logosFolder, sound.logoPath)
                 // download sound from Firebase
                 soundReference
                         .getFile(soundFile)
                         .addOnSuccessListener { soundSnapshot: FileDownloadTask.TaskSnapshot? ->
-                            Log.d(TAG, "onSuccess: called")
                             // now download the image
                             imageReference
                                     .getFile(logoFile)
                                     .addOnSuccessListener { imageSnapshot: FileDownloadTask.TaskSnapshot? ->
-                                        Log.d(TAG, "onSuccess for imageReference: called")
 
                                         val fetchedSound = sound.copy(logoPath = logoFile.path, filePath = soundFile.path)
 
@@ -179,7 +173,6 @@ class SoundRepository : ISoundRepository {
                         }
             }
         } else {
-            Log.d(TAG, "getAssetsStorage: loading assets from local storage")
             val logosDirectory = File(logosFolder.absolutePath)
 
             val newList = mutableListOf<Sound>()

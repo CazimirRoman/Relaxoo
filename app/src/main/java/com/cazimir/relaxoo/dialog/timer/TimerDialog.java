@@ -4,7 +4,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -103,7 +102,6 @@ public class TimerDialog extends RetainableDialogFragment {
     listView.setOnItemClickListener(
             (parent, view, position, id) -> {
               callback.startCountDownTimer(timers.get(position));
-              Log.d(TAG, "onItemClick: " + timers.get(position));
               dismiss();
             });
 

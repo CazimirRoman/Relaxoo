@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PorterDuff
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
@@ -65,8 +64,6 @@ class GridRecyclerViewAdapter(val context: Context, var sounds: ArrayList<Sound>
         holder.itemView.sound_volume.setOnSeekBarChangeListener(
                 object : OnSeekBarChangeListener {
                     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                        Log.d(TAG, "onProgressChanged: current value: $progress")
-
                         if (fromUser) {
                             val soundWithNewVolume = sounds.find { foundSound -> sound.id == foundSound.id }?.copy(volume = (progress.toDouble() / 100).toString().toFloat())
 
@@ -81,7 +78,6 @@ class GridRecyclerViewAdapter(val context: Context, var sounds: ArrayList<Sound>
 
                     override fun onStartTrackingTouch(seekBar: SeekBar) {}
                     override fun onStopTrackingTouch(seekBar: SeekBar) {
-                        Log.d(TAG, "onStopTrackingTouch() called")
                         // update ViewModel date only when user lets go of the progressbar, otherwise refreshing
                         // the view to many times results in stuttering
                         listener.volumeChangeStopped(sound, seekBar.progress)

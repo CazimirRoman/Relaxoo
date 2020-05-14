@@ -1,6 +1,5 @@
 package com.cazimir.relaxoo.ui.create_sound
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -34,8 +33,6 @@ class CreateSoundViewModel : ViewModel() {
                 recordingsList.add(Recording.Builder().withId(file.name).withFile(file).withFileName(file.name).build())
             }
         }
-
-        Log.d(TAG, "refreshList called: $recordingsList")
 
         _recordingsLive.value = recordingsList as ArrayList<Recording>
     }

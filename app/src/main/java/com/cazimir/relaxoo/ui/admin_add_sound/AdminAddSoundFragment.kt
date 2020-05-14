@@ -1,7 +1,6 @@
 package com.cazimir.relaxoo.ui.admin_add_sound
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -45,7 +44,6 @@ class AdminAddSoundFragment : Fragment() {
                     pro = checkbox_pro.isChecked())
 
             viewModel.saveToFirebase(sound)
-            Log.d(TAG, "onSaveButtonClicked() called with: Saving to Firebase database")
         } else {
         }
     }

@@ -11,7 +11,6 @@ import android.media.SoundPool
 import android.os.Build
 import android.os.CountDownTimer
 import android.os.IBinder
-import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LiveData
@@ -96,8 +95,6 @@ class SoundService : Service(), ISoundService {
 
         val event = intent?.getSerializableExtra(SOUND_POOL_ACTION) as? ISoundServiceCommand
 
-        Log.d(TAG, "onStartCommand: called with: $event")
-
         when (event) {
             is StopServiceCommand -> {
                 FirebaseAnalytics.getInstance(this).logEvent(AnalyticsEvents.shutdownAppFromNotification().first, AnalyticsEvents.shutdownAppFromNotification().second)
@@ -173,8 +170,6 @@ class SoundService : Service(), ISoundService {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "createOrGetSoundPool: called")
-
         setupNotifications()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -184,7 +179,6 @@ class SoundService : Service(), ISoundService {
         }
 
         soundPool.setOnLoadCompleteListener { soundPool: SoundPool?, soundPoolId: Int, status: Int ->
-            Log.d(TAG, "onLoadComplete: $soundPoolId")
 
             val soundWithSoundPoolId = allSounds.find { sound ->
                 sound.soundPoolId == soundPoolId
@@ -240,7 +234,6 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun toggleCountDownTimer(minutes: Int) {
-        Log.d(TAG, "toggleCountDownTimer: called")
         if (timerRunning) {
             countDownTimer?.cancel()
             _timerData.value = TimerData("", false)
@@ -248,7 +241,6 @@ class SoundService : Service(), ISoundService {
             countDownTimer = object : CountDownTimer(TimeUnit.MINUTES.toMillis(minutes.toLong()), 1000) {
                 override fun onTick(millisUntilFinished: Long) { // updateLiveDataHere() observe from Fragment
                     // timerText is the observable that is being observed from the fragment
-                    Log.d(TAG, "onTick: called with: ${_timerData.value}")
 
                     _timerData.value = TimerData(String.format("Sound%s will stop in " +
                             TimerDialog.getCountTimeByLong(millisUntilFinished),
@@ -256,7 +248,6 @@ class SoundService : Service(), ISoundService {
                 }
 
                 override fun onFinish() { // live data observe timer finished
-                    Log.d(TAG, "CountDownTimer finished")
                     _timerData.value = TimerData("", false)
                     stopAllSounds()
                 }
@@ -265,7 +256,6 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun triggerCombo(soundList: List<Sound>, boughtPro: Boolean) {
-        Log.d(TAG, "triggerCombo: called")
         stopAllSounds()
         // just ignore the play commands if conditions not fulfilled (pro or sound loaded)
         soundList.forEach { sound ->
@@ -290,7 +280,6 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun sendTimerObservable() {
-        Log.d(TAG, "sendTimerText: called")
         EventBus.getDefault().post(EventBusTimer(_timerData))
     }
 
@@ -314,7 +303,6 @@ class SoundService : Service(), ISoundService {
         createNotificationBuilder()
 
         _playingSounds.observeForever { playingSounds ->
-            Log.d(TAG, "_playingSounds.observeForever: called")
             if (playingSounds.isEmpty()) {
                 notificationView.setImageViewResource(
                         R.id.remote_view_play_stop,
@@ -363,7 +351,6 @@ class SoundService : Service(), ISoundService {
 
     override fun onDestroy() {
         // also kill activity if used decides to kill service so that everything is recreated on relaunch
-        Log.d(TAG, "onDestroy: called")
         EventBus.getDefault().post(EventBusServiceDestroyed())
         _playingSounds.removeObserver { textEndingObserver }
         _timerData.removeObserver { timerRunningObserver }
@@ -396,8 +383,6 @@ class SoundService : Service(), ISoundService {
 
     //entry point where the sounds are coming in to the service
     override fun loadToSoundPool(sounds: List<Sound>) {
-        Log.d(TAG, "loadToSoundPool: called with sounds: $sounds")
-
         allSounds.clear()
         // add to processed sounds with soundPoolId and loaded
         // soundPool ID is returned but that does not mean that the sound has been loaded yet. we need to wait for the callback
@@ -406,13 +391,11 @@ class SoundService : Service(), ISoundService {
 
         for (sound: Sound in sounds) {
             val soundPoolId = soundPool.load(sound.filePath, 1)
-            Log.d(TAG, "loadToSoundPool: load called with: $soundPoolId")
             allSounds.add(sound.copy(soundPoolId = soundPoolId, pro = if (proPurchased) false else sound.pro))
         }
     }
 
     private fun loadCustomSound(sound: Sound) {
-        Log.d(TAG, "loadCustomSound: called")
         val soundWithSoundPoolId = sound.copy(soundPoolId = soundPool.load(sound.filePath, 1))
 
         allSounds.add(soundWithSoundPoolId)
@@ -422,7 +405,6 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun unload(sound: Sound) {
-        Log.d(TAG, "unload: called with: soundId: $sound.id and soundPoolId: ${sound.soundPoolId}")
         //stop(StopCommand(sound))
         soundPool.unload(sound.soundPoolId)
 
@@ -440,8 +422,6 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun play(playCommand: PlayCommand) {
-        Log.d(TAG, "play: called with: ${playCommand.sound}")
-
         val streamId = soundPool.play(
                 playCommand.sound.soundPoolId,
                 playCommand.sound.volume,
@@ -468,7 +448,6 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun stop(stopCommand: StopCommand) {
-        Log.d(TAG, "stop: called with: ${stopCommand.sound}")
         soundPool.stop(stopCommand.sound.streamId)
 
         val newStoppedSound = stopCommand.sound.copy(streamId = -1, playing = false)
@@ -484,8 +463,6 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun stopAllSounds() {
-        Log.d(TAG, "stopAllSounds in service: called")
-
         for (playingSound: Sound in allSounds.filter { it.playing }) {
             soundPool.stop(playingSound.streamId)
         }
@@ -508,7 +485,6 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun setVolume(id: String, streamId: Int, leftVolume: Float, rightVolume: Float) {
-        Log.d(TAG, "setVolume: called with $leftVolume")
         soundPool.setVolume(streamId, leftVolume, rightVolume)
         val toBeReplaced = allSounds.first { playingSound -> playingSound.id == id }
 
@@ -532,7 +508,6 @@ class SoundService : Service(), ISoundService {
     }
 
     private fun sendUpdatedSoundsBackToViewModel() {
-        Log.d(TAG, "sendUpdatedSoundsBackToViewModel: called with: $allSounds")
         _allSoundsLive.value = allSounds
     }
 }

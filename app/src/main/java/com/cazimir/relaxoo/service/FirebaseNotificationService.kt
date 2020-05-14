@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
@@ -22,7 +21,6 @@ class FirebaseNotificationService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
 
         if (remoteMessage.data.isNotEmpty()) {
-            Log.d(TAG, "Message data payload: " + remoteMessage.getData())
             remoteMessage.data.let { data ->
                 if (data["title"] != null && data["body"] != null) {
                     sendNotification(data["title"]!!, data["body"]!!)

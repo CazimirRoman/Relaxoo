@@ -3,7 +3,6 @@ package com.cazimir.relaxoo.adapter
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -110,7 +109,6 @@ class RecordingAdapter(
     }
 
     fun finishedPlayingRecording(recordedSound: Recording?) {
-        Log.d(TAG, "finishedPlayingRecording() called")
         list[list.indexOf(recordedSound)] = Recording.Builder()
                 .withFile(recordedSound?.file)
                 .withFileName(recordedSound?.file?.name)

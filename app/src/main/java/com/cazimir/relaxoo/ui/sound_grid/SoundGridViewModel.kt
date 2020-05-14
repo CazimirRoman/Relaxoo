@@ -1,6 +1,5 @@
 package com.cazimir.relaxoo.ui.sound_grid
 
-import android.util.Log
 import androidx.lifecycle.*
 import com.cazimir.relaxoo.eventbus.EventBusAllSounds
 import com.cazimir.relaxoo.model.Sound
@@ -50,9 +49,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     }
 
     fun fetchSounds() {
-        Log.d(TAG, "fetchSounds: called")
         soundRepository.getSounds().observeOnceOnListNotEmpty(Observer {
-            Log.d(TAG, "fetchSounds: called with $it")
             // fetch is finished -> start loading them to the soundpool
             shouldLoadToSoundPool = true
             _initialFetchFinished.value = it
@@ -60,9 +57,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     }
 
     fun fetchSoundsOffline() {
-        Log.d(TAG, "fetchSoundsOffline: called")
         soundRepository.getSoundsOffline().observeOnceOnListNotEmpty(Observer {
-            Log.d(TAG, "fetchSounds: called with $it")
             // fetch is finished -> start loading them to the soundpool
             shouldLoadToSoundPool = true
             _initialFetchFinished.value = it
@@ -105,8 +100,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     }
 
     fun setClickedProSound(sound: Sound) {
-        Log.d(TAG, "setClickedProSound:  " + savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND))
-        Log.d(TAG, "init: savedStateHandle.getTestValue:  " + savedStateHandle.get(TEST_VALUE))
         savedStateHandle.set(CURRENTLY_CLICKED_PRO_SOUND, sound)
         savedStateHandle.set(TEST_VALUE, 5)
 
@@ -117,14 +110,12 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun serviceCallbackAllSounds(eventBusPlayingSounds: EventBusAllSounds) {
         eventBusPlayingSounds.allSoundsFromService.observeForever { allSounds: List<Sound> ->
-            Log.d(TAG, "serviceCallbackAllSounds: with allSounds: $allSounds")
             _soundsStorage.value = allSounds
         }
     }
 
     // this emit on the livedata is used to update the Recyclerview adapter with the new data
     private fun triggerLiveDataEmit(newList: List<Sound>) {
-        Log.d(TAG, "triggerLiveDataEmit: called")
         _soundsStorage.value = newList
     }
 }

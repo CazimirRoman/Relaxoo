@@ -5,7 +5,6 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,7 +61,6 @@ class CreateSoundFragment : Fragment() {
     }
 
     private fun stopRecordedSound() {
-        Log.d(TAG, "stopRecordedSound() called")
         if (mediaPlayer != null) {
             mediaPlayer!!.stop()
             mediaPlayer!!.reset()
@@ -82,12 +80,10 @@ class CreateSoundFragment : Fragment() {
             e.printStackTrace()
         }
         mediaPlayer!!.setOnCompletionListener {
-            Log.d(TAG, "playRecordedSound() called with: finished")
             val adapter = recording_list.getAdapter() as RecordingAdapter
             adapter.finishedPlayingRecording(recordedSound)
         }
         mediaPlayer!!.start()
-        Log.d(TAG, "playRecordedSound() called with: " + mediaPlayer!!.isPlaying)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -101,7 +97,6 @@ class CreateSoundFragment : Fragment() {
                 .observe(
                         viewLifecycleOwner,
                         Observer { files: ArrayList<Recording> ->
-                            Log.d(TAG, "onChanged() called with: files[]$files")
                             val adapter = createSoundView.recording_list.adapter as RecordingAdapter
                             adapter.setList(files)
                             createSoundView.no_recordings_text.visibility = if (files.size != 0) View.GONE else View.VISIBLE
@@ -125,7 +120,6 @@ class CreateSoundFragment : Fragment() {
     }
 
     private fun onAddRecordingClicked() {
-        Log.d(TAG, "onViewClicked() called")
         activityCallback.recordingStarted()
     }
 
