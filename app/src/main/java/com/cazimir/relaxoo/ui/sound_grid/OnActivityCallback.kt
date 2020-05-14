@@ -1,6 +1,5 @@
 package com.cazimir.relaxoo.ui.sound_grid
 
-import android.os.Bundle
 import com.cazimir.relaxoo.dialog.OnDeleted
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.model.SavedCombo
@@ -23,5 +22,4 @@ interface OnActivityCallback {
     fun showMessageToUser(string: String, duration: Int)
     fun startBuyingProFlow()
     fun removeAdsViewAndButtonInAbout()
-    fun logAnalyticsEvent(eventName: String, bundle: Bundle)
 }

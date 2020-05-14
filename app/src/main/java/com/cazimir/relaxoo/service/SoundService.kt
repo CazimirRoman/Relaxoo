@@ -20,12 +20,14 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
+import com.cazimir.relaxoo.analytics.AnalyticsEvents
 import com.cazimir.relaxoo.application.MyApplication
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
 import com.cazimir.relaxoo.eventbus.*
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.service.commands.*
 import com.cazimir.utilitieslibrary.pluralize
+import com.google.firebase.analytics.FirebaseAnalytics
 import org.greenrobot.eventbus.EventBus
 import java.util.concurrent.TimeUnit
 
@@ -98,6 +100,7 @@ class SoundService : Service(), ISoundService {
 
         when (event) {
             is StopServiceCommand -> {
+                FirebaseAnalytics.getInstance(this).logEvent(AnalyticsEvents.shutdownAppFromNotification().first, AnalyticsEvents.shutdownAppFromNotification().second)
                 stopAllSounds().also { stopSelf() }
             }
             is LoadSoundsCommand -> loadToSoundPool(event.sounds)

@@ -4,7 +4,9 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.cazimir.relaxoo.BuildConfig
 import com.cazimir.utilitieslibrary.SharedPreferencesUtil
+import com.google.firebase.analytics.FirebaseAnalytics
 
 class MyApplication : Application() {
 
@@ -17,6 +19,11 @@ class MyApplication : Application() {
         super.onCreate()
         SharedPreferencesUtil.with(this)
         createNotificationChannel()
+        setupFirebaseAnalytics()
+    }
+
+    private fun setupFirebaseAnalytics() {
+        FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(!BuildConfig.DEBUG)
     }
 
     private fun createNotificationChannel() {

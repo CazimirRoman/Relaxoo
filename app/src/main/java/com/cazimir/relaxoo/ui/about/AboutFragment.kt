@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.AboutListAdapter
 import com.cazimir.relaxoo.adapter.AboutListAdapter.Interactor
+import com.cazimir.relaxoo.analytics.AnalyticsEvents
 import com.cazimir.relaxoo.model.AboutItem
 import com.cazimir.relaxoo.model.MenuItemType
 import com.cazimir.relaxoo.shared.SharedViewModel
@@ -23,6 +24,7 @@ import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
 import com.cazimir.utilitieslibrary.shareMyApp
 import com.cazimir.utilitieslibrary.showMyListingInStoreForRating
 import com.cazimir.utilitieslibrary.showMyOtherApplicationsInGooglePlay
+import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.android.synthetic.main.about_fragment.view.*
 
 class AboutFragment : Fragment() {
@@ -87,10 +89,12 @@ class AboutFragment : Fragment() {
     }
 
     private fun startMoreAppsActivity() {
+        FirebaseAnalytics.getInstance(context!!).logEvent(AnalyticsEvents.moreAppsClicked().first, AnalyticsEvents.moreAppsClicked().second)
         showMyOtherApplicationsInGooglePlay(activity as Activity)
     }
 
     private fun startPrivacyPolicyActivity() {
+        FirebaseAnalytics.getInstance(context!!).logEvent(AnalyticsEvents.privacyPolicyClicked().first, AnalyticsEvents.privacyPolicyClicked().second)
         val intent = Intent(activity, PrivacyPolicyActivity::class.java)
         startActivity(putAdsBoughExtra(intent))
     }
@@ -102,10 +106,12 @@ class AboutFragment : Fragment() {
     }
 
     private fun startRateAppAction() {
+        FirebaseAnalytics.getInstance(context!!).logEvent(AnalyticsEvents.rateAppClicked().first, AnalyticsEvents.rateAppClicked().second)
         showMyListingInStoreForRating(activity as Context)
     }
 
     private fun startShareAction() {
+        FirebaseAnalytics.getInstance(context!!).logEvent(AnalyticsEvents.shareClicked().first, AnalyticsEvents.shareClicked().second)
         shareMyApp(activity as Context, resources.getString(R.string.share_text))
     }
 

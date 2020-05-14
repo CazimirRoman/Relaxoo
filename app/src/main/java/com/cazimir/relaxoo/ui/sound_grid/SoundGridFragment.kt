@@ -21,7 +21,11 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.GridRecyclerViewAdapter
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.muteClicked
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.randomClicked
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.removeFromDashboard
 import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.soundClicked
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.timerClicked
 import com.cazimir.relaxoo.dialog.custom.BottomCustomDeleteFragment
 import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
 import com.cazimir.relaxoo.eventbus.*
@@ -38,6 +42,7 @@ import com.cazimir.utilitieslibrary.SharedPreferencesUtil.saveToSharedPreference
 import com.cazimir.utilitieslibrary.observeOnceOnListEmptyWithOwner
 import com.cazimir.utilitieslibrary.observeOnceOnListNotEmptyWithOwner
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.android.synthetic.main.sound_list_fragment.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -290,9 +295,7 @@ class SoundGridFragment : Fragment() {
                     allSounds as ArrayList<Sound>,
                     object : OnSoundClickListener {
                         override fun clicked(sound: Sound) {
-
-                            activityCallback.logAnalyticsEvent(eventName = soundClicked(sound).first, bundle = soundClicked(sound).second)
-
+                            FirebaseAnalytics.getInstance(context!!).logEvent(soundClicked(sound).first, soundClicked(sound).second)
                             if (!sound.loaded) {
                                 activityCallback.showMessageToUser(getString(R.string.sound_loading), Snackbar.LENGTH_SHORT)
                             } else if (sound.pro && !sound.playing) {
@@ -337,6 +340,7 @@ class SoundGridFragment : Fragment() {
                         override fun moreOptionsClicked(sound: Sound) {
                             BottomCustomDeleteFragment(sound, object : CustomBottomCallback {
                                 override fun deletedClicked(sound: Sound) {
+                                    FirebaseAnalytics.getInstance(context!!).logEvent(removeFromDashboard().first, removeFromDashboard().second)
                                     removeRecordingFromSoundPool(sound)
                                 }
                             }).show(parentFragmentManager, "deleteCustom")
@@ -370,6 +374,7 @@ class SoundGridFragment : Fragment() {
     private fun setListenersForButtons() {
         Log.d(TAG, "setListenersForButtons: called")
         mute_button.setOnClickListener {
+            FirebaseAnalytics.getInstance(context!!).logEvent(muteClicked().first, muteClicked().second)
             //if no sound is playing do not allow user to mute
             if (currentlyPlayingSounds.isNotEmpty()) {
                 sendCommandToService(
@@ -383,6 +388,7 @@ class SoundGridFragment : Fragment() {
             }
         }
         random_button.setOnClickListener {
+            FirebaseAnalytics.getInstance(context!!).logEvent(randomClicked().first, randomClicked().second)
             stopAllSounds()
 
             activityCallback.showMessageToUser(getString(R.string.playing_random), Snackbar.LENGTH_SHORT)
@@ -420,6 +426,7 @@ class SoundGridFragment : Fragment() {
         }
 
         set_timer_button.setOnClickListener {
+            FirebaseAnalytics.getInstance(context!!).logEvent(timerClicked().first, timerClicked().second)
             val atLeastOneIsPlaying = currentlyPlayingSounds.isNotEmpty()
             if (atLeastOneIsPlaying) {
                 if (timerRunning) {

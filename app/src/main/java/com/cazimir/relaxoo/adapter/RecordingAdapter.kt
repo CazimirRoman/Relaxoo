@@ -46,8 +46,8 @@ class RecordingAdapter(
         // replace the contents of the view with that element
 
         // get name without extension
-        holder.recordingName.setText(FilenameUtils.removeExtension(item.file.name))
-        holder.recordingDuration.setText("Duration: " + TimerDialog.getCountTimeByLong(millSecond.toLong()))
+        holder.recordingName.text = FilenameUtils.removeExtension(item.file.name)
+        holder.recordingDuration.text = "Duration: " + TimerDialog.getCountTimeByLong(millSecond.toLong())
         val file = File(item.file.path)
         val lastModDate = Date(file.lastModified())
 
@@ -57,49 +57,47 @@ class RecordingAdapter(
 
 
         holder.recordingCreated.setText("Created at: $date")
-        holder.playRecording.setOnClickListener(
-                View.OnClickListener {
-                    // if current item is playing, stop it
-                    if (item.isPlaying) {
-                        val recordingWithStop = Recording.Builder().withFile(item.file).withPlaying(false).build()
-                        list[list.indexOf(item)] = recordingWithStop
-                        notifyDataSetChanged()
-                        listener.onStopClicked()
-                        currentlyPlaying = null
-                        // stop currently playing sound
-                    } else {
-                        listener.onStopClicked()
-                        if (currentlyPlaying != null) {
-                            val recordingWithStop = Recording.Builder()
-                                    .withId(currentlyPlaying!!.id)
-                                    .withFile(currentlyPlaying!!.file)
-                                    .withFileName(currentlyPlaying!!.file.name)
-                                    .withFileName(currentlyPlaying!!.file.name)
-                                    .withPlaying(false)
-                                    .build()
-                            list[list.indexOf(currentlyPlaying as Recording)] = recordingWithStop
-                            notifyDataSetChanged()
-                            currentlyPlaying = null
-                        }
-                        val recordingWithPlay = Recording.Builder()
-                                .withId(item.id)
-                                .withFile(item.file)
-                                .withFileName(item.file.name)
-                                .withFileName(item.file.name)
-                                .withPlaying(true)
-                                .build()
-                        list[list.indexOf(item)] = recordingWithPlay
-                        currentlyPlaying = recordingWithPlay
-                        notifyDataSetChanged()
-                        listener.onPlayClicked(recordingWithPlay)
-                    }
-                })
+        holder.playRecording.setOnClickListener {
+            // if current item is playing, stop it
+            if (item.isPlaying) {
+                val recordingWithStop = Recording.Builder().withFile(item.file).withPlaying(false).build()
+                list[list.indexOf(item)] = recordingWithStop
+                notifyDataSetChanged()
+                listener.onStopClicked()
+                currentlyPlaying = null
+                // stop currently playing sound
+            } else {
+                listener.onStopClicked()
+                if (currentlyPlaying != null) {
+                    val recordingWithStop = Recording.Builder()
+                            .withId(currentlyPlaying!!.id)
+                            .withFile(currentlyPlaying!!.file)
+                            .withFileName(currentlyPlaying!!.file.name)
+                            .withFileName(currentlyPlaying!!.file.name)
+                            .withPlaying(false)
+                            .build()
+                    list[list.indexOf(currentlyPlaying as Recording)] = recordingWithStop
+                    notifyDataSetChanged()
+                    currentlyPlaying = null
+                }
+                val recordingWithPlay = Recording.Builder()
+                        .withId(item.id)
+                        .withFile(item.file)
+                        .withFileName(item.file.name)
+                        .withFileName(item.file.name)
+                        .withPlaying(true)
+                        .build()
+                list[list.indexOf(item)] = recordingWithPlay
+                currentlyPlaying = recordingWithPlay
+                notifyDataSetChanged()
+                listener.onPlayClicked(recordingWithPlay)
+            }
+        }
         holder.playRecording.setImageDrawable(
                 if (item.isPlaying) context?.resources?.getDrawable(R.drawable.ic_stop_white) else context?.resources?.getDrawable(R.drawable.ic_play))
-        holder.optionsRecording.setOnClickListener(
-                View.OnClickListener {
-                    listener.onOptionsClicked(list[position])
-                })
+        holder.optionsRecording.setOnClickListener {
+            listener.onOptionsClicked(list[position])
+        }
     }
 
     override fun getItemCount(): Int {

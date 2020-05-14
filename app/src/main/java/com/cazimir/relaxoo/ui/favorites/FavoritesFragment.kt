@@ -12,11 +12,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.SavedComboAdapter
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.comboDeleted
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.comboTriggered
 import com.cazimir.relaxoo.dialog.OnDeleted
 import com.cazimir.relaxoo.dialog.favorite.FavoriteDeleted
 import com.cazimir.relaxoo.model.ListOfSavedCombos
 import com.cazimir.relaxoo.model.SavedCombo
 import com.cazimir.relaxoo.ui.sound_grid.OnActivityCallback
+import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.android.synthetic.main.favorites_fragment.view.*
 
 class FavoritesFragment : Fragment() {
@@ -50,10 +53,12 @@ class FavoritesFragment : Fragment() {
                             adapter = SavedComboAdapter(context!!, savedCombos, object : SavedComboAdapter.OnItemClickListener {
                                 private var positionToBeDeleted = 0
                                 override fun onItemClick(savedCombo: SavedCombo) {
+                                    FirebaseAnalytics.getInstance(context!!).logEvent(comboTriggered().first, comboTriggered().second)
                                     activityCallback?.triggerCombo(savedCombo)
                                 }
 
                                 override fun onItemDeleted(position: Int) {
+                                    FirebaseAnalytics.getInstance(context!!).logEvent(comboDeleted().first, comboDeleted().second)
                                     positionToBeDeleted = position
                                     val deleted: OnDeleted = object : FavoriteDeleted {
                                         override fun deleted() {

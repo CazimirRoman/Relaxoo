@@ -79,8 +79,12 @@ public class AboutListAdapter extends RecyclerView.Adapter<AboutListAdapter.RowH
         }
 
         int index = data.indexOf(itemToBeDeleted);
-        data.remove(index);
-        notifyItemRemoved(index);
+
+        //if user already bough 'remove ads' this item will not be here
+        if (index != -1) {
+            data.remove(index);
+            notifyItemRemoved(index);
+        }
     }
 
     public interface Interactor {

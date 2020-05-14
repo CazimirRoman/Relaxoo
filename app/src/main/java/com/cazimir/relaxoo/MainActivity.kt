@@ -32,6 +32,11 @@ import cafe.adriel.androidaudiorecorder.model.AudioSampleRate
 import cafe.adriel.androidaudiorecorder.model.AudioSource
 import com.android.billingclient.api.*
 import com.cazimir.relaxoo.adapter.PagerAdapter
+import com.cazimir.relaxoo.analytics.AnalyticsEvents
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.editRecording
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.pinnedToDashboard
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.saveComboClicked
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.shutdownAppFromBack
 import com.cazimir.relaxoo.dialog.DeleteConfirmationDialog
 import com.cazimir.relaxoo.dialog.OnDeleted
 import com.cazimir.relaxoo.dialog.favorite.FavoriteDeleted
@@ -120,12 +125,9 @@ class MainActivity : FragmentActivity(),
     private var timerDialog: TimerDialog? = null
     private var soundGridFragment: SoundGridFragment? = null
 
-    private lateinit var firebaseAnalytics: FirebaseAnalytics
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
-        firebaseAnalytics = FirebaseAnalytics.getInstance(this)
         EventBus.getDefault().register(this)
         sharedViewModel = ViewModelProvider(this).get(SharedViewModel::class.java)
         subscribeObservers()
@@ -300,6 +302,7 @@ class MainActivity : FragmentActivity(),
     override fun onBackPressed() {
 
         if (doubleBackToExitPressedOnce) {
+            FirebaseAnalytics.getInstance(this).logEvent(shutdownAppFromBack().first, shutdownAppFromBack().second)
             super.onBackPressed()
             return
         }
@@ -612,6 +615,7 @@ class MainActivity : FragmentActivity(),
     override fun saved(savedCombo: SavedCombo) {
         Log.d(TAG, "saved: called")
         favoriteFragment!!.updateList(savedCombo)
+        FirebaseAnalytics.getInstance(this).logEvent(saveComboClicked(savedCombo.name()).first, saveComboClicked(savedCombo.name()).second)
         showMessageToUser(getString(R.string.saved_combo), Snackbar.LENGTH_SHORT)
     }
 
@@ -718,16 +722,13 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun renameRecording(recording: Recording, newName: String) {
+        FirebaseAnalytics.getInstance(this).logEvent(editRecording(newName).first, editRecording(newName).second)
         createSoundFragment!!.renameRecording(recording, newName)
         getSoundGridFragment().renameCustomSoundFromDashboardIfThere(recording, newName)
     }
 
-    override fun logAnalyticsEvent(eventName: String, bundle: Bundle) {
-        firebaseAnalytics.logEvent(eventName, bundle)
-    }
-
     override fun pinToDashBoardActionCalled(sound: Sound) {
-
+        FirebaseAnalytics.getInstance(this).logEvent(pinnedToDashboard().first, pinnedToDashboard().second)
         val pinnedRecordings = loadFromSharedPreferences<ListOfSavedCustom>(PINNED_RECORDINGS)
         val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
 
@@ -835,8 +836,10 @@ class MainActivity : FragmentActivity(),
 
             // pro includes also remove ads
             if (purchases?.get(0)?.sku == BUY_PRO) {
+                FirebaseAnalytics.getInstance(this).logEvent(AnalyticsEvents.boughtPro().first, AnalyticsEvents.boughtPro().second)
                 sharedViewModel.updateBoughtPro()
             } else if (purchases?.get(0)?.sku == REMOVE_ADS) {
+                FirebaseAnalytics.getInstance(this).logEvent(AnalyticsEvents.removedAds().first, AnalyticsEvents.removedAds().second)
                 sharedViewModel.updateBoughtAds()
             }
 

@@ -19,8 +19,10 @@ import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.ScrollListenerRecycleView
 import com.cazimir.relaxoo.adapter.RecordingAdapter
+import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.recordClicked
 import com.cazimir.relaxoo.model.Recording
 import com.cazimir.relaxoo.repository.RecordingRepository
+import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.android.synthetic.main.create_sound_fragment.*
 import kotlinx.android.synthetic.main.create_sound_fragment.view.*
 import java.io.IOException
@@ -53,6 +55,7 @@ class CreateSoundFragment : Fragment() {
                 ArrayList())
 
         createSoundView.add_recording.setOnClickListener {
+            FirebaseAnalytics.getInstance(context!!).logEvent(recordClicked().first, recordClicked().second)
             onAddRecordingClicked()
         }
         return createSoundView
