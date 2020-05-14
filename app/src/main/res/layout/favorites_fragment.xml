@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
-        android:text="You don't have any favorites"
+        android:text="@string/no_favorites_text"
         android:textColor="@android:color/white"
         android:visibility="gone" />
 

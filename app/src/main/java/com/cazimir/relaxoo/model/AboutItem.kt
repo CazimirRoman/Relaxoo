@@ -3,7 +3,7 @@ package com.cazimir.relaxoo.model
 class AboutItem(val name: MenuItemType, val icon: Int)
 
 enum class MenuItemType(val itemName: String) {
-    SEND_FEEDBACK("Send us feedback"),
+    SEND_FEEDBACK("Send feedback"),
     REMOVE_ADS("Remove Ads"),
     SHARE("Share"),
     PRIVACY_POLICY("Privacy policy"),

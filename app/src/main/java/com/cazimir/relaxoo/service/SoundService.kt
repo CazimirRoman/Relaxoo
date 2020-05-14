@@ -173,9 +173,9 @@ class SoundService : Service(), ISoundService {
         setupNotifications()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            createSoundPoolWithBuilder();
+            createSoundPoolWithBuilder()
         } else {
-            createSoundPoolWithConstructor();
+            createSoundPoolWithConstructor()
         }
 
         soundPool.setOnLoadCompleteListener { soundPool: SoundPool?, soundPoolId: Int, status: Int ->
@@ -308,7 +308,7 @@ class SoundService : Service(), ISoundService {
                         R.id.remote_view_play_stop,
                         R.drawable.ic_play_white
                 )
-                notificationView.setTextViewText(R.id.remote_view_playing_txt, "No sound playing")
+                notificationView.setTextViewText(R.id.remote_view_playing_txt, getString(R.string.no_sound_playing))
                 this.notificationBuilder.setCustomContentView(notificationView)
             } else {
                 notificationView.setTextViewText(
@@ -378,7 +378,7 @@ class SoundService : Service(), ISoundService {
 
     private fun getNotificationText(numberOfPlayingSounds: Int?): String {
         val label = numberOfPlayingSounds?.let { "sound".pluralize(it) }
-        return "$numberOfPlayingSounds $label playing..."
+        return getString(R.string.number_of_sounds_playing, numberOfPlayingSounds, label)
     }
 
     //entry point where the sounds are coming in to the service

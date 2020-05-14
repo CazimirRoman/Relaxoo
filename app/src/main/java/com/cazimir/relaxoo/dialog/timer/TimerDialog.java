@@ -2,7 +2,6 @@ package com.cazimir.relaxoo.dialog.timer;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,12 +84,14 @@ public class TimerDialog extends RetainableDialogFragment {
             Integer minutes = timers.get(position);
 
             if (minutes == 999) {
-              text1.setText("Custom");
+              text1.setText(getString(R.string.timer_custom_time));
             } else {
               text1.setText(
-                  (minutes >= 60)
-                      ? String.format((minutes >= 120) ? "%s hours" : "%s hour", minutes / 60)
-                      : String.format("%s minutes", minutes));
+                      (minutes >= 60)
+                              ? (minutes >= 120)
+                              ? getString(R.string.timer_dialog_hours, minutes / 60)
+                              : getString(R.string.timer_dialog_hour, minutes / 60)
+                              : getString(R.string.timer_dialog_minutes, minutes));
             }
 
             return view;
@@ -107,18 +108,6 @@ public class TimerDialog extends RetainableDialogFragment {
 
     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-    return (builder.setTitle("Set timer duration").setView(form).create());
-  }
-
-  @Override
-  public void onDismiss(DialogInterface unused) {
-    // handle dismiss actions here
-    super.onDismiss(unused);
-  }
-
-  @Override
-  public void onCancel(DialogInterface unused) {
-    // handle cancel actions here
-    super.onCancel(unused);
+    return (builder.setTitle(getString(R.string.set_timer_duration)).setView(form).create());
   }
 }

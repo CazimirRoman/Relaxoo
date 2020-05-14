@@ -46,7 +46,7 @@ class RecordingAdapter(
 
         // get name without extension
         holder.recordingName.text = FilenameUtils.removeExtension(item.file.name)
-        holder.recordingDuration.text = "Duration: " + TimerDialog.getCountTimeByLong(millSecond.toLong())
+        holder.recordingDuration.text = context?.getString(R.string.recording_duration, TimerDialog.getCountTimeByLong(millSecond.toLong()))
         val file = File(item.file.path)
         val lastModDate = Date(file.lastModified())
 
@@ -55,7 +55,7 @@ class RecordingAdapter(
         val date: String = simpleDateFormat.format(lastModDate)
 
 
-        holder.recordingCreated.setText("Created at: $date")
+        holder.recordingCreated.text = context?.getString(R.string.recording_created, date)
         holder.playRecording.setOnClickListener {
             // if current item is playing, stop it
             if (item.isPlaying) {

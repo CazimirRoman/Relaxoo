@@ -13,6 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/combo_hint"
-        android:inputType="text"></EditText>
+        android:inputType="text" />
 
 </LinearLayout>

@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical">
 
     <LinearLayout
@@ -30,21 +31,21 @@
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/recording_name"
                 style="@style/ListItemRecording"
-                android:text="Recording name"
+                tools:text="Recording name"
                 android:textColor="@android:color/white" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/recording_duration"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Recording duration"
+                tools:text="Recording duration"
                 android:textColor="@android:color/white" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/recording_created"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Recording created"
+                tools:text="Recording created"
                 android:textColor="@android:color/white" />
 
         </LinearLayout>

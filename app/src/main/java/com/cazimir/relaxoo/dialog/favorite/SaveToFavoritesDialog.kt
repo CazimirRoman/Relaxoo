@@ -87,10 +87,6 @@ class SaveToFavoritesDialog(private val playingSoundIds: List<Sound>) : Retainab
         addToListInFragmentCallback!!.saved(savedCombo)
     }
 
-    override fun onDismiss(unused: DialogInterface) {
-        super.onDismiss(unused)
-    }
-
     companion object {
         private const val TAG = "SaveToFavoritesDialog"
     }

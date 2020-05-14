@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
-        android:text="You don't have any recordings"
+        android:text="@string/no_recordings_text"
         android:textColor="@android:color/white">
 
     </androidx.appcompat.widget.AppCompatTextView>

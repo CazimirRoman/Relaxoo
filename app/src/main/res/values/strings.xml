@@ -63,4 +63,15 @@
     <string name="permission_recording_denied_do_not_show">You need to go to Setting and enable the permissions there</string>
     <string name="internet_back_up">You are back online</string>
     <string name="playing_random">Playing 3 random sounds</string>
+    <string name="no_recordings_text">You don\'t have any recordings</string>
+    <string name="no_favorites_text">You don\'t have any favorites</string>
+    <string name="recording_duration">Duration: %s</string>
+    <string name="recording_created">"Created at: %s"</string>
+    <string name="set_timer_duration">Set timer duration</string>
+    <string name="timer_custom_time">Custom</string>
+    <string name="timer_dialog_minutes">%d minutes</string>
+    <string name="timer_dialog_hour">%d hour</string>
+    <string name="timer_dialog_hours">%d hours</string>
+    <string name="no_sound_playing">No sound playing</string>
+    <string name="number_of_sounds_playing">"%1$d %2$s playing…"</string>
 </resources>
