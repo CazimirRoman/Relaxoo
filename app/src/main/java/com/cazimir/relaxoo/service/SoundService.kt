@@ -25,6 +25,7 @@ import com.cazimir.relaxoo.application.MyApplication
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
 import com.cazimir.relaxoo.eventbus.*
 import com.cazimir.relaxoo.model.Sound
+import com.cazimir.relaxoo.model.TimerData
 import com.cazimir.relaxoo.service.commands.*
 import com.cazimir.utilitieslibrary.pluralize
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -55,8 +56,7 @@ class SoundService : Service(), ISoundService {
     { soundsList ->
         soundsList.filter { sound -> sound.playing } as ArrayList<Sound>
     }
-    private val _timerRunning: MutableLiveData<Boolean> = MutableLiveData()
-    private val _timerText: MutableLiveData<String> = MutableLiveData("")
+    private val _timerData: MutableLiveData<TimerData> = MutableLiveData(TimerData("", false))
     private lateinit var notificationBuilder: NotificationCompat.Builder
     private lateinit var notificationView: RemoteViews
     private var muted = false
@@ -76,8 +76,8 @@ class SoundService : Service(), ISoundService {
         }
     }
 
-    private val timerRunningObserver: Observer<Boolean> = Observer {
-        timerRunning = it
+    private val timerRunningObserver: Observer<TimerData> = Observer {
+        timerRunning = it.timerRunning
     }
 
     private val mutedObserver: Observer<Boolean> = Observer {
@@ -118,7 +118,7 @@ class SoundService : Service(), ISoundService {
             is AllSoundsCommand -> sendAllSounds()
             is TriggerComboCommand -> triggerCombo(event.soundList, event.boughtPro)
             is ToggleCountDownTimerCommand -> toggleCountDownTimer(event.minutes)
-            is TimerTextCommand -> sendTimerText()
+            is TimerTextCommand -> sendTimerObservable()
             is LoadCustomSoundCommand -> loadCustomSound(event.sound)
             is ToggleMuteCommand -> toggleMute()
             is TogglePlayStopCommand -> togglePlayStopFromNotification()
@@ -209,7 +209,7 @@ class SoundService : Service(), ISoundService {
         _playingSounds.observeForever {
             if (it.isEmpty()) {
                 countDownTimer?.cancel()
-                _timerRunning.value = false
+                _timerData.value = TimerData("", false)
                 //no need to keep mute on when NO sound is playing.
                 muted = false
                 _muted.value = muted
@@ -217,7 +217,7 @@ class SoundService : Service(), ISoundService {
         }
 
 
-        _timerRunning.observeForever(timerRunningObserver)
+        _timerData.observeForever(timerRunningObserver)
         _muted.observeForever(mutedObserver)
 
         _allSoundsLive.observeForever { allSoundsList ->
@@ -243,28 +243,25 @@ class SoundService : Service(), ISoundService {
         Log.d(TAG, "toggleCountDownTimer: called")
         if (timerRunning) {
             countDownTimer?.cancel()
-            _timerRunning.value = false
+            _timerData.value = TimerData("", false)
         } else {
             countDownTimer = object : CountDownTimer(TimeUnit.MINUTES.toMillis(minutes.toLong()), 1000) {
                 override fun onTick(millisUntilFinished: Long) { // updateLiveDataHere() observe from Fragment
                     // timerText is the observable that is being observed from the fragment
-                    Log.d(TAG, "onTick: called with: ${_timerText.value}")
-                    _timerText.value = String.format("Sound%s will stop in " +
+                    Log.d(TAG, "onTick: called with: ${_timerData.value}")
+
+                    _timerData.value = TimerData(String.format("Sound%s will stop in " +
                             TimerDialog.getCountTimeByLong(millisUntilFinished),
-                            timerTextEnding)
+                            timerTextEnding), true)
                 }
 
                 override fun onFinish() { // live data observe timer finished
                     Log.d(TAG, "CountDownTimer finished")
-                    _timerRunning.value = false
+                    _timerData.value = TimerData("", false)
                     stopAllSounds()
                 }
             }.start()
-
-            _timerRunning.value = true
         }
-
-        EventBus.getDefault().post(EventBusTimer(_timerRunning, _timerText))
     }
 
     private fun triggerCombo(soundList: List<Sound>, boughtPro: Boolean) {
@@ -292,11 +289,9 @@ class SoundService : Service(), ISoundService {
         EventBus.getDefault().post(EventBusAllSounds(_allSoundsLive))
     }
 
-    private fun sendTimerText() {
+    private fun sendTimerObservable() {
         Log.d(TAG, "sendTimerText: called")
-        if (timerRunning) {
-            EventBus.getDefault().post(EventBusTimer(_timerRunning, _timerText))
-        }
+        EventBus.getDefault().post(EventBusTimer(_timerData))
     }
 
     private fun setupNotifications() {
@@ -371,7 +366,7 @@ class SoundService : Service(), ISoundService {
         Log.d(TAG, "onDestroy: called")
         EventBus.getDefault().post(EventBusServiceDestroyed())
         _playingSounds.removeObserver { textEndingObserver }
-        _timerRunning.removeObserver { timerRunningObserver }
+        _timerData.removeObserver { timerRunningObserver }
         _muted.removeObserver { mutedObserver }
         soundPool.release()
         super.onDestroy()
@@ -507,7 +502,8 @@ class SoundService : Service(), ISoundService {
 
         allSounds = newList
         sendUpdatedSoundsBackToViewModel()
-        countDownTimer?.cancel().also { _timerRunning.value = false }
+        countDownTimer?.cancel()
+        _timerData.value = TimerData("", false)
 
     }
 

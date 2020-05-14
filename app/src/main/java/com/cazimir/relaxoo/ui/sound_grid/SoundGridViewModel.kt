@@ -3,7 +3,6 @@ package com.cazimir.relaxoo.ui.sound_grid
 import android.util.Log
 import androidx.lifecycle.*
 import com.cazimir.relaxoo.eventbus.EventBusAllSounds
-import com.cazimir.relaxoo.eventbus.EventBusTimer
 import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.repository.ISoundRepository
 import com.cazimir.relaxoo.repository.SoundRepository
@@ -24,9 +23,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
     // TODO: 26-Apr-20 get rid of redundandt gettter methods for livedata - see example for soundsStorage
     // ---- Internal live data ------//
-    private val _timerRunningFetched = MutableLiveData<Boolean>()
-    private val _timerTextFetched = MutableLiveData<Boolean>()
-    private var _timerText = MutableLiveData<String>()
     private var _soundsStorage: MutableLiveData<List<Sound>> = MutableLiveData()
     private val _initialFetchFinished: MutableLiveData<List<Sound>> = MutableLiveData()
     private var _soundsLoadedToSoundPool = MutableLiveData(0)
@@ -37,12 +33,8 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
 
     //--------- Public live data ----------//
     val soundsStorage: LiveData<List<Sound>> = _soundsStorage
-    val timerRunningFetched: LiveData<Boolean> = _timerRunningFetched
-    val timerTextFetched: LiveData<Boolean> = _timerTextFetched
-    val timerText: LiveData<String> = _timerText
     val initialFetchFinished: LiveData<List<Sound>> = _initialFetchFinished
     val soundsLoadedToSoundPool: LiveData<Int> = _soundsLoadedToSoundPool
-    val timerRunning: LiveData<Boolean> = _timerRunning
 
     init {
         if (!EventBus.getDefault().isRegistered(this)) {
@@ -119,17 +111,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         savedStateHandle.set(TEST_VALUE, 5)
 
         currentlyClickedProSound = sound
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
-    fun updateTimerLiveDataInViewModel(eventBusTimerStarted: EventBusTimer) {
-        Log.d(TAG, "updateTimerLiveDataInViewModel: called")
-        // start observing from fragment as soon as the live data 'fetched' has been triggered
-        // hopefully when i am changin something on the service now it should trigger the observable and the need to send the eventbus 'EventBusTimer' event is no longer needed
-        _timerRunning = eventBusTimerStarted._timerRunning
-        _timerText = eventBusTimerStarted._timerText
-        _timerTextFetched.value = true
-        _timerRunningFetched.value = true
     }
 
     /*This is the place where the service sends back the updated list with updates parameters(loaded, playing etc)*/

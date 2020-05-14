@@ -29,10 +29,7 @@ import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.timerClicked
 import com.cazimir.relaxoo.dialog.custom.BottomCustomDeleteFragment
 import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
 import com.cazimir.relaxoo.eventbus.*
-import com.cazimir.relaxoo.model.ListOfSavedCustom
-import com.cazimir.relaxoo.model.Recording
-import com.cazimir.relaxoo.model.SavedCombo
-import com.cazimir.relaxoo.model.Sound
+import com.cazimir.relaxoo.model.*
 import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.SoundService.Companion.SOUND_POOL_ACTION
 import com.cazimir.relaxoo.service.commands.*
@@ -223,43 +220,6 @@ class SoundGridFragment : Fragment() {
                                     activityCallback.hideSplashScreen()
                                 }
                             }
-                        })
-
-        // first find out when the timer text observable from the service has arrived and after that start observing the timerText
-        viewModel
-                .timerTextFetched
-                .observe(viewLifecycleOwner, Observer {
-                    viewModel
-                            .timerText
-                            .observe(
-                                    viewLifecycleOwner,
-                                    Observer { timerText: String ->
-                                        setTimerText(timerText)
-                                    }
-                            )
-                }
-
-                )
-
-        // TODO: 02-May-20 Why do we need to observe another live data aobject again after observing the first one??
-
-        viewModel
-                .timerRunningFetched
-                .observe(
-                        viewLifecycleOwner,
-                        Observer {
-                            Log.d(TAG, "timerRunningFetched: called")
-                            viewModel.timerRunning.observe(viewLifecycleOwner, Observer { running ->
-                                if (running) {
-                                    timerRunning = true
-                                    showTimerText()
-                                    set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_on))
-                                } else {
-                                    timerRunning = false
-                                    hideTimerText()
-                                    set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
-                                }
-                            })
                         })
         // endregion
     }
@@ -565,6 +525,31 @@ class SoundGridFragment : Fragment() {
 
         val newObject = ListOfSavedCustom(newList)
         saveToSharedPreferences(newObject, MainActivity.PINNED_RECORDINGS)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun updateTimerLiveDataInViewModel(eventBusTimerStarted: EventBusTimer) {
+        Log.d(TAG, "updateTimerLiveDataInViewModel: called")
+
+        // no need to put this livedata in viewmodel because it is being observed from a foreground service which never dies unless the user shuts it down.
+        eventBusTimerStarted._timer
+                .observe(
+                        viewLifecycleOwner,
+                        Observer { timerData: TimerData ->
+
+                            if (timerData.timerRunning) {
+                                showTimerText()
+                                setTimerText(timerData.timerText)
+                                set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_on))
+                                timerRunning = true
+                            } else {
+                                hideTimerText()
+                                setTimerText(timerData.timerText)
+                                set_timer_button.setImageDrawable(resources.getDrawable(R.drawable.ic_timer_off))
+                                timerRunning = false
+                            }
+                        }
+                )
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
