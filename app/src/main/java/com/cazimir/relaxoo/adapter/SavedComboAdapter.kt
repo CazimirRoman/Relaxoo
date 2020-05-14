@@ -34,7 +34,7 @@ class SavedComboAdapter(private val context: Context, private val list: ListOfSa
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val savedCombo = list.savedComboList!![position]
         holder.comboText.text = savedCombo.name()
-        holder.parentLayout.setOnClickListener { // Log.d(TAG, "Clicked on combo in favorites list with active sounds: " + savedCombo.getSounds().toString());
+        holder.parentLayout.setOnClickListener {
             listener.onItemClick(list.savedComboList!![position])
         }
         holder.deleteCombo.setOnClickListener { listener.onItemDeleted(position) }

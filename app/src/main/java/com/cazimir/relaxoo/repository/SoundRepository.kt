@@ -165,11 +165,11 @@ class SoundRepository : ISoundRepository {
                                         }
                                     }
                                     .addOnFailureListener { e: Exception ->
-                                        Log.d(TAG, "onFailure logo: " + e.message)
+                                        throw RuntimeException("Logo fetching failed")
                                     }
                         }
                         .addOnFailureListener { e: Exception ->
-                            Log.d(TAG, "onFailure sound: " + e.message)
+                            throw RuntimeException("Sound fetching failed")
                         }
             }
         } else {

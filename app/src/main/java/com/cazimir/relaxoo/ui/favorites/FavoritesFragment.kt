@@ -47,7 +47,6 @@ class FavoritesFragment : Fragment() {
                 .observe(
                         viewLifecycleOwner,
                         Observer { savedCombos: ListOfSavedCombos ->
-//                Log.d(TAG, "onChanged: called: savedCombos size is: " + savedCombos.size());
                             // update recyclerview
                             favoritesFragmentView.favoritesList.layoutManager = LinearLayoutManager(context)
                             adapter = SavedComboAdapter(context!!, savedCombos, object : SavedComboAdapter.OnItemClickListener {

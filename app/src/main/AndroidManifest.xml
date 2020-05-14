@@ -25,7 +25,6 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".ui.more_apps.MoreAppsActivity" />
         <activity android:name=".ui.privacy_policy.PrivacyPolicyActivity" />
         <activity android:name=".ui.settings.SettingsActivity" />
         <activity

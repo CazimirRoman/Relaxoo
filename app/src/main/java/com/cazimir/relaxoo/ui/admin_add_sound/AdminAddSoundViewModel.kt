@@ -1,6 +1,5 @@
 package com.cazimir.relaxoo.ui.admin_add_sound
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.cazimir.relaxoo.model.Sound
 import com.google.firebase.database.DatabaseError
@@ -21,11 +20,6 @@ class AdminAddSoundViewModel : ViewModel() {
                     .setValue(
                             soundWithId
                     ) { databaseError: DatabaseError?, databaseReference: DatabaseReference? ->
-                        if (databaseError != null) {
-                            Log.d(TAG, "onComplete() called with: databaseError" + databaseError.message)
-                        } else {
-                            Log.d(TAG, "onComplete() called with: exception occurred")
-                        }
                     }
         }
     }
