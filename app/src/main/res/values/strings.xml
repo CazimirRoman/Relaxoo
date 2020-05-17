@@ -50,11 +50,6 @@
     <string name="playing_saved_combo">Playing selected combo</string>
     <string name="privacy_policy_title">Privacy policy</string>
 
-    <!--    do not translate-->
-    <string name="mute_off_tag">mute_off</string>
-    <string name="mute_on_tag">mute_on</string>
-    <string name="play_button_tag">play_button</string>
-    <string name="stop_button_tag">stop_button</string>
     <string name="permission_storage_denied_message">In order to bring you the freshest relaxation sounds to your phone, we need to save them locally for offline use. For that we need access to your storage. \n \nThank you for your understanding.</string>
     <string name="permission_storage_denied_title">Storage permission needed</string>
     <string name="permission_storage_denied_do_not_show_message">You need to go to Setting and enable the denied permissions there</string>
@@ -74,4 +69,16 @@
     <string name="timer_dialog_hours">%d hours</string>
     <string name="no_sound_playing">No sound playing</string>
     <string name="number_of_sounds_playing">"%1$d %2$s playing…"</string>
+    <string name="send_feedback">Send feedback</string>
+    <string name="remove_ads">Remove ads</string>
+    <string name="share_app">Share app</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="rate_app">Rate this app</string>
+    <string name="more_apps">More apps</string>
+
+    <!--    do not translate-->
+    <string name="mute_off_tag">mute_off</string>
+    <string name="mute_on_tag">mute_on</string>
+    <string name="play_button_tag">play_button</string>
+    <string name="stop_button_tag">stop_button</string>
 </resources>
