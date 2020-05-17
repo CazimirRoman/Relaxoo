@@ -184,7 +184,7 @@ class MainActivity : FragmentActivity(),
                 this,
                 Observer { preconditionsToStartFetchingData: PreconditionsToStartFetchingData ->
                     //if saved to shared preferences that means that initial fetch has been done and sounds are available locally
-                    val allSounds = loadFromSharedPreferences<ListOfSounds>(SoundRepository.ALL_SOUNDS)?.sounds
+                    val allSounds = loadFromSharedPreferences<ListOfSounds>(SoundRepository.PREF_ALL_SOUNDS)?.sounds
 
                     if (allSounds == null) {
                         no_internet_text.text = getString(R.string.no_internet_initial_load)

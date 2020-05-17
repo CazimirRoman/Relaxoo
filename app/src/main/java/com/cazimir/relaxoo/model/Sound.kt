@@ -19,7 +19,8 @@ data class Sound(
         @get:Exclude
         val custom: Boolean = false,
         @get:Exclude
-        val loaded: Boolean = false
+        val loaded: Boolean = false,
+        val new: Boolean = false
 ) : Serializable {
 
     override fun equals(other: Any?): Boolean {
@@ -66,6 +67,10 @@ data class Sound(
             return false
         }
 
+        if (new != other.new) {
+            return false
+        }
+
         return true
     }
 
@@ -97,6 +102,8 @@ data class Sound(
         stringBuilder.append("custom = $custom")
         stringBuilder.append(", ")
         stringBuilder.append("loaded = $loaded")
+        stringBuilder.append(", ")
+        stringBuilder.append("new = $new")
         return stringBuilder.toString()
     }
 }

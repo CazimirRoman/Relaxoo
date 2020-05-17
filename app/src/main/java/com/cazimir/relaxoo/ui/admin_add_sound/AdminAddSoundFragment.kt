@@ -41,7 +41,7 @@ class AdminAddSoundFragment : Fragment() {
             val sound = Sound(id = "123", name = sound_name.getText().toString(),
                     logoPath = sound_logo_url.getText().toString(),
                     filePath = sound_name_storage.getText().toString(),
-                    pro = checkbox_pro.isChecked())
+                    pro = checkbox_pro.isChecked(), new = true)
 
             viewModel.saveToFirebase(sound)
         } else {
