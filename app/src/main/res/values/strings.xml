@@ -3,60 +3,46 @@
     <string name="nav_sounds">Sounds</string>
     <string name="nav_favorites">Favorites</string>
     <string name="nav_create_sound">Create your sound</string>
-    <string name="nav_about">About</string>
-    <string name="toast">Value: %1$s</string>
-    <string name="favorites_combos">Favorites combos</string>
+    <string name="nav_about">About us</string>
+    <string name="favorites_combos">Favorite combos</string>
     <string name="delete_confirmation">Are you sure you want to delete?</string>
-    <string name="delete_confirmation_recording">Are you sure you want to delete the recording?\n \nAll pinned sounds will also be removed</string>
+    <string name="delete_confirmation_recording">Are you sure you want to delete the recording?   All pinned sounds on the main screen will also be removed</string>
     <string name="create_sound">Create your sound</string>
     <string name="actions_text">You can do these actions to play sound once</string>
     <string name="watch_an_ad">Watch an ad</string>
-    <string name="invite_fb_friends">Invite friends with Facebook</string>
-    <string name="invite_friends">Invite friends</string>
     <string name="about_fragment">About</string>
-    <string name="pin_to_dashboard">Pin to dashboard</string>
-    <string name="edit_recording_name">Edit name</string>
+    <string name="pin_to_dashboard">Pin to main screen</string>
+    <string name="edit_recording_name">Edit recording name</string>
     <string name="delete_recording">Delete recording</string>
-    <string name="loading_sounds">Loading sounds…</string>
     <string name="share_text">Hey. I found this really awesome app Relaxoo that helps you concentrate at day and makes it easy to fall asleep at night. Download it from here: https://play.google.com/store/apps/details?id=com.cazimir.relaxoo</string>
     <string name="delete_custom_sound">Delete sound</string>
-    <string name="hello_blank_fragment">Hello F1</string>
     <string name="saved_combo">Saved combo</string>
-    <string name="empty_field">Please enter a value</string>
-    <string name="no_recording_text">Please enter a new name</string>
-    <string name="no_combo_text">Please a name for your combo</string>
+    <string name="no_recording_text">Please enter a new name for your recording</string>
+    <string name="no_combo_text">Please enter a name for your combo</string>
     <string name="no_internet">You are offline. Loading local sounds</string>
-    <string name="no_internet_initial_load">You are offline. \nPlease connect to download your sounds locally.</string>
+    <string name="no_internet_initial_load">You\'re offline.  Please connect to the internet to download your sounds once.</string>
     <string name="sound_loading">Please wait. Sound is still loading</string>
     <string name="back_exit">Please click BACK again to exit</string>
-    <string name="sound_already_pinned">Sound already on dashboard</string>
-    <string name="recording_permission_denied">You need to grant recording permissions to record your own sound</string>
-    <string name="sound_saved">Sound saved to file</string>
-    <string name="canceled">Canceled recording action</string>
+    <string name="sound_already_pinned">Sound already on main screen</string>
+    <string name="recording_permission_denied">You need to grant recording permissions to record your own sounds</string>
+    <string name="sound_saved">Sound saved</string>
+    <string name="canceled">Nothing recorded</string>
     <string name="play_one_sound">You must play at least one sound</string>
-
-    <string name="reward_ad_test">ca-app-pub-3940256099942544/5224354917</string>
-    <string name="reward_ad_prod">ca-app-pub-7748272108558557/3205446097</string>
-
-    <string name="ad_test">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="ad_prod">ca-app-pub-7748272108558557/1855871257</string>
     <string name="combo_hint">Enter your combo name here</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="buy_pro">Buy PRO</string>
-    <string name="playing_except_pro">Playing sounds except the PRO ones</string>
+    <string name="playing_except_pro">Playing all sounds except PRO</string>
     <string name="playing_except_loading">Some sounds are still loading. Playing already loaded sounds</string>
     <string name="custom_timer_zero">Please select an amount of time</string>
     <string name="playing_saved_combo">Playing selected combo</string>
     <string name="privacy_policy_title">Privacy policy</string>
-
-    <string name="permission_storage_denied_message">In order to bring you the freshest relaxation sounds to your phone, we need to save them locally for offline use. For that we need access to your storage. \n \nThank you for your understanding.</string>
+    <string name="permission_storage_denied_message">In order to bring you the freshest relaxation sounds to your phone, we need to save them locally for offline use. For that we need access to your storage.    Thank you for your understanding.</string>
     <string name="permission_storage_denied_title">Storage permission needed</string>
     <string name="permission_storage_denied_do_not_show_message">You need to go to Setting and enable the denied permissions there</string>
     <string name="permission_recording_denied">You need to grant recording permissions to record your own sound</string>
     <string name="permission_recording_denied_title">Recording permission needed</string>
     <string name="permission_recording_denied_do_not_show">You need to go to Setting and enable the permissions there</string>
-    <string name="internet_back_up">You are back online</string>
     <string name="playing_random">Playing 3 random sounds</string>
     <string name="no_recordings_text">You don\'t have any recordings</string>
     <string name="no_favorites_text">You don\'t have any favorites</string>
@@ -75,10 +61,16 @@
     <string name="privacy_policy">Privacy policy</string>
     <string name="rate_app">Rate this app</string>
     <string name="more_apps">More apps</string>
+    <string name="delete_title">Delete?</string>
 
     <!--    do not translate-->
-    <string name="mute_off_tag">mute_off</string>
-    <string name="mute_on_tag">mute_on</string>
-    <string name="play_button_tag">play_button</string>
-    <string name="stop_button_tag">stop_button</string>
+    <string name="reward_ad_test" translatable="false">ca-app-pub-3940256099942544/5224354917</string>
+    <string name="reward_ad_prod" translatable="false">ca-app-pub-7748272108558557/3205446097</string>
+    <string name="ad_test" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="ad_prod" translatable="false">ca-app-pub-7748272108558557/1855871257</string>
+    <string name="mute_off_tag" translatable="false">mute_off</string>
+    <string name="mute_on_tag" translatable="false">mute_on</string>
+    <string name="play_button_tag" translatable="false">play_button</string>
+    <string name="stop_button_tag" translatable="false">stop_button</string>
+
 </resources>

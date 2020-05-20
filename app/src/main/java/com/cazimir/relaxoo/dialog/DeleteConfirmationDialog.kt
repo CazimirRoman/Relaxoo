@@ -18,7 +18,7 @@ class DeleteConfirmationDialog(private val callback: OnDeleted) : RetainableDial
         val builder = AlertDialog.Builder(activity!!)
         builder.setNegativeButton(getString(R.string.cancel), null)
         builder.setPositiveButton(getString(R.string.ok), this)
-        return builder.setTitle("Delete?").setView(form).create()
+        return builder.setTitle(getString(R.string.delete_title)).setView(form).create()
     }
 
     override fun onClick(dialog: DialogInterface, which: Int) {
