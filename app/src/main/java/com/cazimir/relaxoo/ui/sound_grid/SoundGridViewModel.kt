@@ -73,7 +73,7 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     fun updateNameOnSound(sound: Sound, newName: String) {
         val newList = _soundsStorage.value?.map {
             if (it.id == sound.id) {
-                it.copy(name = newName)
+                it.copy(name = newName, id = "$newName.wav", filePath = "/storage/emulated/0/Relaxoo/own_sounds/$newName.wav")
             } else {
                 it
             }

@@ -10,6 +10,9 @@ import java.util.*
 
 class SharedViewModel : ViewModel() {
 
+    var textToShowOnSplash: String = ""
+
+    var soundsDownloadStarted: Boolean = false
     val timer: Timer = Timer()
 
     var timerTaskExtended: TimerTaskExtended? = null

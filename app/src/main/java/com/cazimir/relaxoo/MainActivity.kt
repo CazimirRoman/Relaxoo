@@ -47,6 +47,7 @@ import com.cazimir.relaxoo.dialog.recording.BottomRecordingDialogFragment
 import com.cazimir.relaxoo.dialog.timer.OnTimerDialogCallback
 import com.cazimir.relaxoo.dialog.timer.TimerDialog
 import com.cazimir.relaxoo.eventbus.EventBusServiceDestroyed
+import com.cazimir.relaxoo.eventbus.EventBusSoundsFetchedFromFirebase
 import com.cazimir.relaxoo.model.*
 import com.cazimir.relaxoo.repository.SoundRepository
 import com.cazimir.relaxoo.service.SoundService
@@ -162,13 +163,13 @@ class MainActivity : FragmentActivity(),
         isInternetAvailable.observe(this, Observer { internetUp ->
             when (internetUp) {
                 true -> {
-                    no_internet_text.visibility = GONE
+                    splash_status_text.visibility = GONE
                 }
                 false -> {
                     if (splash.visibility == VISIBLE) {
-                        no_internet_text.visibility = VISIBLE
+                        splash_status_text.visibility = VISIBLE
                     } else {
-                        no_internet_text.visibility = GONE
+                        splash_status_text.visibility = GONE
                     }
                 }
             }
@@ -187,9 +188,14 @@ class MainActivity : FragmentActivity(),
                     val allSounds = loadFromSharedPreferences<ListOfSounds>(SoundRepository.PREF_ALL_SOUNDS)?.sounds
 
                     if (allSounds == null) {
-                        no_internet_text.text = getString(R.string.no_internet_initial_load)
+                        if (preconditionsToStartFetchingData.isInternetUp.not()) {
+                            showStatusTextOnSplash(getString(R.string.no_internet_initial_load))
+                        }
+
                     } else {
-                        no_internet_text.text = getString(R.string.no_internet)
+                        if (preconditionsToStartFetchingData.isInternetUp.not()) {
+                            showStatusTextOnSplash(getString(R.string.no_internet))
+                        }
                     }
 
                     if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted) {
@@ -198,12 +204,20 @@ class MainActivity : FragmentActivity(),
                             //if any snackbar is showing, dismiss it
                             snackBar?.dismiss()
                             if (InternetUtil.isNetworkAvailable(this@MainActivity)) {
-                                getSoundGridFragment().fetchSoundsOnline()
+
+                                if (!sharedViewModel.soundsDownloadStarted) {
+                                    getSoundGridFragment().fetchSoundsOnline()
+                                    showStatusTextOnSplash(getString(R.string.starting_download))
+                                    sharedViewModel.soundsDownloadStarted = true
+                                }
+
                             } else {
                                 if (allSounds != null) {
                                     getSoundGridFragment().fetchSoundsOffline()
                                 }
                             }
+                        } else {
+                            sharedViewModel.soundsDownloadStarted = false
                         }
                     }
                 })
@@ -224,6 +238,12 @@ class MainActivity : FragmentActivity(),
                 removeAdsViewAndButtonInAbout()
             }
         })
+    }
+
+    private fun showStatusTextOnSplash(message: String) {
+        sharedViewModel.textToShowOnSplash = message
+        splash_status_text.text = sharedViewModel.textToShowOnSplash
+        splash_status_text.visibility = VISIBLE
     }
 
     private fun activateAllProSounds() {
@@ -331,22 +351,27 @@ class MainActivity : FragmentActivity(),
     }
 
     private fun launchFlowToRemoveAds() {
-        if (billingClient.isReady) {
-            val skuDetailsParams = SkuDetailsParams.newBuilder()
-                    .setSkusList(skuListAds)
-                    .setType(BillingClient.SkuType.INAPP)
-                    .build()
-            billingClient.querySkuDetailsAsync(
-                    skuDetailsParams
-            ) { billingResult: BillingResult, skuDetailsList: List<SkuDetails> ->
-                if ((billingResult.responseCode == BillingClient.BillingResponseCode.OK &&
-                                !skuDetailsList.isEmpty())) {
-                    for (skuDetail: SkuDetails in skuDetailsList) {
-                        val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
-                        billingClient.launchBillingFlow(this, flowParams)
+
+        if (InternetUtil.isNetworkAvailable(this)) {
+            if (billingClient.isReady) {
+                val skuDetailsParams = SkuDetailsParams.newBuilder()
+                        .setSkusList(skuListAds)
+                        .setType(BillingClient.SkuType.INAPP)
+                        .build()
+                billingClient.querySkuDetailsAsync(
+                        skuDetailsParams
+                ) { billingResult: BillingResult, skuDetailsList: List<SkuDetails> ->
+                    if ((billingResult.responseCode == BillingClient.BillingResponseCode.OK &&
+                                    !skuDetailsList.isEmpty())) {
+                        for (skuDetail: SkuDetails in skuDetailsList) {
+                            val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
+                            billingClient.launchBillingFlow(this, flowParams)
+                        }
                     }
                 }
             }
+        } else {
+            showMessageToUser(getString(R.string.no_internet), Snackbar.LENGTH_SHORT)
         }
     }
 
@@ -629,29 +654,33 @@ class MainActivity : FragmentActivity(),
         hideProgress()
         splash.visibility = GONE
         main_layout.visibility = VISIBLE
-        no_internet_text.visibility = GONE
+        splash_status_text.visibility = GONE
         sharedViewModel.splashScreenShown = true
         EspressoIdlingResource.decrement()
     }
 
     override fun startBuyingProFlow() {
 
-        if (billingClient.isReady) {
-            val skuDetailsParams = SkuDetailsParams.newBuilder()
-                    .setSkusList(skuListPro)
-                    .setType(BillingClient.SkuType.INAPP)
-                    .build()
-            billingClient.querySkuDetailsAsync(
-                    skuDetailsParams
-            ) { billingResult: BillingResult, skuDetailsList: List<SkuDetails> ->
-                if ((billingResult.responseCode == BillingClient.BillingResponseCode.OK &&
-                                !skuDetailsList.isEmpty())) {
-                    for (skuDetail: SkuDetails in skuDetailsList) {
-                        val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
-                        billingClient.launchBillingFlow(this, flowParams)
+        if (InternetUtil.isNetworkAvailable(this)) {
+            if (billingClient.isReady) {
+                val skuDetailsParams = SkuDetailsParams.newBuilder()
+                        .setSkusList(skuListPro)
+                        .setType(BillingClient.SkuType.INAPP)
+                        .build()
+                billingClient.querySkuDetailsAsync(
+                        skuDetailsParams
+                ) { billingResult: BillingResult, skuDetailsList: List<SkuDetails> ->
+                    if ((billingResult.responseCode == BillingClient.BillingResponseCode.OK &&
+                                    !skuDetailsList.isEmpty())) {
+                        for (skuDetail: SkuDetails in skuDetailsList) {
+                            val flowParams: BillingFlowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build()
+                            billingClient.launchBillingFlow(this, flowParams)
+                        }
                     }
                 }
             }
+        } else {
+            showMessageToUser(getString(R.string.no_internet), Snackbar.LENGTH_SHORT)
         }
     }
 
@@ -673,7 +702,7 @@ class MainActivity : FragmentActivity(),
     override fun deleteRecording(recording: Recording) {
         //should also search is any custom sounds are pinned to dashboard and remove those as well
         createSoundFragment!!.deleteRecording(recording)
-        getSoundGridFragment().removeCustomSoundFromDashboardIfThere(recording)
+        getSoundGridFragment().removeCustomSoundFromDashboardIfThere(recording.id)
     }
 
     override fun showMessageToUser(messageToShow: String, length: Int) {
@@ -683,7 +712,7 @@ class MainActivity : FragmentActivity(),
     override fun renameRecording(recording: Recording, newName: String) {
         FirebaseAnalytics.getInstance(this).logEvent(editRecording(newName).first, editRecording(newName).second)
         createSoundFragment!!.renameRecording(recording, newName)
-        getSoundGridFragment().renameCustomSoundFromDashboardIfThere(recording, newName)
+//        getSoundGridFragment().renameCustomSoundFromDashboardIfThere(recording, newName)
     }
 
     override fun pinToDashBoardActionCalled(sound: Sound) {
@@ -716,8 +745,13 @@ class MainActivity : FragmentActivity(),
     }
 
     override fun playRewardAd() {
-        if (rewardedVideoAd.isLoaded) {
-            rewardedVideoAd.show()
+
+        if (InternetUtil.isNetworkAvailable(this)) {
+            if (rewardedVideoAd.isLoaded) {
+                rewardedVideoAd.show()
+            }
+        } else {
+            showMessageToUser(getString(R.string.no_internet), Snackbar.LENGTH_SHORT)
         }
     }
 
@@ -839,5 +873,15 @@ class MainActivity : FragmentActivity(),
         // and timer, the activity needs to restart to recreate the service. Therefore forcing a finish on the applications
         // i am thinking that the user does not want to use the service and the application anymore if he presses 'X'
         this.finish()
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun numberOfSoundsFetchedFromFirebase(soundsFetchedFromFirebase: EventBusSoundsFetchedFromFirebase) {
+
+        showStatusTextOnSplash(getString(R.string.fetched_sounds, soundsFetchedFromFirebase.fetched, soundsFetchedFromFirebase.total))
+
+        if (soundsFetchedFromFirebase.fetched == soundsFetchedFromFirebase.total) {
+            splash_status_text.visibility = GONE
+        }
     }
 }

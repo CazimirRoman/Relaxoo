@@ -10,6 +10,11 @@ data class Sound(
         @get:Exclude
         val streamId: Int = -1,
         val name: String = "",
+        val name_DE: String = "",
+        val name_FR: String = "",
+        val name_SP: String = "",
+        val name_IT: String = "",
+        val name_CH: String = "",
         val logoPath: String = "",
         val filePath: String = "",
         @get:Exclude

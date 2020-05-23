@@ -28,7 +28,10 @@ import com.cazimir.relaxoo.analytics.AnalyticsEvents.Companion.timerClicked
 import com.cazimir.relaxoo.dialog.custom.BottomCustomDeleteFragment
 import com.cazimir.relaxoo.dialog.custom.CustomBottomCallback
 import com.cazimir.relaxoo.eventbus.*
-import com.cazimir.relaxoo.model.*
+import com.cazimir.relaxoo.model.ListOfSavedCustom
+import com.cazimir.relaxoo.model.SavedCombo
+import com.cazimir.relaxoo.model.Sound
+import com.cazimir.relaxoo.model.TimerData
 import com.cazimir.relaxoo.service.SoundService
 import com.cazimir.relaxoo.service.commands.*
 import com.cazimir.relaxoo.shared.SharedViewModel
@@ -233,6 +236,27 @@ class SoundGridFragment : Fragment() {
             sendCommandToService(SoundService.getCommand(context, AllSoundsCommand()))
             sendCommandToService(SoundService.getCommand(context, TimerTextCommand()))
             sendCommandToService(SoundService.getCommand(context, MuteStatusCommand()))
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun recordingNameUpdated(eventBusUpdateRecordingName: EventBusUpdateRecordingName) {
+
+        val recordingId = eventBusUpdateRecordingName.id
+        val recordingNewName = eventBusUpdateRecordingName.newName
+
+        val findRecording = viewModel.soundsStorage.value?.find { it.id == recordingId }
+
+        findRecording?.let {
+            removeCustomSoundFromDashboardIfThere(recordingId)
+
+            val sound = Sound(custom = true,
+                    filePath = "/storage/emulated/0/Relaxoo/own_sounds/$recordingNewName.wav",
+                    logoPath = "/storage/emulated/0/Relaxoo/logos/thunder.png",
+                    name = recordingNewName,
+                    id = "$recordingNewName.wav")
+
+            activityCallback.pinToDashBoardActionCalled(sound)
         }
     }
 
@@ -519,45 +543,17 @@ class SoundGridFragment : Fragment() {
     }
 
 
-    fun removeCustomSoundFromDashboardIfThere(recording: Recording) {
+    fun removeCustomSoundFromDashboardIfThere(recordingId: String) {
         val filtered = mutableListOf<Sound>()
         viewModel.soundsStorage.value?.filterTo(filtered, predicate = {
-            it.id == recording.id
+            it.id == recordingId
         })
 
         // i imagine there will be only one
         if (filtered.size != 0) {
-
             //found recording in the sounds store
             removeRecordingFromSoundPool(filtered.first())
         }
-    }
-
-    fun renameCustomSoundFromDashboardIfThere(recording: Recording, newName: String) {
-        val filtered = mutableListOf<Sound>()
-        viewModel.soundsStorage.value?.filterTo(filtered, predicate = {
-            it.id == recording.id
-        })
-
-        if (filtered.size != 0) {
-            viewModel.updateNameOnSound(filtered.first(), newName)
-        }
-
-        val newList = mutableListOf<Sound>()
-        val pinnedRecordings = loadFromSharedPreferences<ListOfSavedCustom>(MainActivity.PINNED_RECORDINGS)
-        val list = pinnedRecordings?.savedCustomList ?: mutableListOf()
-
-        list.mapTo(newList, {
-            if (it.id == recording.id) {
-                it.copy(name = newName, id = "$newName.wav", filePath = "/storage/emulated/0/Relaxoo/own_sounds/$newName.wav")
-            } else {
-                it
-            }
-        })
-
-        val newObject = ListOfSavedCustom(newList)
-        saveToSharedPreferences(newObject, MainActivity.PINNED_RECORDINGS)
-
     }
 
     fun areSoundsStillLoading(): Boolean {

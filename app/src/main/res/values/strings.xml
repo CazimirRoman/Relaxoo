@@ -19,8 +19,8 @@
     <string name="saved_combo">Saved combo</string>
     <string name="no_recording_text">Please enter a new name for your recording</string>
     <string name="no_combo_text">Please enter a name for your combo</string>
-    <string name="no_internet">You are offline. Loading local sounds</string>
-    <string name="no_internet_initial_load">You\'re offline.  Please connect to the internet to download your sounds once.</string>
+    <string name="no_internet">You are offline</string>
+    <string name="no_internet_initial_load">Please connect to the internet to download your sounds once.</string>
     <string name="sound_loading">Please wait. Sound is still loading</string>
     <string name="back_exit">Please click BACK again to exit</string>
     <string name="sound_already_pinned">Sound already on main screen</string>
@@ -37,7 +37,7 @@
     <string name="custom_timer_zero">Please select an amount of time</string>
     <string name="playing_saved_combo">Playing selected combo</string>
     <string name="privacy_policy_title">Privacy policy</string>
-    <string name="permission_storage_denied_message">In order to bring you the freshest relaxation sounds to your phone, we need to save them locally for offline use. For that we need access to your storage.    Thank you for your understanding.</string>
+    <string name="permission_storage_denied_message">In order to bring you the freshest relaxation sounds to your phone, we need to save them locally for offline use.\n\nFor that we need access to the local storage.</string>
     <string name="permission_storage_denied_title">Storage permission needed</string>
     <string name="permission_storage_denied_do_not_show_message">You need to go to Setting and enable the denied permissions there</string>
     <string name="permission_recording_denied">You need to grant recording permissions to record your own sound</string>
@@ -72,5 +72,7 @@
     <string name="mute_on_tag" translatable="false">mute_on</string>
     <string name="play_button_tag" translatable="false">play_button</string>
     <string name="stop_button_tag" translatable="false">stop_button</string>
+    <string name="fetched_sounds">Downloaded %1$d out of %2$d sounds</string>
+    <string name="starting_download">Downloading sounds... Please wait</string>
 
 </resources>

@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.cazimir.relaxoo.EspressoIdlingResource
+import com.cazimir.relaxoo.eventbus.EventBusSoundsFetchedFromFirebase
 import com.cazimir.relaxoo.model.ListOfSavedCustom
 import com.cazimir.relaxoo.model.ListOfSounds
 import com.cazimir.relaxoo.model.Sound
@@ -20,6 +21,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FileDownloadTask
 import com.google.firebase.storage.FirebaseStorage
+import org.greenrobot.eventbus.EventBus
 import java.io.File
 
 class SoundRepository : ISoundRepository {
@@ -59,6 +61,11 @@ class SoundRepository : ISoundRepository {
     }
 
     override fun getSounds(): MutableLiveData<List<Sound>> {
+
+        if (mAuth.currentUser == null) {
+            signInAnonymously()
+        }
+
         authenticationComplete.observeOnceWithTrueNoLifecycleOwner(Observer {
             val soundsInFirebase = mutableListOf<Sound>()
             EspressoIdlingResource.increment()
@@ -141,23 +148,16 @@ class SoundRepository : ISoundRepository {
         val soundsDirectory = File(soundsFolder.absolutePath)
         val files = soundsDirectory.listFiles()
 
-        when {
-            // no files downloaded locally
-            files == null -> {
-                getAllSoundsFromStorage(soundsInDatabase)
-            }
-
-            files.size < soundsInDatabase.size -> {
-                //find the new sound (transform to set and then filter based on set contains criteria)
-                val fileNames = files.map { it.name }.toSet()
-                val newSoundList = soundsInDatabase.filter { !fileNames.contains(it.filePath) }
-                getNewSoundsFromStorage(newSoundList, soundsInDatabase)
-                //fetch and on callback and after loop finishes call loadLocalSounds
-            }
-            files.size == soundsInDatabase.size -> {
-                // no new sounds in firebase, load local sounds
-                loadLocalSounds(soundsInDatabase)
-            }
+        if (files == null || files.isEmpty()) {
+            getAllSoundsFromStorage(soundsInDatabase)
+        } else if (files.size < soundsInDatabase.size) {
+            //find the new sound (transform to set and then filter based on set contains criteria)
+            val fileNames = files.map { it.name }.toSet()
+            val newSoundList = soundsInDatabase.filter { !fileNames.contains(it.filePath) }
+            return getNewSoundsFromStorage(newSoundList, soundsInDatabase)
+            //fetch and on callback and after loop finishes call loadLocalSounds
+        } else {
+            loadLocalSounds(soundsInDatabase)
         }
     }
 
@@ -175,6 +175,10 @@ class SoundRepository : ISoundRepository {
     }
 
     private fun getAllSoundsFromStorage(list: List<Sound>) {
+
+        val newList = mutableListOf<Sound>()
+
+        var numberOfSoundsFetched = 0
 
         for (sound in list) {
             val soundReference = FirebaseStorage.getInstance().reference.child("sounds").child(sound.filePath)
@@ -197,17 +201,21 @@ class SoundRepository : ISoundRepository {
                                 .getFile(logoFile)
                                 .addOnSuccessListener { imageSnapshot: FileDownloadTask.TaskSnapshot? ->
 
+                                    numberOfSoundsFetched++
+
                                     val fetchedSound = sound.copy(logoPath = logoFile.path, filePath = soundFile.path)
-                                    val newList = mutableListOf(fetchedSound)
+                                    newList.add(fetchedSound)
 
                                     // add custom sounds from SP as well
                                     val customSounds = loadFromSharedPreferences<ListOfSavedCustom>("PINNED_RECORDINGS")
                                     customSounds?.savedCustomList?.let { newList.addAll(it) }
 
                                     //all sounds fetched? update livedata
-                                    if (_soundsStorageRepo.value?.size == list.size) {
+                                    if (numberOfSoundsFetched == list.size) {
                                         _soundsStorageRepo.value = newList
                                     }
+
+                                    EventBus.getDefault().post(EventBusSoundsFetchedFromFirebase(numberOfSoundsFetched, list.size))
                                 }
                                 .addOnFailureListener { e: Exception ->
                                     throw RuntimeException("Logo fetching failed")
@@ -217,8 +225,6 @@ class SoundRepository : ISoundRepository {
                         throw RuntimeException("Sound fetching failed")
                     }
         }
-
-
     }
 
     private fun getNewSoundsFromStorage(list: List<Sound>, soundsInFirebase: List<Sound>) {
@@ -245,9 +251,6 @@ class SoundRepository : ISoundRepository {
                         imageReference
                                 .getFile(logoFile)
                                 .addOnSuccessListener { imageSnapshot: FileDownloadTask.TaskSnapshot? ->
-
-//                                    val fetchedSound = sound.copy(logoPath = logoFile.path, filePath = soundFile.path)
-//                                    newList.add(0, fetchedSound)
 
                                     sounds.remove(sound)
                                     sounds.add(0, sound)

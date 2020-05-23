@@ -14,6 +14,7 @@ import com.cazimir.relaxoo.model.Sound
 import com.cazimir.relaxoo.ui.sound_grid.OnSoundClickListener
 import com.cazimir.utilitieslibrary.inflate
 import kotlinx.android.synthetic.main.grid_item.view.*
+import java.util.*
 import kotlin.math.roundToInt
 
 
@@ -35,7 +36,7 @@ class GridRecyclerViewAdapter(val context: Context, var sounds: ArrayList<Sound>
     override fun onBindViewHolder(holder: SoundHolder, position: Int) {
         val sound = sounds[position]
 
-        holder.itemView.sound_name.text = sound.name
+        holder.itemView.sound_name.text = determineLanguageAndReturnSoundName(sound)
         holder.itemView.sound_volume.progress = (sound.volume * 100).roundToInt()
         holder.itemView.sound_volume.visibility = if (sound.playing) View.VISIBLE else View.INVISIBLE
         holder.itemView.more_options.visibility = if (sound.custom) View.VISIBLE else View.INVISIBLE
@@ -83,6 +84,23 @@ class GridRecyclerViewAdapter(val context: Context, var sounds: ArrayList<Sound>
                         listener.volumeChangeStopped(sound, seekBar.progress)
                     }
                 })
+    }
+
+    private fun determineLanguageAndReturnSoundName(sound: Sound): String {
+
+        val languagename: String = Locale.getDefault().displayLanguage
+
+        var localizedSoundName = sound.name
+
+        when (languagename) {
+            Locale.GERMAN.displayLanguage -> localizedSoundName = sound.name_DE
+            else -> { // Note the block
+                print("x is neither 1 nor 2")
+            }
+        }
+
+        return localizedSoundName
+
     }
 
     fun refreshList(newSounds: List<Sound>) {

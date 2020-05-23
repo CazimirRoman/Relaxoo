@@ -17,7 +17,6 @@ class RecordingRepository : IRecordingRepository {
         val ownSoundsFolder = Environment.getExternalStoragePublicDirectory("Relaxoo/own_sounds")
         val from = File(ownSoundsFolder, recording.file.name)
         val to = File(ownSoundsFolder, "$newName.wav")
-
         return from.renameTo(to)
     }
 

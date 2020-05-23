@@ -193,7 +193,9 @@ class SoundService : Service(), ISoundService {
 
             _allSoundsLive.value = allSounds
 
-            EventBus.getDefault().post(EventBusLoad(soundWithSoundPoolId!!.copy(loaded = true)))
+            soundWithSoundPoolId?.let {
+                EventBus.getDefault().post(EventBusLoad(soundWithSoundPoolId!!.copy(loaded = true)))
+            }
         }
 
 

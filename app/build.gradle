@@ -41,13 +41,11 @@ android {
         unitTests {
             includeAndroidResources = true
         }
-
-//        execution 'ANDROIDX_TEST_ORCHESTRATOR'
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.isPro'
         }
     }

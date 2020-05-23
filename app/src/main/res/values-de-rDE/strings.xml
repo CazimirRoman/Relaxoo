@@ -20,7 +20,7 @@
     <string name="saved_combo">Gespeicherte Kombination</string>
     <string name="no_recording_text">Bitte gib einen neuen Namen für deine Aufzeichnung ein</string>
     <string name="no_combo_text">Bitte gib einen Namen für deine Kombination ein</string>
-    <string name="no_internet">Du bist offline. Die lokale Töne werden geladen</string>
+    <string name="no_internet">Du bist offline. Die lokalen Töne werden geladen</string>
     <string name="no_internet_initial_load">Du bist offline.  Bitte verbinde dich mit dem Internet, um einmalig deine Töne herunterzuladen</string>
     <string name="sound_loading">Bitte warte. Ton wird noch geladen</string>
     <string name="back_exit">Bitte klicken Sie zum Beenden erneut auf ZURÜCK</string>
