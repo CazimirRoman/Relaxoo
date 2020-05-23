@@ -10,6 +10,7 @@ import java.util.*
 
 class SharedViewModel : ViewModel() {
 
+    var currentScrollPosition = 0
     var textToShowOnSplash: String = ""
 
     var soundsDownloadStarted: Boolean = false

@@ -17,6 +17,7 @@ import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.adapter.GridRecyclerViewAdapter
@@ -120,6 +121,7 @@ class SoundGridFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+
         sharedViewModel = ViewModelProvider(activity as ViewModelStoreOwner).get(SharedViewModel::class.java)
 
         if (!EventBus.getDefault().isRegistered(this)) {
@@ -131,6 +133,13 @@ class SoundGridFragment : Fragment() {
         viewModel = ViewModelProvider(this, factory).get(SoundGridViewModel::class.java)
 
         setListenersForButtons()
+
+        sounds_recycler_view.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                val layoutManager = sounds_recycler_view.layoutManager as GridLayoutManager
+                sharedViewModel.currentScrollPosition = layoutManager.findFirstVisibleItemPosition()
+            }
+        })
 
         // region Observers
 
@@ -319,6 +328,8 @@ class SoundGridFragment : Fragment() {
             val gridLayoutManager = GridLayoutManager(context, numberOfColumns)
             sounds_recycler_view.layoutManager = gridLayoutManager
             sounds_recycler_view.adapter = soundsAdapter
+
+            sounds_recycler_view.smoothScrollToPosition(sharedViewModel.currentScrollPosition)
 
         }
     }
