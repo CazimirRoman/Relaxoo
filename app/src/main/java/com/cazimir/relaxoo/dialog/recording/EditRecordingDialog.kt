@@ -37,6 +37,7 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         layout.new_recording_name.requestFocus()
+        layout.new_recording_name.selectAll()
         dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         return super.onCreateView(inflater, container, savedInstanceState)
     }

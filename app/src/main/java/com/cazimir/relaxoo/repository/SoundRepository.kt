@@ -14,7 +14,6 @@ import com.cazimir.utilitieslibrary.SharedPreferencesUtil
 import com.cazimir.utilitieslibrary.SharedPreferencesUtil.loadFromSharedPreferences
 import com.cazimir.utilitieslibrary.observeOnceWithTrueNoLifecycleOwner
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -43,15 +42,6 @@ class SoundRepository : ISoundRepository {
     private val soundsDirectory = File(soundsFolder.absolutePath)
     private val logosDirectory = File(logosFolder.absolutePath)
 
-    init {
-        val user: FirebaseUser? = mAuth.currentUser
-        if (user == null) {
-            signInAnonymously()
-        } else {
-            authenticationComplete.value = true
-        }
-    }
-
     private fun signInAnonymously() {
         mAuth.signInAnonymously().addOnCompleteListener {
             if (it.isSuccessful) {
@@ -64,6 +54,8 @@ class SoundRepository : ISoundRepository {
 
         if (mAuth.currentUser == null) {
             signInAnonymously()
+        } else {
+            authenticationComplete.value = true
         }
 
         authenticationComplete.observeOnceWithTrueNoLifecycleOwner(Observer {

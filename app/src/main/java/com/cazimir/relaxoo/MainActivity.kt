@@ -194,7 +194,7 @@ class MainActivity : FragmentActivity(),
 
                     } else {
                         if (preconditionsToStartFetchingData.isInternetUp.not()) {
-                            showStatusTextOnSplash(getString(R.string.no_internet))
+                            showStatusTextOnSplash(getString(R.string.no_internet_splash))
                         }
                     }
 
@@ -218,6 +218,7 @@ class MainActivity : FragmentActivity(),
                             }
                         } else {
                             sharedViewModel.soundsDownloadStarted = false
+                            splash_status_text.visibility = GONE
                         }
                     }
                 })

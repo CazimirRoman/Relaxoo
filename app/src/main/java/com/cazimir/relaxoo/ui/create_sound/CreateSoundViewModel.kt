@@ -26,12 +26,12 @@ class CreateSoundViewModel : ViewModel() {
 
     fun refreshList() {
 
-        val recordings: Array<File> = repository.getRecordings() ?: mutableListOf<File>() as Array<File>
+        val recordings: Array<File>? = repository.getRecordings()
 
         val recordingsList = mutableListOf<Recording>()
 
         // after changing to viewpager2 the recordings returned null so I needed a safe call here
-        recordings.let {
+        recordings?.let {
             Arrays.sort(recordings) { f1, f2 -> f1.lastModified().compareTo(f2.lastModified()) }
             recordings.reverse()
             for (file in recordings) {

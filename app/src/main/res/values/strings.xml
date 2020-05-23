@@ -74,5 +74,6 @@
     <string name="stop_button_tag" translatable="false">stop_button</string>
     <string name="fetched_sounds">Downloaded %1$d out of %2$d sounds</string>
     <string name="starting_download">Loading sounds... Please wait</string>
+    <string name="no_internet_splash">You are offline. Loading local sounds</string>
 
 </resources>
