@@ -187,33 +187,24 @@ class MainActivity : FragmentActivity(),
                     //if saved to shared preferences that means that initial fetch has been done and sounds are available locally
                     val allSounds = loadFromSharedPreferences<ListOfSounds>(SoundRepository.PREF_ALL_SOUNDS)?.sounds
 
-                    if (allSounds == null) {
-                        if (preconditionsToStartFetchingData.isInternetUp.not()) {
-                            showStatusTextOnSplash(getString(R.string.no_internet_initial_load))
-                        }
-
-                    } else {
-                        if (preconditionsToStartFetchingData.isInternetUp.not()) {
-                            showStatusTextOnSplash(getString(R.string.no_internet_splash))
-                        }
-                    }
-
                     if (preconditionsToStartFetchingData.isFragmentStarted && preconditionsToStartFetchingData.arePermissionsGranted) {
 
                         if (!sharedViewModel.splashScreenShown) {
-                            //if any snackbar is showing, dismiss it
                             snackBar?.dismiss()
                             if (InternetUtil.isNetworkAvailable(this@MainActivity)) {
 
                                 if (!sharedViewModel.soundsDownloadStarted) {
                                     getSoundGridFragment().fetchSoundsOnline()
-                                    showStatusTextOnSplash(getString(R.string.starting_download))
+                                    showStatusTextOnSplash(getString(R.string.checking_sounds))
                                     sharedViewModel.soundsDownloadStarted = true
                                 }
 
                             } else {
                                 if (allSounds != null) {
                                     getSoundGridFragment().fetchSoundsOffline()
+                                    showStatusTextOnSplash(getString(R.string.no_internet_splash))
+                                } else {
+                                    showStatusTextOnSplash(getString(R.string.no_internet_initial_load))
                                 }
                             }
                         } else {

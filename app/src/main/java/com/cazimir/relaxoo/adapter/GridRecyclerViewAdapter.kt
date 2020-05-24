@@ -94,13 +94,10 @@ class GridRecyclerViewAdapter(val context: Context, var sounds: ArrayList<Sound>
 
         when (languagename) {
             Locale.GERMAN.displayLanguage -> localizedSoundName = sound.name_DE
-            else -> { // Note the block
-                print("x is neither 1 nor 2")
-            }
+            Locale.FRENCH.displayLanguage -> localizedSoundName = sound.name_FR
         }
 
         return localizedSoundName
-
     }
 
     fun refreshList(newSounds: List<Sound>) {
