@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.cazimir.relaxoo.MainActivity
 import com.cazimir.relaxoo.R
 import com.cazimir.relaxoo.ScrollListenerRecycleView
@@ -32,6 +33,7 @@ class CreateSoundFragment : Fragment() {
     private lateinit var activityCallback: OnRecordingStarted
     private var mediaPlayer: MediaPlayer? = null
     private lateinit var createSoundView: View
+    private var recordingButtonShown: Boolean = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         createSoundView = inflater.inflate(R.layout.create_sound_fragment, container, false)
@@ -80,7 +82,7 @@ class CreateSoundFragment : Fragment() {
             e.printStackTrace()
         }
         mediaPlayer!!.setOnCompletionListener {
-            val adapter = recording_list.getAdapter() as RecordingAdapter
+            val adapter = recording_list.adapter as RecordingAdapter
             adapter.finishedPlayingRecording(recordedSound)
         }
         mediaPlayer!!.start()
@@ -105,14 +107,29 @@ class CreateSoundFragment : Fragment() {
         mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
 
         recording_list.addOnScrollListener(object : ScrollListenerRecycleView(recording_list.layoutManager as LinearLayoutManager) {
+
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+
+                when (newState) {
+                    1 -> {
+                        if (!recyclerView.canScrollVertically(1)) {
+                            if (recordingButtonShown) hide() else show()
+                        }
+                    }
+                }
+            }
+
             override fun onScrollFinished() {
             }
 
             override fun show() {
+                recordingButtonShown = true
                 add_recording.animate().translationX(0f).setInterpolator(DecelerateInterpolator(2f)).start()
             }
 
             override fun hide() {
+                recordingButtonShown = false
                 add_recording.animate().translationX(add_recording.width.toFloat() + 50f).setInterpolator(AccelerateInterpolator(2f)).start()
 
             }
@@ -141,7 +158,6 @@ class CreateSoundFragment : Fragment() {
     }
 
     companion object {
-        private const val TAG = "CreateSoundFragment"
         fun newInstance(): CreateSoundFragment {
             return CreateSoundFragment()
         }

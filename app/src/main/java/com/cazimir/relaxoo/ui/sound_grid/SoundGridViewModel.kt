@@ -15,7 +15,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     private var soundRepository: ISoundRepository
 
     companion object {
-        private const val TAG = "SoundGridViewModel"
         private const val CURRENTLY_CLICKED_PRO_SOUND = "CurrentlyClickedProSound"
         private const val TEST_VALUE = "TestValue"
     }
@@ -25,7 +24,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     private var _soundsStorage: MutableLiveData<List<Sound>> = MutableLiveData()
     private val _initialFetchFinished: MutableLiveData<List<Sound>> = MutableLiveData()
     private var _soundsLoadedToSoundPool = MutableLiveData(0)
-    private var _timerRunning = MutableLiveData<Boolean>()
 
     var currentlyClickedProSound: Sound? = savedStateHandle.get(CURRENTLY_CLICKED_PRO_SOUND)
     var shouldLoadToSoundPool = false
@@ -82,7 +80,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         triggerLiveDataEmit(newList!!)
     }
 
-    // just used to hide splash after 3 sounds loaded
     fun loadedToSoundPool() {
         _soundsLoadedToSoundPool.value = _soundsLoadedToSoundPool.value!! + 1
     }
@@ -106,7 +103,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         currentlyClickedProSound = sound
     }
 
-    /*This is the place where the service sends back the updated list with updates parameters(loaded, playing etc)*/
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun serviceCallbackAllSounds(eventBusPlayingSounds: EventBusAllSounds) {
         eventBusPlayingSounds.allSoundsFromService.observeForever { allSounds: List<Sound> ->
@@ -114,7 +110,6 @@ class SoundGridViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
         }
     }
 
-    // this emit on the livedata is used to update the Recyclerview adapter with the new data
     private fun triggerLiveDataEmit(newList: List<Sound>) {
         _soundsStorage.value = newList
     }
