@@ -67,4 +67,5 @@
     <string name="checking_sounds">正在加载声音.....</string>
     <string name="no_internet_splash">您已离线。加载本地声音</string>
     <string name="save_favorite_combo_title">保存最喜欢的组合</string>
+    <string name="rename_created_sound">重新命名创建的声音</string>
 </resources>

@@ -67,4 +67,5 @@
     <string name="checking_sounds">Chargement des sons…</string>
     <string name="no_internet_splash">Vous êtes offline. Chargement des sons locaux</string>
     <string name="save_favorite_combo_title">Sauvegarder le combo préféré</string>
+    <string name="rename_created_sound">Renommer le son créé</string>
 </resources>

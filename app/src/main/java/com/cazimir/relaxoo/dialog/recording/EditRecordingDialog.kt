@@ -1,7 +1,6 @@
 package com.cazimir.relaxoo.dialog.recording
 
 import android.app.Dialog
-import android.content.DialogInterface
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -69,26 +68,19 @@ class EditRecordingDialog(val recording: Recording, val callback: RecordingBotto
             layout.new_recording_name.setText(FilenameUtils.removeExtension(recording.file.name))
             // set dialog message
             alertDialogBuilder
-                    .setTitle("Rename created sound")
+                    .setTitle(getString(R.string.rename_created_sound))
                     .setCancelable(false)
                     .setPositiveButton(
-                            "OK",
-                    object : DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-
-                            callback.edited(
+                            "OK"
+                    ) { dialog, which ->
+                        callback.edited(
                                 recording,
-                                    layout.new_recording_name?.getText().toString()
-                            )
-                        }
-                    })
-                .setNegativeButton(
-                    "Cancel",
-                    object : DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-                            dialog?.cancel()
-                        }
-                    })
+                                layout.new_recording_name?.getText().toString()
+                        )
+                    }
+                    .setNegativeButton(
+                            "Cancel"
+                    ) { dialog, which -> dialog?.cancel() }
         }
 
         // create alert dialog

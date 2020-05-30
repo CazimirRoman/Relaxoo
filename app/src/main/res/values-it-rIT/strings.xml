@@ -55,7 +55,7 @@
     <string name="timer_dialog_hour">%d ora</string>
     <string name="timer_dialog_hours">%d ore</string>
     <string name="no_sound_playing">Nessun suono che suona</string>
-    <string name="number_of_sounds_playing">%1$d %2$s che gioca...</string>
+    <string name="number_of_sounds_playing">%1$d %2$s che gioca…</string>
     <string name="send_feedback">Invia un feedback</string>
     <string name="remove_ads">Rimuovere gli annunci</string>
     <string name="share_app">Condividi app</string>
@@ -64,7 +64,8 @@
     <string name="more_apps">Altre applicazioni</string>
     <string name="delete_title">Cancellare?</string>
     <string name="fetched_sounds">Scaricato %1$d su %2$d suoni</string>
-    <string name="checking_sounds">Caricamento dei suoni...</string>
+    <string name="checking_sounds">Caricamento dei suoni…</string>
     <string name="no_internet_splash">Sei offline. Caricamento dei suoni locali</string>
     <string name="save_favorite_combo_title">Salva la combinazione preferita</string>
+    <string name="rename_created_sound">Rinominare il suono creato</string>
 </resources>

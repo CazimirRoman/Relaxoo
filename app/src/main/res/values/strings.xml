@@ -66,6 +66,7 @@
     <string name="checking_sounds">Loading sounds…</string>
     <string name="no_internet_splash">You are offline. Loading local sounds</string>
     <string name="save_favorite_combo_title">Save favourite combo</string>
+    <string name="rename_created_sound">Rename created sound</string>
 
     <!--    do not translate-->
     <string name="reward_ad_test" translatable="false">ca-app-pub-3940256099942544/5224354917</string>
@@ -76,4 +77,5 @@
     <string name="mute_on_tag" translatable="false">mute_on</string>
     <string name="play_button_tag" translatable="false">play_button</string>
     <string name="stop_button_tag" translatable="false">stop_button</string>
+
 </resources>

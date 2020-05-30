@@ -67,4 +67,5 @@
     <string name="no_internet_splash">Du bist offline. Lokale Töne laden</string>
     <string name="checking_sounds">Töne laden…</string>
     <string name="save_favorite_combo_title">Kombination speichern</string>
+    <string name="rename_created_sound">Erstellten Ton umbenennen</string>
 </resources>

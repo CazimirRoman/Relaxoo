@@ -67,4 +67,5 @@
     <string name="checking_sounds">Cargando sonidos...</string>
     <string name="no_internet_splash">Estás desconectado. Cargando sonidos locales</string>
     <string name="save_favorite_combo_title">Guarda la combinación favorita</string>
+    <string name="rename_created_sound">Renombrar el sonido creado</string>
 </resources>
