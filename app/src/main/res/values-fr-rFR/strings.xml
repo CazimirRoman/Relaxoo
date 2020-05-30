@@ -9,7 +9,7 @@
     <string name="delete_confirmation">Êtes-vous sûr de vouloir supprimer ?</string>
     <string name="delete_confirmation_recording">Êtes-vous sûr de vouloir supprimer l\'enregistrement ? Tous les sons épinglés sur l\'écran principal seront également supprimés</string>
     <string name="create_sound">Créez votre son</string>
-    <string name="actions_text">Vous pouvez effectuer ces actions pour faire jouer le son une fois</string>
+    <string name="actions_text">C\'est un son PRO. Vous pouvez regarder une publicité pour le faire jouer</string>
     <string name="watch_an_ad">Regarder une annonce</string>
     <string name="about_fragment">À propos de</string>
     <string name="pin_to_dashboard">Broche vers l\'écran principal</string>
@@ -66,4 +66,5 @@
     <string name="fetched_sounds">Sons téléchargés %1$d sur %2$d</string>
     <string name="checking_sounds">Chargement des sons…</string>
     <string name="no_internet_splash">Vous êtes offline. Chargement des sons locaux</string>
+    <string name="save_favorite_combo_title">Sauvegarder le combo préféré</string>
 </resources>

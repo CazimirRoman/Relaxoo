@@ -6,9 +6,9 @@
     <string name="nav_about">About us</string>
     <string name="favorites_combos">Favorite combos</string>
     <string name="delete_confirmation">Are you sure you want to delete?</string>
-    <string name="delete_confirmation_recording">Are you sure you want to delete the recording?   All pinned sounds on the main screen will also be removed</string>
+    <string name="delete_confirmation_recording">Are you sure you want to delete the recording? All pinned sounds on the main screen will also be removed</string>
     <string name="create_sound">Create your sound</string>
-    <string name="actions_text">You can do these actions to play sound once</string>
+    <string name="actions_text">This is a PRO sound. You can watch an ad to play it</string>
     <string name="watch_an_ad">Watch an ad</string>
     <string name="about_fragment">About</string>
     <string name="pin_to_dashboard">Pin to main screen</string>
@@ -75,4 +75,5 @@
     <string name="mute_on_tag" translatable="false">mute_on</string>
     <string name="play_button_tag" translatable="false">play_button</string>
     <string name="stop_button_tag" translatable="false">stop_button</string>
+    <string name="save_favorite_combo_title">Save favourite combo</string>
 </resources>

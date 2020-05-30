@@ -9,7 +9,7 @@
     <string name="favorites_combos">Beliebte Kombinationen</string>
     <string name="delete_confirmation_recording">Bist du sicher, dass du die Aufzeichnung löschen möchtest? Alle angehefteten Töne auf dem Hauptbildschirm werden ebenfalls entfernt</string>
     <string name="create_sound">Erstelle deinen Ton</string>
-    <string name="actions_text">Du kannst  folgende Aktionen durchführen, um den Ton einmal abzuspielen</string>
+    <string name="actions_text">Dies ist ein PRO-Sound. Sie können eine Anzeige ansehen, um sie abzuspielen</string>
     <string name="watch_an_ad">Eine Anzeige ansehen</string>
     <string name="about_fragment">Über uns</string>
     <string name="pin_to_dashboard">An den Hauptbildschirm anheften</string>
@@ -66,4 +66,5 @@
     <string name="fetched_sounds">%1$d aus %2$d Töne runtergeladen</string>
     <string name="no_internet_splash">Du bist offline. Lokale Töne laden</string>
     <string name="checking_sounds">Töne laden…</string>
+    <string name="save_favorite_combo_title">Kombination speichern</string>
 </resources>

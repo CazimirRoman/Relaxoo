@@ -54,7 +54,7 @@ class SaveToFavoritesDialog(private val playingSoundIds: List<Sound>) : Retainab
         val builder = AlertDialog.Builder(activity!!)
 
         return builder
-                .setTitle("Save Favorites Combos")
+                .setTitle(getString(R.string.save_favorite_combo_title))
                 .setView(form)
                 .setPositiveButton(getString(R.string.ok), this)
                 .setNegativeButton(getString(R.string.cancel), null)
