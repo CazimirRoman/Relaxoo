@@ -88,19 +88,19 @@ class GridRecyclerViewAdapter(val context: Context, var sounds: ArrayList<Sound>
 
     private fun determineLanguageAndReturnSoundName(sound: Sound): String {
 
+        var localizedSoundName = sound.name
         val languagename: String = Locale.getDefault().displayLanguage
 
-        var localizedSoundName = sound.name
-
-        val spanish = Locale("es", "ES")
-
-        when (languagename) {
-            Locale.GERMAN.displayLanguage -> localizedSoundName = sound.name_DE
-            Locale.FRENCH.displayLanguage -> localizedSoundName = sound.name_FR
-            spanish.displayLanguage -> localizedSoundName = sound.name_SP
-            Locale.ITALIAN.displayLanguage -> localizedSoundName = sound.name_SP
-            Locale.CHINESE.displayLanguage -> localizedSoundName = sound.name_CH
+        if (sound.custom.not()) {
+            when (languagename) {
+                Locale.GERMAN.displayLanguage -> localizedSoundName = sound.name_DE
+                Locale.FRENCH.displayLanguage -> localizedSoundName = sound.name_FR
+                Locale("es", "ES").displayLanguage -> localizedSoundName = sound.name_SP
+                Locale.ITALIAN.displayLanguage -> localizedSoundName = sound.name_SP
+                Locale.CHINESE.displayLanguage -> localizedSoundName = sound.name_CH
+            }
         }
+
 
         return localizedSoundName
     }

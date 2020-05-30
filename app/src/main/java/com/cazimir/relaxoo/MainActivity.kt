@@ -603,7 +603,9 @@ class MainActivity : FragmentActivity(),
     override fun saved(savedCombo: SavedCombo) {
         favoriteFragment!!.updateList(savedCombo)
         FirebaseAnalytics.getInstance(this).logEvent(saveComboClicked(savedCombo.name()).first, saveComboClicked(savedCombo.name()).second)
+        scrollViewPager(0)
         showMessageToUser(getString(R.string.saved_combo), Snackbar.LENGTH_SHORT)
+        scrollViewPager(1)
     }
 
     private val favoriteFragment: FavoritesFragment?
@@ -729,7 +731,7 @@ class MainActivity : FragmentActivity(),
             saveToSharedPreferences(ListOfSavedCustom(mutableListOf(sound)), PINNED_RECORDINGS)
         }
 
-        scrollViewPager()
+        scrollViewPager(0)
     }
 
     private fun sendCommandToService(intent: Intent) {
@@ -756,8 +758,8 @@ class MainActivity : FragmentActivity(),
                 .show(supportFragmentManager, "rec_bottom")
     }
 
-    private fun scrollViewPager() {
-        pager.currentItem = 0
+    private fun scrollViewPager(position: Int) {
+        pager.currentItem = position
     }
 
     private fun checkRecordingPermission() {

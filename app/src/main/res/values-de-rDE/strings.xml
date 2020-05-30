@@ -17,7 +17,7 @@
     <string name="delete_recording">Aufzeichnung löschen</string>
     <string name="share_text">Hey, ich habe diese wirklich tolle App Relaxoo gefunden, die einem tagsüber hilft, sich zu konzentrieren, und die es einem leicht macht, nachts einzuschlafen. Du kannst sie von hier herunterladen: https://play.google.com/store/apps/details?id=com.cazimir.relaxoo</string>
     <string name="delete_custom_sound">Ton löschen</string>
-    <string name="saved_combo">Gespeicherte Kombination</string>
+    <string name="saved_combo">Kombination gespeichert</string>
     <string name="no_recording_text">Bitte gib einen neuen Namen für deine Aufzeichnung ein</string>
     <string name="no_combo_text">Bitte gib einen Namen für deine Kombination ein</string>
     <string name="no_internet">Du bist offline. Die lokalen Töne werden geladen</string>
