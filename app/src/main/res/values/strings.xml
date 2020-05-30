@@ -77,5 +77,7 @@
     <string name="mute_on_tag" translatable="false">mute_on</string>
     <string name="play_button_tag" translatable="false">play_button</string>
     <string name="stop_button_tag" translatable="false">stop_button</string>
+    <string name="feedback_subject">Feedback for Relaxoo</string>
+    <string name="feedback_body">What can we do to make the product better for you?\n\nYour message here: </string>
 
 </resources>

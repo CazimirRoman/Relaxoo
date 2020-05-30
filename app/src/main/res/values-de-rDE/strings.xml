@@ -68,4 +68,6 @@
     <string name="checking_sounds">Töne laden…</string>
     <string name="save_favorite_combo_title">Kombination speichern</string>
     <string name="rename_created_sound">Erstellten Ton umbenennen</string>
+    <string name="feedback_subject">Feedback für Relaxoo</string>
+    <string name="feedback_body">Was können wir tun, um das Produkt für Sie besser zu machen?\n\nIhre Nachricht hier: </string>
 </resources>

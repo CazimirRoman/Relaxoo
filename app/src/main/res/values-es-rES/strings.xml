@@ -68,4 +68,6 @@
     <string name="no_internet_splash">Estás desconectado. Cargando sonidos locales</string>
     <string name="save_favorite_combo_title">Guarda la combinación favorita</string>
     <string name="rename_created_sound">Renombrar el sonido creado</string>
+    <string name="feedback_subject">Comentarios para Relaxoo</string>
+    <string name="feedback_body">"¿Qué podemos hacer para mejorar el producto para usted?  Su mensaje aquí: "</string>
 </resources>

@@ -56,8 +56,7 @@ class AboutFragment : Fragment() {
                     override fun onItemClick(item: AboutItem) {
                         when (item.name) {
 
-                            is AboutItemType.SendFeedback -> startSendFeedbackAction(listOf("cazimir.developer@gmail.com").toTypedArray(), "Feedback for Relaxoo", "Your feedback helps a lot." +
-                                    "\n \n What can we do to make the product better for you?\n\nYour message here:\n")
+                            is AboutItemType.SendFeedback -> startSendFeedbackAction(listOf("cazimir.developer@gmail.com").toTypedArray(), getString(R.string.feedback_subject), getString(R.string.feedback_body))
                             is AboutItemType.RemoveAds -> startRemoveAdsAction()
                             is AboutItemType.Share -> startShareAction()
                             is AboutItemType.PrivacyPolicy -> startPrivacyPolicyActivity()
