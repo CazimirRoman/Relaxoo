@@ -21,7 +21,9 @@
 #-renamesourcefileattribute SourceFile
 
 -keepattributes *Annotation*
--keepclassmembers class ** {
+-keepclassmembers class * {
     @org.greenrobot.eventbus.Subscribe <methods>;
 }
 -keep enum org.greenrobot.eventbus.ThreadMode { *; }
+
+-keep class com.cazimir.relaxoo.model.* { *; }

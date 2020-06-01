@@ -53,14 +53,14 @@ class PrivacyPolicyActivity : AppCompatActivity() {
 
         val languagename: String = Locale.getDefault().displayLanguage
 
-        var pathToHtml = "file:///android_asset/privacy_policy.html"
+        var pathToHtml = "file:///android_asset/privacy_policy/privacy_policy.html"
 
         when (languagename) {
-            Locale.GERMAN.displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy_de.html"
-            Locale.FRENCH.displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy_fr.html"
-            Locale("es", "ES").displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy_sp.html"
-            Locale.ITALIAN.displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy_it.html"
-            Locale.CHINESE.displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy_ch.html"
+            Locale.GERMAN.displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy/privacy_policy_de.html"
+            Locale.FRENCH.displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy/privacy_policy_fr.html"
+            Locale("es", "ES").displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy/privacy_policy_sp.html"
+            Locale.ITALIAN.displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy/privacy_policy_it.html"
+            Locale.CHINESE.displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy/privacy_policy_ch.html"
         }
 
 

@@ -407,7 +407,7 @@ class SoundService : Service(), ISoundService {
     }
 
     override fun unload(sound: Sound) {
-        //stop(StopCommand(sound))
+        stop(StopCommand(sound))
         soundPool.unload(sound.soundPoolId)
 
         val newList = mutableListOf<Sound>()

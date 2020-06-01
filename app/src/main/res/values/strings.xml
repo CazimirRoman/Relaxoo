@@ -61,6 +61,7 @@
     <string name="privacy_policy">Privacy policy</string>
     <string name="rate_app">Rate this app</string>
     <string name="more_apps">More apps</string>
+    <string name="about_the_app">About the app</string>
     <string name="delete_title">Delete?</string>
     <string name="fetched_sounds">Downloaded %1$d out of %2$d sounds</string>
     <string name="checking_sounds">Loading sounds…</string>
@@ -79,5 +80,4 @@
     <string name="stop_button_tag" translatable="false">stop_button</string>
     <string name="feedback_subject">Feedback for Relaxoo</string>
     <string name="feedback_body">What can we do to make the product better for you?\n\nYour message here: </string>
-
 </resources>
