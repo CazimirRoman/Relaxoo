@@ -9,7 +9,7 @@
     <string name="delete_confirmation">Sei sicuro di voler cancellare?</string>
     <string name="delete_confirmation_recording">Sei sicuro di voler cancellare la registrazione? Anche tutti i suoni appuntati sulla schermata principale saranno rimossi</string>
     <string name="create_sound">Crea il tuo suono</string>
-    <string name="actions_text">Questo è un suono PRO. È possibile guardare un annuncio per riprodurlo</string>
+    <string name="actions_text">È possibile guardare un annuncio per riprodurre questo suono o sbloccarli tutti acquistando PRO (Acquistando PRO si rimuoveranno anche gli annunci)</string>
     <string name="watch_an_ad">Guarda un annuncio</string>
     <string name="about_fragment">Informazioni su</string>
     <string name="pin_to_dashboard">Da pin a schermo principale</string>

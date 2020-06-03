@@ -9,7 +9,7 @@
     <string name="favorites_combos">Beliebte Kombinationen</string>
     <string name="delete_confirmation_recording">Bist du sicher, dass du die Aufzeichnung löschen möchtest? Alle angehefteten Töne auf dem Hauptbildschirm werden ebenfalls entfernt</string>
     <string name="create_sound">Erstelle deinen Ton</string>
-    <string name="actions_text">Dies ist ein PRO-Sound. Sie können eine Anzeige ansehen, um sie abzuspielen</string>
+    <string name="actions_text">Sie können sich eine Anzeige ansehen, um diesen Ton abzuspielen, oder Sie können alle Töne freischalten, indem Sie PRO kaufen (mit dem Kauf von PRO werden auch die Anzeigen entfernt)</string>
     <string name="watch_an_ad">Eine Anzeige ansehen</string>
     <string name="about_fragment">Über uns</string>
     <string name="pin_to_dashboard">An den Hauptbildschirm anheften</string>

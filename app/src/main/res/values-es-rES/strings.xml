@@ -9,7 +9,7 @@
     <string name="delete_confirmation">¿Estás seguro de que quieres borrar?</string>
     <string name="delete_confirmation_recording">¿Estás seguro de que quieres borrar la grabación? Todos los sonidos fijos de la pantalla principal también serán eliminados.</string>
     <string name="create_sound">Crea tu sonido</string>
-    <string name="actions_text">Este es un sonido PRO. Puedes ver un anuncio para reproducirlo</string>
+    <string name="actions_text">Puedes ver un anuncio para reproducir este sonido o desbloquearlos todos comprando PRO (Comprando PRO también eliminará los anuncios)</string>
     <string name="watch_an_ad">Mira un anuncio</string>
     <string name="about_fragment">Acerca de</string>
     <string name="pin_to_dashboard">Pin a la pantalla principal</string>

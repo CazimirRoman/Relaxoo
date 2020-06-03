@@ -8,7 +8,7 @@
     <string name="delete_confirmation">Are you sure you want to delete?</string>
     <string name="delete_confirmation_recording">Are you sure you want to delete the recording? All pinned sounds on the main screen will also be removed</string>
     <string name="create_sound">Create your sound</string>
-    <string name="actions_text">This is a PRO sound. You can watch an ad to play it</string>
+    <string name="actions_text">You can watch an ad to play this sound or unlock all of them by purchasing PRO (Purchasing PRO will also remove the ads)</string>
     <string name="watch_an_ad">Watch an ad</string>
     <string name="about_fragment">About</string>
     <string name="pin_to_dashboard">Pin to main screen</string>

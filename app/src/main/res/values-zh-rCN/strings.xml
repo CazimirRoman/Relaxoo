@@ -9,7 +9,7 @@
     <string name="delete_confirmation">你确定要删除吗？</string>
     <string name="delete_confirmation_recording">你确定要删除录音吗？主屏幕上所有釘裝的聲音也會被刪除。</string>
     <string name="create_sound">创造你的声音</string>
-    <string name="actions_text">这是个专业的声音。你可以看一个广告来播放</string>
+    <string name="actions_text">你可以观看广告播放这个声音，也可以通过购买PRO来解锁所有的广告（购买PRO也会删除广告）。</string>
     <string name="watch_an_ad">看广告</string>
     <string name="about_fragment">关于我们</string>
     <string name="pin_to_dashboard">引脚到主屏幕</string>
