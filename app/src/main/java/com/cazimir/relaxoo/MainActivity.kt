@@ -828,37 +828,25 @@ class MainActivity : FragmentActivity(),
         loadRewardedVideoAd()
     }
 
-    override fun onRewardedVideoAdLeftApplication() {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-    }
+    override fun onRewardedVideoAdLeftApplication() {}
 
-    override fun onRewardedVideoAdLoaded() {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-    }
+    override fun onRewardedVideoAdLoaded() {}
 
-    override fun onRewardedVideoAdOpened() {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-    }
+    override fun onRewardedVideoAdOpened() {}
 
     override fun onRewardedVideoCompleted() {
         getSoundGridFragment().rewardUserByPlayingProSound()
         loadRewardedVideoAd()
     }
 
+    override fun onRewarded(p0: RewardItem?) {}
+
+    override fun onRewardedVideoStarted() {}
+
+    override fun onRewardedVideoAdFailedToLoad(p0: Int) {}
+
     private fun loadRewardedVideoAd() {
         rewardedVideoAd.loadAd(adUnitId, AdRequest.Builder().build())
-    }
-
-    override fun onRewarded(p0: RewardItem?) {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onRewardedVideoStarted() {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onRewardedVideoAdFailedToLoad(p0: Int) {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

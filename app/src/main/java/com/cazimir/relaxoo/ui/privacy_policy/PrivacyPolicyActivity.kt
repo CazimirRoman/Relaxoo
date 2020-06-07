@@ -1,5 +1,6 @@
 package com.cazimir.relaxoo.ui.privacy_policy
 
+import android.content.res.AssetManager
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -63,10 +64,7 @@ class PrivacyPolicyActivity : AppCompatActivity() {
             Locale.CHINESE.displayLanguage -> pathToHtml = "file:///android_asset/privacy_policy/privacy_policy_ch.html"
         }
 
-
         webView.loadUrl(pathToHtml)
-
-
     }
 
     private fun initializeAdView() {
@@ -109,5 +107,9 @@ class PrivacyPolicyActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
+    }
+
+    override fun getAssets(): AssetManager {
+        return resources.assets
     }
 }
